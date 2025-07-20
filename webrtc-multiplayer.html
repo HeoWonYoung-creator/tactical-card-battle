@@ -1066,9 +1066,19 @@
                 await executeSpellEffect(1, spellNumber);
                 state.lastSuccessfulSpell = spellNumber;
                 
-                // 성공한 경우에도 턴 종료
-                await sleep(1000);
-                endTurn();
+                // 성공한 경우 연속 전략 가능하도록 턴 유지
+                state.turnInProgress = false;
+                updateButtons();
+                
+                // 연속 전략 가능한지 확인
+                const availableSpells = player.hand.filter(spell => spell >= spellNumber);
+                if (availableSpells.length > 0) {
+                    addLog(`💡 연속 전략이 가능합니다! ${spellNumber}번 이상의 전략을 선택하거나 턴을 종료하세요.`);
+                } else {
+                    addLog(`💡 더 이상 연속 전략이 불가능합니다. 턴을 종료합니다.`);
+                    await sleep(1000);
+                    endTurn();
+                }
                 return;
             } else {
                 player.health--;
