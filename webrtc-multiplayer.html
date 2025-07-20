@@ -862,6 +862,7 @@
             myHandEl.innerHTML = myPlayer.hand.map(() => `<div class="card card-back"></div>`).join('');
             
             // 상대 손패 (앞면) - 항상 상단에 표시, 상대의 패를 볼 수 있어야 함
+            // 멀티플레이어에서는 상대방의 실제 패를 표시
             opponentHandEl.innerHTML = opponentPlayer.hand.map(stone => `
                 <div class="card card-front flex flex-col items-center justify-center">
                     <div class="text-2xl mb-1">${getSpellIcon(stone)}</div>
@@ -1013,20 +1014,25 @@
             const buttons = spellButtonsContainer.querySelectorAll('button');
             buttons.forEach(btn => {
                 const spellNum = parseInt(btn.dataset.spell);
-                const isDisabled = !state.isPlayerTurn || state.turnInProgress || spellNum < state.lastSuccessfulSpell || state.isGameOver;
+                // 멀티플레이어에서는 현재 플레이어의 턴일 때만 활성화
+                const isMyTurn = multiplayerMode ? (state.currentPlayerId === 1) : state.isPlayerTurn;
+                const isDisabled = !isMyTurn || state.turnInProgress || spellNum < state.lastSuccessfulSpell || state.isGameOver;
                 btn.disabled = isDisabled;
                 
                 // 디버그용: 버튼 상태 로그
                 if (isDisabled) {
-                    console.log(`🔘 전략 ${spellNum} 버튼 비활성화 - 이유: ${!state.isPlayerTurn ? '플레이어 턴 아님' : state.turnInProgress ? '턴 진행 중' : spellNum < state.lastSuccessfulSpell ? '연속 전략 조건 불만족' : '게임 종료'}`);
+                    console.log(`🔘 전략 ${spellNum} 버튼 비활성화 - 이유: ${!isMyTurn ? '내 턴 아님' : state.turnInProgress ? '턴 진행 중' : spellNum < state.lastSuccessfulSpell ? '연속 전략 조건 불만족' : '게임 종료'}`);
                 }
             });
-            endTurnBtn.disabled = !state.isPlayerTurn || state.turnInProgress || state.isGameOver;
+            const isMyTurn = multiplayerMode ? (state.currentPlayerId === 1) : state.isPlayerTurn;
+            endTurnBtn.disabled = !isMyTurn || state.turnInProgress || state.isGameOver;
         }
 
         async function handleSpellCast(spellNumber) {
             console.log(`🎯 전략 시도: ${spellNumber}번`);
-            if (!state.isPlayerTurn || state.turnInProgress || state.isGameOver) {
+            // 멀티플레이어에서는 현재 플레이어의 턴일 때만 활성화
+            const isMyTurn = multiplayerMode ? (state.currentPlayerId === 1) : state.isPlayerTurn;
+            if (!isMyTurn || state.turnInProgress || state.isGameOver) {
                 console.log('❌ 전략 시도 실패 - 조건 불만족');
                 return;
             }
@@ -2648,7 +2654,9 @@
 
         endTurnBtn.addEventListener('click', () => {
             console.log('🔄 턴 종료 버튼 클릭');
-            if (state.isPlayerTurn && !state.turnInProgress && !state.isGameOver) {
+            // 멀티플레이어에서는 현재 플레이어의 턴일 때만 활성화
+            const isMyTurn = multiplayerMode ? (state.currentPlayerId === 1) : state.isPlayerTurn;
+            if (isMyTurn && !state.turnInProgress && !state.isGameOver) {
                 addLog(`- ${state.players[0].name}${getJosa(state.players[0].name, '이/가')} 턴을 수동으로 종료했습니다.`);
                 endTurn();
             }
