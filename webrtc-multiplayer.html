@@ -400,13 +400,13 @@
 
     <!-- 게임 화면 -->
     <div id="game-screen" class="w-full max-w-4xl mx-auto space-y-2 hidden">
-        <!-- AI 영역 -->
-        <div id="ai-area" class="p-4 border-2 border-red-400 rounded-lg transition-all duration-500">
+        <!-- 상대 영역 (항상 상단) -->
+        <div id="opponent-area" class="p-4 border-2 border-red-400 rounded-lg transition-all duration-500">
             <div class="flex justify-between items-center mb-4">
-                <h2 class="text-xl font-bold text-red-300">상대 (AI)</h2>
-                <div id="ai-health" class="flex items-center space-x-1 text-2xl"></div>
+                <h2 class="text-xl font-bold text-red-300">상대</h2>
+                <div id="opponent-health" class="flex items-center space-x-1 text-2xl"></div>
             </div>
-            <div id="ai-hand" class="flex justify-center space-x-2"></div>
+            <div id="opponent-hand" class="flex justify-center space-x-2"></div>
         </div>
 
         <!-- 중앙 영역 -->
@@ -429,12 +429,12 @@
             </div>
         </div>
 
-        <!-- 플레이어 영역 -->
-        <div id="player-area" class="p-4 border-2 border-blue-400 rounded-lg transition-all duration-500">
-            <div id="player-hand" class="flex justify-center space-x-2 mb-4"></div>
+        <!-- 내 영역 (항상 하단) -->
+        <div id="my-area" class="p-4 border-2 border-blue-400 rounded-lg transition-all duration-500">
+            <div id="my-hand" class="flex justify-center space-x-2 mb-4"></div>
             <div class="flex justify-between items-center">
-                <div id="player-health" class="flex items-center space-x-1 text-2xl"></div>
-                <h2 id="player-title" class="text-xl font-bold text-blue-300">나 (Player)</h2>
+                <div id="my-health" class="flex items-center space-x-1 text-2xl"></div>
+                <h2 id="my-title" class="text-xl font-bold text-blue-300">나</h2>
             </div>
         </div>
 
@@ -591,12 +591,12 @@
         const titleScreen = document.getElementById('title-screen');
         const gameScreen = document.getElementById('game-screen');
         const startGameBtn = document.getElementById('start-game-btn');
-        const playerArea = document.getElementById('player-area');
-        const aiArea = document.getElementById('ai-area');
-        const playerHealthEl = document.getElementById('player-health');
-        const aiHealthEl = document.getElementById('ai-health');
-        const playerHandEl = document.getElementById('player-hand');
-        const aiHandEl = document.getElementById('ai-hand');
+        const myArea = document.getElementById('my-area');
+        const opponentArea = document.getElementById('opponent-area');
+        const myHealthEl = document.getElementById('my-health');
+        const opponentHealthEl = document.getElementById('opponent-health');
+        const myHandEl = document.getElementById('my-hand');
+        const opponentHandEl = document.getElementById('opponent-hand');
         const secretStonesPile = document.getElementById('secret-stones-pile');
         const usedStonesPile = document.getElementById('used-stones-pile');
         const secretStonesCountEl = document.getElementById('secret-stones-count');
@@ -687,8 +687,28 @@
             }
             console.log('🔄 덱 셔플 완료');
             
-            // 랜덤하게 첫 번째 턴 결정
-            const firstPlayer = Math.random() < 0.5 ? 1 : 2;
+            // 멀티플레이어에서는 호스트가 첫 번째 턴을 결정하고 상대방에게 전송
+            let firstPlayer;
+            if (multiplayerMode && isHost) {
+                firstPlayer = Math.random() < 0.5 ? 1 : 2;
+                console.log(`🎯 호스트가 첫 번째 턴 결정: 플레이어 ${firstPlayer}`);
+                
+                // 상대방에게 첫 번째 턴 정보 전송
+                if (dataChannel && dataChannel.readyState === 'open') {
+                    dataChannel.send(JSON.stringify({
+                        type: 'firstTurn',
+                        firstPlayer: firstPlayer
+                    }));
+                }
+            } else if (multiplayerMode && !isHost) {
+                // 게스트는 호스트의 결정을 기다림
+                console.log('⏳ 호스트의 첫 번째 턴 결정 대기 중...');
+                return; // 호스트의 결정을 기다린 후 다시 호출됨
+            } else {
+                // AI 모드에서는 랜덤 결정
+                firstPlayer = Math.random() < 0.5 ? 1 : 2;
+                console.log(`🎯 AI 모드 첫 번째 턴 결정: 플레이어 ${firstPlayer}`);
+            }
             
             const aiName = `AI ${aiDifficulty === 'easy' ? '쉬움' : aiDifficulty === 'normal' ? '보통' : '어려움'}`;
             state = {
@@ -729,6 +749,82 @@
             playGameStartSound();
         }
 
+        // 포기 처리
+        async function handleSurrender(surrenderingPlayerId) {
+            console.log('🏳️ 상대방 포기 처리');
+            
+            // 승리 처리 (상대방이 포기했으므로 내가 승리)
+            updateStats(true, true);
+            
+            addLog('상대방이 게임을 포기했습니다.');
+            addLog('승리가 기록되었습니다.');
+            
+            // 승리한 플레이어에게 메시지 표시
+            await showModal('게임 종료', '상대가 게임을 포기하여 승리하였습니다!', true);
+            
+            // 타이틀 화면으로 돌아가기
+            showTitleScreen();
+        }
+
+        // 호스트의 첫 번째 턴 결정으로 게임 초기화
+        function resetGameWithFirstPlayer(firstPlayer) {
+            console.log('🔄 호스트의 첫 번째 턴 결정으로 게임 초기화');
+            
+            // 덱 생성 및 셔플
+            const deck = [];
+            for (let i = 1; i <= 6; i++) {
+                for (let j = 0; j < 3; j++) {
+                    deck.push(i);
+                }
+            }
+            console.log('📦 초기 덱 생성:', deck);
+            
+            for (let i = deck.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [deck[i], deck[j]] = [deck[j], deck[i]];
+            }
+            console.log('🔄 덱 셔플 완료');
+            
+            const aiName = `AI ${aiDifficulty === 'easy' ? '쉬움' : aiDifficulty === 'normal' ? '보통' : '어려움'}`;
+            state = {
+                players: [
+                    { id: 1, name: 'Player', health: 3, hand: deck.slice(0, 6).sort((a, b) => a - b), knownSecretStones: [] },
+                    { id: 2, name: multiplayerMode ? 'Opponent' : aiName, health: 3, hand: deck.slice(6, 12).sort((a, b) => a - b), knownSecretStones: [] }
+                ],
+                secretStones: deck.slice(12),
+                usedStones: [],
+                publiclyRevealedSecretStones: [],
+                currentPlayerId: firstPlayer,
+                lastSuccessfulSpell: 0,
+                isPlayerTurn: firstPlayer === 1,
+                turnInProgress: false,
+                gameLog: [`게임이 시작되었습니다. ${firstPlayer === 1 ? playerName : (multiplayerMode ? opponentName : aiName)}가 먼저 시작합니다.`],
+                isGameOver: false,
+                memoNotes: {},
+                memoPanelActive: false,
+            };
+            
+            console.log('🎯 게스트 초기 게임 상태:', {
+                playerHand: state.players[0].hand,
+                aiHand: state.players[1].hand,
+                secretStones: state.secretStones,
+                playerHealth: state.players[0].health,
+                aiHealth: state.players[1].health,
+                firstPlayer: firstPlayer
+            });
+            
+            createSpellButtons();
+            updatePlayerName();
+            render();
+            updateDebugInfo();
+            
+            // 메모 패널 표시
+            showMemoPanel();
+            
+            // 게임 시작 사운드
+            playGameStartSound();
+        }
+
         function updateDebugInfo() {
             if (!debugPanel.classList.contains('hidden')) {
                 const player = state.players[0];
@@ -748,21 +844,26 @@
 
         function render() {
             const player = state.players[0];
-            const ai = state.players[1];
+            const opponent = state.players[1];
+            
+            // 내가 플레이어 1인지 2인지에 따라 표시할 정보 결정
+            const myPlayerId = 1; // 항상 플레이어 1로 고정
+            const myPlayer = state.players[myPlayerId - 1];
+            const opponentPlayer = state.players[2 - myPlayerId]; // 상대는 나머지 플레이어
             
             // 체력 표시에 애니메이션 추가
-            playerHealthEl.innerHTML = '❤️'.repeat(player.health);
-            aiHealthEl.innerHTML = '❤️'.repeat(ai.health);
+            myHealthEl.innerHTML = '❤️'.repeat(myPlayer.health);
+            opponentHealthEl.innerHTML = '❤️'.repeat(opponentPlayer.health);
             
             // 체력 하트에 애니메이션 클래스 추가
-            const hearts = playerHealthEl.querySelectorAll('span');
+            const hearts = myHealthEl.querySelectorAll('span');
             hearts.forEach(heart => heart.classList.add('health-heart'));
             
-            // 플레이어 손패 (뒷면)
-            playerHandEl.innerHTML = player.hand.map(() => `<div class="card card-back"></div>`).join('');
+            // 내 손패 (뒷면) - 항상 하단에 표시
+            myHandEl.innerHTML = myPlayer.hand.map(() => `<div class="card card-back"></div>`).join('');
             
-            // AI 손패 (앞면) - 상대의 패를 볼 수 있어야 함
-            aiHandEl.innerHTML = ai.hand.map(stone => `
+            // 상대 손패 (앞면) - 항상 상단에 표시, 상대의 패를 볼 수 있어야 함
+            opponentHandEl.innerHTML = opponentPlayer.hand.map(stone => `
                 <div class="card card-front flex flex-col items-center justify-center">
                     <div class="text-2xl mb-1">${getSpellIcon(stone)}</div>
                     <div class="text-sm font-bold">${stone}</div>
@@ -788,8 +889,9 @@
                 return `<p class="${className}">${log}</p>`;
             }).join('');
             
-            playerArea.classList.toggle('player-area-glow', state.currentPlayerId === 1 && !state.isGameOver);
-            aiArea.classList.toggle('player-area-glow', state.currentPlayerId === 2 && !state.isGameOver);
+            // 현재 턴에 따라 영역 하이라이트 (내 턴이면 내 영역, 상대 턴이면 상대 영역)
+            myArea.classList.toggle('player-area-glow', state.currentPlayerId === 1 && !state.isGameOver);
+            opponentArea.classList.toggle('player-area-glow', state.currentPlayerId === 2 && !state.isGameOver);
             updateButtons();
             updateDebugInfo();
             
@@ -958,31 +1060,31 @@
                 
                 // 성공 효과
                 playSuccessSound();
-                addSuccessAnimation(playerArea);
+                addSuccessAnimation(myArea);
                 
                                     addLog(`✅ ${state.players[0].name}${getJosa(state.players[0].name, '이/가')} ${spellNumber}번 전략을 성공적으로 실행했습니다!`);
                 render();
                 await executeSpellEffect(1, spellNumber);
                 state.lastSuccessfulSpell = spellNumber;
+                
+                // 성공한 경우에도 턴 종료
+                await sleep(1000);
+                endTurn();
+                return;
             } else {
                 player.health--;
                 console.log(`❌ 전략 실패! 플레이어 병력 감소: ${player.health}`);
                 
                 // 실패 효과
                 playFailureSound();
-                addFailureAnimation(playerArea);
-                showDamageEffect(playerArea, 1);
+                addFailureAnimation(myArea);
+                showDamageEffect(myArea, 1);
                 
-                                    addLog(`❌ ${state.players[0].name}${getJosa(state.players[0].name, '이/가')} ${spellNumber}번 전략을 실행했지만 실패하여, 병력이 1 감소하였습니다.`);
+                addLog(`❌ ${state.players[0].name}${getJosa(state.players[0].name, '이/가')} ${spellNumber}번 전략을 실행했지만 실패하여, 병력이 1 감소하였습니다.`);
                 render();
                 await sleep(1000);
                 endTurn();
                 return;
-            }
-            
-            if (!state.isGameOver) {
-                state.turnInProgress = false;
-                updateButtons();
             }
         }
 
@@ -1010,8 +1112,13 @@
             
             if (checkGameOver()) return;
 
+            // 멀티플레이어에서는 상대방이 턴을 처리하므로 AI 턴을 실행하지 않음
             if (!state.isPlayerTurn && !multiplayerMode) {
                 aiTurn();
+            } else if (!state.isPlayerTurn && multiplayerMode) {
+                // 멀티플레이어에서 상대방 턴 시작 로그
+                const opponentName = state.players[1].name;
+                addLog(`${opponentName}${getJosa(opponentName, '의')} 턴이 시작되었습니다.`);
             }
         }
 
@@ -1046,14 +1153,14 @@
                     if (player.health < 3) player.health++;
                     console.log(`💚 휴식 회복: ${player.name} 병력 ${player.health}`);
                     playHealSound();
-                    showHealEffect(player.id === 1 ? playerArea : aiArea, 1);
+                    showHealEffect(player.id === 1 ? myArea : opponentArea, 1);
                     addLog(`${player.name}${getJosa(player.name, '이/가')} 휴식을 취해 병력이 1 회복되었습니다.`);
                     break;
                 case 4: // 공격
                     opponent.health--;
                     console.log(`⚔️ 공격: 피해 1`);
                     playDamageSound();
-                    showDamageEffect(opponent.id === 1 ? playerArea : aiArea, 1);
+                    showDamageEffect(opponent.id === 1 ? myArea : opponentArea, 1);
                     addLog(`${player.name}${getJosa(player.name, '이/가')} ${opponent.name}${getJosa(opponent.name, '에게')} 공격하여 피해 1을 입혔습니다.`);
                     break;
                 case 3: // 스파이
@@ -1086,8 +1193,8 @@
                     console.log(`💀 기습: ${opponent.name} 병력 ${opponent.health}, ${player.name} 병력 ${player.health}`);
                     playDamageSound();
                     playHealSound();
-                    showDamageEffect(opponent.id === 1 ? playerArea : aiArea, 1);
-                    showHealEffect(player.id === 1 ? playerArea : aiArea, 1);
+                    showDamageEffect(opponent.id === 1 ? myArea : opponentArea, 1);
+                    showHealEffect(player.id === 1 ? myArea : opponentArea, 1);
                     addLog(`${player.name}${getJosa(player.name, '이/가')} ${opponent.name}${getJosa(opponent.name, '의')} 병력을 흡수하여 피해 1을 입히고 병력을 1 회복했습니다.`);
                     break;
                 case 1: // 전세 역전
@@ -1102,7 +1209,7 @@
                     if (player.health < 3) player.health = Math.min(3, player.health + 2);
                     console.log(`💚 전세 역전 회복: ${player.name} 병력 ${player.health}`);
                     playHealSound();
-                    showHealEffect(player.id === 1 ? playerArea : aiArea, 2);
+                    showHealEffect(player.id === 1 ? myArea : opponentArea, 2);
                     addLog(`${player.name}${getJosa(player.name, '의')} 병력이 2 회복되었습니다.`);
                     break;
             }
@@ -1147,7 +1254,7 @@
                     
                     // AI 성공 효과
                     playSuccessSound();
-                    addSuccessAnimation(aiArea);
+                    addSuccessAnimation(opponentArea);
                     
                     addLog(`✅ ${opponentName}${getJosa(opponentName, '이/가')} ${chosenSpell}번 전략을 성공적으로 실행했습니다!`);
                     render();
@@ -1180,8 +1287,8 @@
                     
                     // AI 실패 효과
                     playFailureSound();
-                    addFailureAnimation(aiArea);
-                    showDamageEffect(aiArea, 1);
+                    addFailureAnimation(opponentArea);
+                    showDamageEffect(opponentArea, 1);
                     
                     addLog(`❌ ${opponentName}${getJosa(opponentName, '이/가')} ${chosenSpell}번 전략을 실행했지만 실패했습니다. (병력 1 감소)`);
                     render();
@@ -1548,8 +1655,28 @@
             shuffleArray(deck);
             console.log('🔄 덱 셔플 완료');
             
-            // 랜덤하게 첫 번째 턴 결정
-            const firstPlayer = Math.random() < 0.5 ? 1 : 2;
+            // 멀티플레이어에서는 호스트가 첫 번째 턴을 결정하고 상대방에게 전송
+            let firstPlayer;
+            if (multiplayerMode && isHost) {
+                firstPlayer = Math.random() < 0.5 ? 1 : 2;
+                console.log(`🎯 호스트가 첫 번째 턴 결정: 플레이어 ${firstPlayer}`);
+                
+                // 상대방에게 첫 번째 턴 정보 전송
+                if (dataChannel && dataChannel.readyState === 'open') {
+                    dataChannel.send(JSON.stringify({
+                        type: 'firstTurn',
+                        firstPlayer: firstPlayer
+                    }));
+                }
+            } else if (multiplayerMode && !isHost) {
+                // 게스트는 호스트의 결정을 기다림
+                console.log('⏳ 호스트의 첫 번째 턴 결정 대기 중...');
+                return; // 호스트의 결정을 기다린 후 다시 호출됨
+            } else {
+                // AI 모드에서는 랜덤 결정
+                firstPlayer = Math.random() < 0.5 ? 1 : 2;
+                console.log(`🎯 AI 모드 첫 번째 턴 결정: 플레이어 ${firstPlayer}`);
+            }
             
             const playerName = localStorage.getItem('playerName') || 'Player';
             state = {
@@ -1987,9 +2114,9 @@
 
         function updatePlayerName() {
             const playerName = localStorage.getItem('playerName') || 'Player';
-            const playerTitle = document.getElementById('player-title');
-            if (playerTitle) {
-                playerTitle.textContent = `나 (${playerName})`;
+            const myTitle = document.getElementById('my-title');
+            if (myTitle) {
+                myTitle.textContent = `나 (${playerName})`;
             }
         }
         
@@ -2158,10 +2285,10 @@
             updatePlayerName();
             
             // 상대방 정보 표시
-            const aiArea = document.getElementById('ai-area');
-            const aiTitle = aiArea.querySelector('h2');
-            aiTitle.textContent = `상대 (${opponentName})`;
-            aiTitle.className = 'text-xl font-bold text-green-300';
+            const opponentArea = document.getElementById('opponent-area');
+            const opponentTitle = opponentArea.querySelector('h2');
+            opponentTitle.textContent = `상대 (${opponentName})`;
+            opponentTitle.className = 'text-xl font-bold text-green-300';
             
             // 게임 상태 초기화 시 상대방 이름 설정
             if (state.players && state.players[1]) {
@@ -2317,6 +2444,11 @@
                     opponentName = isHost ? message.guestName : message.hostName;
                     startMultiplayerGame();
                     break;
+                case 'firstTurn':
+                    console.log(`🎯 호스트의 첫 번째 턴 결정 수신: 플레이어 ${message.firstPlayer}`);
+                    // 호스트의 결정으로 게임 초기화
+                    resetGameWithFirstPlayer(message.firstPlayer);
+                    break;
                 case 'gameState':
                     updateGameState(message.state);
                     break;
@@ -2328,6 +2460,9 @@
                     break;
                 case 'gameOver':
                     handleGameOver(message.winner, message.gameState);
+                    break;
+                case 'surrender':
+                    handleSurrender(message.surrenderingPlayerId);
                     break;
             }
         }
@@ -2366,6 +2501,10 @@
                 // 상대방이 보낸 게임 상태로 업데이트
                 state = gameState;
                 console.log('🔄 턴 종료 시 게임 상태 동기화됨');
+                
+                // 턴 전환 후 현재 플레이어 턴 시작 로그
+                const currentPlayerName = state.currentPlayerId === 1 ? state.players[0].name : state.players[1].name;
+                addLog(`${currentPlayerName}${getJosa(currentPlayerName, '의')} 턴이 시작되었습니다.`);
             } else {
                 state.isPlayerTurn = !state.isPlayerTurn;
                 state.currentPlayerId = state.currentPlayerId === 1 ? 2 : 1;
@@ -2466,6 +2605,21 @@
                 addLog('전투를 포기했습니다.');
                 addLog('패배가 기록되었습니다.');
                 
+                // 멀티플레이어 모드에서 상대방에게 포기 메시지 전송
+                if (multiplayerMode && dataChannel && dataChannel.readyState === 'open') {
+                    dataChannel.send(JSON.stringify({
+                        type: 'surrender',
+                        surrenderingPlayerId: 1
+                    }));
+                }
+                
+                // 포기한 플레이어에게 메시지 표시
+                if (multiplayerMode) {
+                    await showModal('게임 종료', '게임을 포기하여 패배하였습니다.', true);
+                } else {
+                    await showModal('게임 종료', 'AI에게 패배하였습니다.', true);
+                }
+                
                 // 바로 타이틀 화면으로 돌아가기
                 showTitleScreen();
             }
@@ -2487,6 +2641,7 @@
         endTurnBtn.addEventListener('click', () => {
             console.log('🔄 턴 종료 버튼 클릭');
             if (state.isPlayerTurn && !state.turnInProgress && !state.isGameOver) {
+                addLog(`- ${state.players[0].name}${getJosa(state.players[0].name, '이/가')} 턴을 수동으로 종료했습니다.`);
                 endTurn();
             }
         });
