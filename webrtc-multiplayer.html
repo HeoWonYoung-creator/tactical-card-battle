@@ -909,6 +909,12 @@
         }
 
         function render() {
+            // 게임 상태가 유효하지 않으면 렌더링 중단
+            if (!state || !state.players || state.players.length < 2) {
+                console.log('⚠️ 게임 상태가 유효하지 않아 렌더링을 건너뜁니다');
+                return;
+            }
+            
             const player = state.players[0];
             const opponent = state.players[1];
             
@@ -1010,15 +1016,14 @@
                 }, 1000);
             }
             
-            // 턴 상태 모니터링
+            // 턴 상태 모니터링 및 동기화
             if (multiplayerMode && state.players && state.players.length >= 2) {
                 const myPlayerId = isHost ? 1 : 2;
-                const isMyTurn = (state.currentPlayerId === myPlayerId);
-                if (state.isPlayerTurn !== isMyTurn) {
-                    console.log(`⚠️ 턴 상태 불일치 감지 - 내 턴: ${state.isPlayerTurn}, 실제 턴: ${isMyTurn}`);
-                    setTimeout(() => {
-                        safeRefreshGameState();
-                    }, 2000);
+                const shouldBeMyTurn = (state.currentPlayerId === myPlayerId);
+                if (state.isPlayerTurn !== shouldBeMyTurn) {
+                    console.log(`⚠️ 턴 상태 불일치 감지 - 내 턴: ${state.isPlayerTurn}, 실제 턴: ${shouldBeMyTurn}`);
+                    state.isPlayerTurn = shouldBeMyTurn;
+                    console.log(`🔄 턴 상태 자동 동기화: ${state.isPlayerTurn} → ${shouldBeMyTurn}`);
                 }
             }
         }
@@ -1241,7 +1246,19 @@
         function updateButtons() {
             const buttons = spellButtonsContainer.querySelectorAll('button');
             const myPlayerId = multiplayerMode ? (isHost ? 1 : 2) : 1;
-            const isMyTurn = multiplayerMode ? (state.currentPlayerId === myPlayerId) : state.isPlayerTurn;
+            
+            // 멀티플레이어에서는 currentPlayerId를 기준으로 턴 판단
+            let isMyTurn;
+            if (multiplayerMode) {
+                isMyTurn = (state.currentPlayerId === myPlayerId);
+                // state.isPlayerTurn과 currentPlayerId가 일치하지 않으면 동기화
+                if (state.isPlayerTurn !== isMyTurn) {
+                    console.log(`🔄 턴 상태 동기화: isPlayerTurn ${state.isPlayerTurn} → ${isMyTurn}`);
+                    state.isPlayerTurn = isMyTurn;
+                }
+            } else {
+                isMyTurn = state.isPlayerTurn;
+            }
             
             console.log(`🎮 버튼 업데이트 - 내 플레이어ID: ${myPlayerId}, 현재 플레이어ID: ${state.currentPlayerId}, 내 턴: ${isMyTurn}, 턴 진행중: ${state.turnInProgress}, 게임종료: ${state.isGameOver}`);
             
@@ -1291,7 +1308,19 @@
             console.log(`🎯 전략 시도: ${spellNumber}번`);
             // 멀티플레이어에서는 현재 플레이어의 턴일 때만 활성화
             const myPlayerId = multiplayerMode ? (isHost ? 1 : 2) : 1;
-            const isMyTurn = multiplayerMode ? (state.currentPlayerId === myPlayerId) : state.isPlayerTurn;
+            
+            // 멀티플레이어에서는 currentPlayerId를 기준으로 턴 판단
+            let isMyTurn;
+            if (multiplayerMode) {
+                isMyTurn = (state.currentPlayerId === myPlayerId);
+                // state.isPlayerTurn과 currentPlayerId가 일치하지 않으면 동기화
+                if (state.isPlayerTurn !== isMyTurn) {
+                    console.log(`🔄 전략 시도 시 턴 상태 동기화: isPlayerTurn ${state.isPlayerTurn} → ${isMyTurn}`);
+                    state.isPlayerTurn = isMyTurn;
+                }
+            } else {
+                isMyTurn = state.isPlayerTurn;
+            }
             console.log(`🎮 전략 시도 조건 - 내 플레이어ID: ${myPlayerId}, 현재 플레이어ID: ${state.currentPlayerId}, 내 턴: ${isMyTurn}, 턴 진행중: ${state.turnInProgress}, 게임종료: ${state.isGameOver}`);
             
             if (!isMyTurn || state.turnInProgress || state.isGameOver) {
@@ -1513,6 +1542,12 @@
         }
 
         async function aiTurn() {
+            // 게임 상태가 유효하지 않으면 AI 턴 중단
+            if (!state || !state.players || state.players.length < 2) {
+                console.log('⚠️ 게임 상태가 유효하지 않아 AI 턴을 건너뜁니다');
+                return;
+            }
+            
             const opponentName = multiplayerMode ? state.players[1].name : `AI ${aiDifficulty === 'easy' ? '쉬움' : aiDifficulty === 'normal' ? '보통' : '어려움'}`;
             console.log(`🤖 ${opponentName} 턴 시작 (난이도: ${aiDifficulty})`);
             addLog(`${opponentName}${getJosa(opponentName, '의')} 턴이 시작되었습니다.`);
@@ -2225,6 +2260,15 @@
 
         function addLog(message) {
             console.log(`📝 게임 로그: ${message}`);
+            
+            // state나 gameLog가 없으면 초기화
+            if (!state) {
+                state = {};
+            }
+            if (!state.gameLog) {
+                state.gameLog = [];
+            }
+            
             state.gameLog.unshift(message);
             if (state.gameLog.length > 20) state.gameLog.pop();
         }
@@ -2669,9 +2713,31 @@
             } else {
                 console.log('⏳ 게스트: 호스트의 게임 초기화 대기 중...');
                 // 게스트는 호스트의 firstTurn 메시지를 기다림
-                // 기본 UI 렌더링을 위해 빈 상태로 초기화
+                // 기본 UI 렌더링을 위해 기본 게임 상태로 초기화
                 createSpellButtons();
                 updatePlayerName();
+                
+                // 기본 게임 상태 초기화 (렌더링 전에)
+                if (!state || !state.players || state.players.length < 2) {
+                    console.log('🔄 게스트: 기본 게임 상태 초기화');
+                    state = {
+                        players: [
+                            { id: 1, name: playerName, health: 3, hand: [], knownSecretStones: [] },
+                            { id: 2, name: opponentName || 'Player2', health: 3, hand: [], knownSecretStones: [] }
+                        ],
+                        secretStones: [],
+                        usedStones: [],
+                        publiclyRevealedSecretStones: [],
+                        currentPlayerId: 1,
+                        isPlayerTurn: false, // 게스트는 처음에 턴이 아님
+                        lastSuccessfulSpell: 0,
+                        turnInProgress: false,
+                        isGameOver: false,
+                        gameStarted: true,
+                        gameLog: ['게임이 시작되었습니다. 호스트의 결정을 기다리는 중...']
+                    };
+                }
+                
                 render();
                 
                 // 게스트의 경우 안전 새로고침 실행
@@ -2815,6 +2881,29 @@
         // 게임 메시지 처리
         function handleGameMessage(message) {
             console.log('📨 받은 메시지:', message);
+            
+            // 게임 상태가 유효하지 않으면 기본 상태로 초기화
+            if (!state || !state.players || state.players.length < 2) {
+                console.log('⚠️ 게임 상태가 유효하지 않아 기본 상태로 초기화');
+                const currentPlayerName = localStorage.getItem('playerName') || 'Player';
+                state = {
+                    players: [
+                        { id: 1, name: currentPlayerName, health: 3, hand: [], knownSecretStones: [] },
+                        { id: 2, name: opponentName || 'Player2', health: 3, hand: [], knownSecretStones: [] }
+                    ],
+                    secretStones: [],
+                    usedStones: [],
+                    publiclyRevealedSecretStones: [],
+                    currentPlayerId: 1,
+                    isPlayerTurn: false,
+                    lastSuccessfulSpell: 0,
+                    turnInProgress: false,
+                    isGameOver: false,
+                    gameStarted: true,
+                    gameLog: ['게임 상태가 복구되었습니다.']
+                };
+            }
+            
             switch (message.type) {
                 case 'gameStart':
                     opponentName = isHost ? message.guestName : message.hostName;
@@ -2892,8 +2981,9 @@
                 // 멀티플레이어에서는 currentPlayerId를 기준으로 isPlayerTurn 재설정
                 if (multiplayerMode) {
                     const myPlayerId = isHost ? 1 : 2;
-                    state.isPlayerTurn = (state.currentPlayerId === myPlayerId);
-                    console.log(`🎮 턴 동기화 - 내 플레이어ID: ${myPlayerId}, 현재 플레이어ID: ${state.currentPlayerId}, 내 턴: ${state.isPlayerTurn}`);
+                    const shouldBeMyTurn = (state.currentPlayerId === myPlayerId);
+                    state.isPlayerTurn = shouldBeMyTurn;
+                    console.log(`🎮 턴 동기화 - 내 플레이어ID: ${myPlayerId}, 현재 플레이어ID: ${state.currentPlayerId}, 내 턴: ${shouldBeMyTurn}`);
                 }
                 
                 // 턴 전환 후 현재 플레이어 턴 시작 로그
