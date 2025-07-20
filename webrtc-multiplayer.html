@@ -662,8 +662,8 @@
         
         // 턴 타이머 관련 변수
         let turnTimer = null;
-        let turnTimeLeft = 20; // 20초
-        const TURN_DURATION = 20; // 20초
+        let turnTimeLeft = 30; // 30초
+        const TURN_DURATION = 30; // 30초
         
         // 연승 관련 변수
         let currentWinStreak = parseInt(localStorage.getItem('currentWinStreak')) || 0;
@@ -1611,17 +1611,14 @@
                         state.publiclyRevealedSecretStones.push(revealedStone);
                         console.log(`📢 비밀 전술 전체 공개: ${revealedStone}`);
                         addLog(`정찰 작전! 비밀 전술 [${revealedStone}]${getJosa(revealedStone.toString(), '이/가')} 전체 공개되었습니다.`);
-                        if (playerId === 1) {
-                            await showModal('정찰', `비밀 전술 [${revealedStone}]${getJosa(revealedStone.toString(), '이/가')} 전체 공개되었습니다.`);
-                        } else {
-                            await sleep(1000);
-                        }
+                        // 모든 플레이어에게 정찰 결과 모달 표시
+                        await showModal('정찰', `비밀 전술 [${revealedStone}]${getJosa(revealedStone.toString(), '이/가')} 전체 공개되었습니다.`);
                     } else {
                         const message = '정찰 작전 종료: 더 이상 공개할 비밀 전술이 없습니다.';
                         console.log('📢 더 이상 공개할 비밀 전술 없음');
-                        if (playerId === 1) await showModal('정찰 작전', message);
                         addLog(message);
-                        await sleep(1000);
+                        // 모든 플레이어에게 정찰 실패 모달 표시
+                        await showModal('정찰 작전', message);
                     }
                     break;
                 case 5: // 휴식
@@ -1648,19 +1645,13 @@
                         console.log(`🕵️ 스파이 투입: ${spyStone}을(를) ${opponent.name}의 패에 투입`);
                         playCardSound();
                         addLog(`${player.name}${getJosa(player.name, '이/가')} 스파이를 투입하여 비밀 전술 하나를 ${opponent.name}${getJosa(opponent.name, '의')} 패에 성공적으로 넣었습니다.`);
-                        if (playerId === 1) {
-                            await showModal('스파이', `비밀 전술 하나를 상대의 패에 투입했습니다.`);
-                        } else {
-                            await sleep(1000);
-                        }
+                        // 모든 플레이어에게 스파이 성공 모달 표시
+                        await showModal('스파이', `비밀 전술 하나를 상대의 패에 투입했습니다.`);
                     } else {
                         console.log('❌ 투입할 비밀 전술 없음');
                         addLog(`스파이 작전 종료: 투입할 비밀 전술이 없습니다.`);
-                        if (playerId === 1) {
-                            await showModal('스파이', '투입할 비밀 전술이 없습니다.');
-                        } else {
-                            await sleep(1000);
-                        }
+                        // 모든 플레이어에게 스파이 실패 모달 표시
+                        await showModal('스파이', '투입할 비밀 전술이 없습니다.');
                     }
                     break;
                 case 2: // 기습
@@ -1674,12 +1665,12 @@
                     addLog(`${player.name}${getJosa(player.name, '이/가')} ${opponent.name}${getJosa(opponent.name, '의')} 체력을 흡수하여 피해 1을 입히고 체력을 1 회복했습니다.`);
                     break;
                 case 1: // 전세 역전
-                    console.log('🔄 전세 역전 효과 실행');
+                    console.log('⚡ 전세 역전 효과 실행');
                     const toRevealCount = Math.min(3, state.secretStones.length);
                     if (toRevealCount > 0) {
                         const revealedStones = state.secretStones.splice(0, toRevealCount);
                         state.publiclyRevealedSecretStones.push(...revealedStones);
-                        console.log(`🔄 공개된 전술: [${revealedStones.join(', ')}]`);
+                        console.log(`⚡ 공개된 전술: [${revealedStones.join(', ')}]`);
                         addLog(`전세 역전! 비밀 전술 [${revealedStones.join(', ')}]${getJosa(revealedStones.join(', '), '이/가')} 공개되었습니다.`);
                     }
                     if (player.health < 3) player.health = Math.min(3, player.health + 2);
@@ -2324,7 +2315,7 @@
         // 전략 번호에 따른 아이콘 반환 함수
         function getSpellIcon(spellNumber) {
             const spellIcons = {
-                1: '🔄', // 전세 역전
+                1: '⚡', // 전세 역전
                 2: '💀', // 기습 작전
                 3: '🕵️', // 스파이 투입
                 4: '⚔️', // 공격
