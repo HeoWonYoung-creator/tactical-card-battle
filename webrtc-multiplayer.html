@@ -838,6 +838,7 @@
             
             const playerName = localStorage.getItem('playerName') || 'Player';
             const opponentName = multiplayerMode ? (opponentName || 'Player2') : 'AI';
+            const myPlayerId = multiplayerMode ? (isHost ? 1 : 2) : 1;
             
             state = {
                 players: [
@@ -848,7 +849,7 @@
                 usedStones: [],
                 publiclyRevealedSecretStones: [],
                 currentPlayerId: firstPlayer,
-                isPlayerTurn: firstPlayer === 1,
+                isPlayerTurn: multiplayerMode ? (firstPlayer === myPlayerId) : (firstPlayer === 1),
                 lastSuccessfulSpell: 0,
                 turnInProgress: false,
                 isGameOver: false,
@@ -1453,8 +1454,21 @@
 
         async function executeSpellEffect(playerId, spellNumber) {
             console.log(`✨ 전략 효과 실행: 플레이어 ${playerId}, 전략 ${spellNumber}`);
+            
+            // 게임 상태가 유효하지 않으면 효과 실행 건너뛰기
+            if (!state || !state.players || state.players.length < 2) {
+                console.log('⚠️ 게임 상태가 유효하지 않아 전략 효과 실행을 건너뜁니다');
+                return;
+            }
+            
             const player = state.players.find(p => p.id === playerId);
             const opponent = state.players.find(p => p.id !== playerId);
+            
+            // 플레이어 객체가 유효하지 않으면 건너뛰기
+            if (!player || !opponent) {
+                console.log('⚠️ 플레이어 객체가 유효하지 않아 전략 효과 실행을 건너뜁니다');
+                return;
+            }
             
             switch (spellNumber) {
                 case 6: // 정찰
@@ -1729,6 +1743,12 @@
         }
 
         function checkGameOver() {
+            // 게임 상태가 유효하지 않으면 게임 종료 체크 건너뛰기
+            if (!state || !state.players || state.players.length < 2 || !state.players[0] || !state.players[1]) {
+                console.log('⚠️ 게임 상태가 유효하지 않아 게임 종료 체크를 건너뜁니다');
+                return false;
+            }
+            
             const player = state.players[0];
             const ai = state.players[1];
             let winner = null;
@@ -2034,6 +2054,8 @@
             }
             
             const playerName = localStorage.getItem('playerName') || 'Player';
+            const myPlayerId = multiplayerMode ? (isHost ? 1 : 2) : 1;
+            
             state = {
                 players: [
                     { id: 1, name: playerName, health: 3, hand: deck.slice(0, 7).sort((a, b) => a - b), knownSecretStones: [] },
@@ -2043,7 +2065,7 @@
                 usedStones: [],
                 publiclyRevealedSecretStones: [],
                 currentPlayerId: firstPlayer,
-                isPlayerTurn: firstPlayer === 1,
+                isPlayerTurn: multiplayerMode ? (firstPlayer === myPlayerId) : (firstPlayer === 1),
                 lastSuccessfulSpell: 0,
                 turnInProgress: false,
                 isGameOver: false,
@@ -2948,7 +2970,26 @@
 
         // 게임 상태 업데이트
         function updateGameState(newState) {
+            console.log('🔄 게임 상태 업데이트:', newState);
+            
+            // 게임 상태가 유효한지 확인
+            if (!newState || !newState.players || newState.players.length < 2) {
+                console.log('⚠️ 받은 게임 상태가 유효하지 않음');
+                return;
+            }
+            
             state = newState;
+            
+            // 멀티플레이어에서 턴 상태 동기화
+            if (multiplayerMode) {
+                const myPlayerId = isHost ? 1 : 2;
+                const shouldBeMyTurn = (state.currentPlayerId === myPlayerId);
+                if (state.isPlayerTurn !== shouldBeMyTurn) {
+                    console.log(`🔄 게임 상태 업데이트 시 턴 동기화: isPlayerTurn ${state.isPlayerTurn} → ${shouldBeMyTurn}`);
+                    state.isPlayerTurn = shouldBeMyTurn;
+                }
+            }
+            
             render();
         }
 
