@@ -291,6 +291,10 @@
             0%, 100% { transform: scale(1); }
             50% { transform: scale(1.1); }
         }
+        
+
+        
+
         .spell-button {
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
@@ -614,6 +618,15 @@
         const debugInfo = document.getElementById('debug-info');
 
         let state = {};
+        let lastMyHealth = 3;
+        let lastOpponentHealth = 3;
+        
+        // 연승 관련 변수
+        let currentWinStreak = parseInt(localStorage.getItem('currentWinStreak')) || 0;
+        let maxWinStreak = parseInt(localStorage.getItem('maxWinStreak')) || 0;
+        
+        // 디버그: 변수 초기화 확인
+        console.log('🎮 변수 초기화:', { lastMyHealth, lastOpponentHealth });
 
         // 시각적 피드백 함수들
         function showDamageEffect(element, amount) {
@@ -651,6 +664,10 @@
                 element.classList.remove('failure-animation');
             }, 500);
         }
+
+
+
+
 
         // 디버그 패널 토글 (Ctrl+D)
         document.addEventListener('keydown', (e) => {
@@ -756,11 +773,24 @@
             // 승리 처리 (상대방이 포기했으므로 내가 승리)
             updateStats(true, true);
             
+            // 연승 처리
+            currentWinStreak++;
+            if (currentWinStreak > maxWinStreak) {
+                maxWinStreak = currentWinStreak;
+                localStorage.setItem('maxWinStreak', maxWinStreak.toString());
+            }
+            localStorage.setItem('currentWinStreak', currentWinStreak.toString());
+            
+            let message = '상대가 게임을 포기하여 승리하였습니다!';
+            if (currentWinStreak >= 2) {
+                message += `\n\n🔥 ${currentWinStreak}연승 중!`;
+            }
+            
             addLog('상대방이 게임을 포기했습니다.');
             addLog('승리가 기록되었습니다.');
             
             // 승리한 플레이어에게 메시지 표시
-            await showModal('게임 종료', '상대가 게임을 포기하여 승리하였습니다!', true);
+            await showModal('게임 종료', message, true);
             
             // 타이틀 화면으로 돌아가기
             showTitleScreen();
@@ -850,13 +880,40 @@
             const myPlayer = state.players[myPlayerId - 1];
             const opponentPlayer = state.players[2 - myPlayerId]; // 상대는 나머지 플레이어
             
-            // 체력 표시에 애니메이션 추가
-            myHealthEl.innerHTML = '❤️'.repeat(myPlayer.health);
-            opponentHealthEl.innerHTML = '❤️'.repeat(opponentPlayer.health);
+            // 하트 변화 감지 (하트 업데이트 전에)
+            const newMyHealth = myPlayer.health;
+            const newOpponentHealth = opponentPlayer.health;
+            
+            console.log(`🔍 하트 변화 체크 - 내: ${lastMyHealth} → ${newMyHealth}, 상대: ${lastOpponentHealth} → ${newOpponentHealth}`);
+            
+            // 하트 변화 감지 (로깅만)
+            if (newMyHealth < lastMyHealth) {
+                console.log(`💔 내 하트 손실: ${lastMyHealth} → ${newMyHealth}`);
+            }
+            if (newMyHealth > lastMyHealth) {
+                console.log(`💚 내 하트 회복: ${lastMyHealth} → ${newMyHealth}`);
+            }
+            if (newOpponentHealth < lastOpponentHealth) {
+                console.log(`💔 상대 하트 손실: ${lastOpponentHealth} → ${newOpponentHealth}`);
+            }
+            if (newOpponentHealth > lastOpponentHealth) {
+                console.log(`💚 상대 하트 회복: ${lastOpponentHealth} → ${newOpponentHealth}`);
+            }
+            
+            // 현재 하트 상태 저장
+            lastMyHealth = newMyHealth;
+            lastOpponentHealth = newOpponentHealth;
+            
+            // 체력 표시 업데이트 (파티클 생성 후)
+            myHealthEl.innerHTML = '<span class="health-heart">❤️</span>'.repeat(myPlayer.health);
+            opponentHealthEl.innerHTML = '<span class="health-heart">❤️</span>'.repeat(opponentPlayer.health);
             
             // 체력 하트에 애니메이션 클래스 추가
             const hearts = myHealthEl.querySelectorAll('span');
             hearts.forEach(heart => heart.classList.add('health-heart'));
+            
+            // 디버그: 하트 변화 로그
+            console.log(`💔 하트 변화 감지 - 내 하트: ${lastMyHealth} → ${newMyHealth}, 상대 하트: ${lastOpponentHealth} → ${newOpponentHealth}`);
             
             // 내 손패 (뒷면) - 항상 하단에 표시
             myHandEl.innerHTML = myPlayer.hand.map(() => `<div class="card card-back"></div>`).join('');
@@ -1020,14 +1077,13 @@
                 const isDisabled = !isMyTurn || state.turnInProgress || spellNum < state.lastSuccessfulSpell || state.isGameOver;
                 btn.disabled = isDisabled;
                 
-                // 디버그용: 버튼 상태 로그
-                if (isDisabled) {
-                    console.log(`🔘 전략 ${spellNum} 버튼 비활성화 - 이유: ${!isMyTurn ? '내 턴 아님' : state.turnInProgress ? '턴 진행 중' : spellNum < state.lastSuccessfulSpell ? '연속 전략 조건 불만족' : '게임 종료'}`);
-                }
+                // 디버그용: 버튼 상태 로그 (모든 버튼에 대해 로그)
+                console.log(`🔘 전략 ${spellNum} 버튼 - 내 플레이어ID: ${myPlayerId}, 현재 플레이어ID: ${state.currentPlayerId}, 내 턴: ${isMyTurn}, 턴 진행중: ${state.turnInProgress}, 마지막 성공: ${state.lastSuccessfulSpell}, 게임종료: ${state.isGameOver}, 비활성화: ${isDisabled}`);
             });
             const myPlayerId = multiplayerMode ? (isHost ? 1 : 2) : 1;
             const isMyTurn = multiplayerMode ? (state.currentPlayerId === myPlayerId) : state.isPlayerTurn;
             endTurnBtn.disabled = !isMyTurn || state.turnInProgress || state.isGameOver;
+            console.log(`🔄 턴 종료 버튼 - 내 플레이어ID: ${myPlayerId}, 현재 플레이어ID: ${state.currentPlayerId}, 내 턴: ${isMyTurn}, 턴 진행중: ${state.turnInProgress}, 게임종료: ${state.isGameOver}, 비활성화: ${endTurnBtn.disabled}`);
         }
 
         async function handleSpellCast(spellNumber) {
@@ -1123,6 +1179,7 @@
             const nextPlayerName = state.isPlayerTurn ? state.players[0].name : (multiplayerMode ? state.players[1].name : 'AI');
             console.log(`🔄 턴 전환: ${nextPlayerName} 턴`);
             render();
+            updateButtons(); // 버튼 상태 업데이트 추가
             
             if (checkGameOver()) return;
 
@@ -1133,6 +1190,11 @@
                 // 멀티플레이어에서 상대방 턴 시작 로그
                 const opponentName = state.players[1].name;
                 addLog(`${opponentName}${getJosa(opponentName, '의')} 턴이 시작되었습니다.`);
+            } else if (state.isPlayerTurn && multiplayerMode) {
+                // 멀티플레이어에서 내 턴 시작 로그
+                const myPlayerId = isHost ? 1 : 2;
+                const myName = state.players[myPlayerId - 1].name;
+                addLog(`${myName}${getJosa(myName, '의')} 턴이 시작되었습니다.`);
             }
         }
 
@@ -1443,6 +1505,25 @@
                 // 전적 업데이트
                 const isPlayerWin = winner.id === 1;
                 updateStats(isPlayerWin, multiplayerMode);
+                
+                // 연승 처리
+                if (isPlayerWin) {
+                    currentWinStreak++;
+                    if (currentWinStreak > maxWinStreak) {
+                        maxWinStreak = currentWinStreak;
+                        localStorage.setItem('maxWinStreak', maxWinStreak.toString());
+                    }
+                    localStorage.setItem('currentWinStreak', currentWinStreak.toString());
+                    
+                    // 2연승 이상일 때 연승 메시지 추가
+                    if (currentWinStreak >= 2) {
+                        message += `\n\n🔥 ${currentWinStreak}연승 중!`;
+                    }
+                } else {
+                    // 패배 시 연승 초기화
+                    currentWinStreak = 0;
+                    localStorage.setItem('currentWinStreak', '0');
+                }
                 
                 // 승리/패배 사운드
                 playGameOverSound(winner.id === 1);
@@ -2074,6 +2155,19 @@
                                     </div>
                                 </div>
                             </div>
+                            <div class="text-center">
+                                <h4 class="text-lg font-bold mb-3 text-orange-300">🔥 연승 기록</h4>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div class="bg-orange-900 bg-opacity-30 p-3 rounded-lg">
+                                        <div class="text-xl font-bold text-orange-400">${maxWinStreak}연승</div>
+                                        <div class="text-xs">최고 연승</div>
+                                    </div>
+                                    <div class="bg-yellow-900 bg-opacity-30 p-3 rounded-lg">
+                                        <div class="text-xl font-bold text-yellow-400">${currentWinStreak}연승</div>
+                                        <div class="text-xs">현재 연승</div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     <div class="flex space-x-2 mt-4">
@@ -2530,6 +2624,7 @@
                 state.currentPlayerId = state.currentPlayerId === 1 ? 2 : 1;
             }
             render();
+            updateButtons(); // 버튼 상태 업데이트 추가
         }
 
         // 게임 종료 처리
