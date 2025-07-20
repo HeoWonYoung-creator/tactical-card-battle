@@ -364,6 +364,19 @@
             0% { transform: translateY(0); opacity: 1; }
             100% { transform: translateY(-30px); opacity: 0; }
         }
+        
+        /* 새로고침 버튼 스타일 */
+        #refresh-game-btn {
+            transition: all 0.3s ease;
+            opacity: 0.8;
+        }
+        #refresh-game-btn:hover {
+            opacity: 1;
+            transform: scale(1.02);
+        }
+        #refresh-game-btn:active {
+            transform: scale(0.98);
+        }
     </style>
 </head>
 <body class="flex items-center justify-center min-h-screen p-4">
@@ -455,6 +468,13 @@
         <!-- 하단 버튼 영역 -->
         <div class="flex justify-between items-center p-2">
             <button id="surrender-btn" class="px-6 py-2 rounded-lg font-bold btn-secondary text-sm whitespace-nowrap">포기</button>
+            
+            <!-- 새로고침 버튼 (중앙) -->
+            <button id="refresh-game-btn" class="px-4 py-2 rounded-lg font-bold btn-secondary text-sm whitespace-nowrap flex items-center space-x-2">
+                <span>🔄</span>
+                <span>새로고침</span>
+            </button>
+            
             <div class="relative">
                 <button id="help-btn" class="px-6 py-2 rounded-lg font-bold btn-secondary text-sm whitespace-nowrap min-w-[100px]" 
                         onmousedown="showHelpTooltip()" onmouseup="hideHelpTooltip()" onmouseleave="hideHelpTooltip()"
@@ -864,6 +884,11 @@
                 gameStarted: state.gameStarted,
                 isGameOver: state.isGameOver
             });
+            
+            // 게임 상태 안전 새로고침 실행
+            setTimeout(() => {
+                safeRefreshGameState();
+            }, 500);
         }
 
         function updateDebugInfo() {
@@ -976,6 +1001,26 @@
             if (state.gameStarted && !state.isGameOver) {
                 showMemoPanel();
             }
+            
+            // 게임 상태가 이상한 경우 자동 복구
+            if (multiplayerMode && (!state.players || state.players.length < 2)) {
+                console.log('⚠️ 게임 상태 이상 감지, 자동 복구 시도');
+                setTimeout(() => {
+                    safeRefreshGameState();
+                }, 1000);
+            }
+            
+            // 턴 상태 모니터링
+            if (multiplayerMode && state.players && state.players.length >= 2) {
+                const myPlayerId = isHost ? 1 : 2;
+                const isMyTurn = (state.currentPlayerId === myPlayerId);
+                if (state.isPlayerTurn !== isMyTurn) {
+                    console.log(`⚠️ 턴 상태 불일치 감지 - 내 턴: ${state.isPlayerTurn}, 실제 턴: ${isMyTurn}`);
+                    setTimeout(() => {
+                        safeRefreshGameState();
+                    }, 2000);
+                }
+            }
         }
 
         function createSpellButtons() {
@@ -983,7 +1028,7 @@
             spellButtonsContainer.innerHTML = '';
             
             const spellData = [
-                { number: 1, name: '전세 역전', icon: '🔄', desc: '비밀 전술 3개 공개,<br>병력 2 회복' },
+                { number: 1, name: '전세 역전', icon: '⚡', desc: '비밀 전술 3개 공개,<br>병력 2 회복' },
                 { number: 2, name: '기습', icon: '💀', desc: '피해 1, 회복 1' },
                 { number: 3, name: '스파이', icon: '🕵️', desc: '공개되지 않은 비밀 전술<br>하나를 상대 패에 투입' },
                 { number: 4, name: '공격', icon: '⚔️', desc: '피해 1' },
@@ -998,7 +1043,7 @@
                     <div class="text-xs font-bold">${spell.number}: ${spell.name}</div>
                     <div class="text-xs opacity-75">${spell.desc}</div>
                 `;
-                button.classList.add('py-3', 'rounded-lg', 'font-bold', 'btn-primary', 'spell-button', 'flex', 'flex-col', 'items-center', 'justify-center', 'h-20');
+                button.classList.add('py-3', 'rounded-lg', 'font-bold', 'btn-primary', 'spell-button', 'flex', 'flex-col', 'items-center', 'justify-center', 'h-24');
                 button.dataset.spell = spell.number;
                 button.addEventListener('click', () => handleSpellCast(spell.number));
                 
@@ -1093,12 +1138,120 @@
             console.log('📝 메모 패널 항상 표시');
         }
 
+        // 게임 상태 안전 새로고침 함수
+        function safeRefreshGameState() {
+            console.log('🔄 게임 상태 안전 새로고침 시작');
+            
+            try {
+                // 현재 게임 상태 백업
+                const currentState = { ...state };
+                const currentPlayerName = localStorage.getItem('playerName') || 'Player';
+                
+                // 상대방 이름을 더 안전하게 가져오기
+                let currentOpponentName = 'Player2';
+                if (opponentName) {
+                    currentOpponentName = opponentName;
+                } else if (state.players && state.players.length >= 2) {
+                    // 게임 상태에서 상대방 이름 가져오기
+                    const myPlayerId = isHost ? 1 : 2;
+                    const opponentPlayer = state.players.find(p => p.id !== myPlayerId);
+                    if (opponentPlayer && opponentPlayer.name) {
+                        currentOpponentName = opponentPlayer.name;
+                    }
+                }
+                
+                // 기본 UI 요소들 강제 새로고침
+                createSpellButtons();
+                
+                // 내 이름만 업데이트 (상대방 이름은 건드리지 않음)
+                const myTitle = document.getElementById('my-title');
+                if (myTitle) {
+                    myTitle.textContent = `나 (${currentPlayerName})`;
+                }
+                
+                // 상대방 이름도 안전하게 업데이트
+                updateOpponentName();
+                
+                // 상대방 이름 업데이트
+                const opponentArea = document.getElementById('opponent-area');
+                const opponentTitle = opponentArea.querySelector('h2');
+                if (opponentTitle) {
+                    // 현재 표시된 이름이 있으면 유지, 없으면 새로 설정
+                    const currentDisplayName = opponentTitle.textContent;
+                    if (currentDisplayName && currentDisplayName !== '상대') {
+                        // 이미 표시된 이름이 있으면 유지
+                        console.log('상대방 이름 유지:', currentDisplayName);
+                    } else {
+                        opponentTitle.textContent = `상대 (${currentOpponentName})`;
+                        console.log('상대방 이름 설정:', currentOpponentName);
+                    }
+                }
+                
+                // 게임 상태가 유효한지 확인하고 복구
+                if (!state.players || state.players.length < 2) {
+                    console.log('⚠️ 게임 상태 복구 필요');
+                    // 기본 게임 상태로 복구
+                    if (multiplayerMode) {
+                        const myPlayerId = isHost ? 1 : 2;
+                        state = {
+                            players: [
+                                { id: 1, name: currentPlayerName, health: 3, hand: [], knownSecretStones: [] },
+                                { id: 2, name: currentOpponentName, health: 3, hand: [], knownSecretStones: [] }
+                            ],
+                            secretStones: [],
+                            usedStones: [],
+                            publiclyRevealedSecretStones: [],
+                            currentPlayerId: 1,
+                            isPlayerTurn: (myPlayerId === 1),
+                            lastSuccessfulSpell: 0,
+                            turnInProgress: false,
+                            isGameOver: false,
+                            gameStarted: true,
+                            gameLog: ['게임 상태가 복구되었습니다.']
+                        };
+                    }
+                } else {
+                    // 게임 상태는 유효하지만 턴 상태를 재확인
+                    if (multiplayerMode) {
+                        const myPlayerId = isHost ? 1 : 2;
+                        const shouldBeMyTurn = (state.currentPlayerId === myPlayerId);
+                        if (state.isPlayerTurn !== shouldBeMyTurn) {
+                            console.log(`🔄 턴 상태 수정: ${state.isPlayerTurn} → ${shouldBeMyTurn}`);
+                            state.isPlayerTurn = shouldBeMyTurn;
+                        }
+                    }
+                }
+                
+                // UI 강제 새로고침
+                render();
+                updateButtons();
+                updateDebugInfo();
+                
+                // 메모 패널 표시
+                showMemoPanel();
+                
+                console.log('✅ 게임 상태 안전 새로고침 완료');
+                
+            } catch (error) {
+                console.error('❌ 게임 상태 새로고침 실패:', error);
+                addLog('❌ 게임 상태 새로고침 중 오류가 발생했습니다.');
+            }
+        }
+
         function updateButtons() {
             const buttons = spellButtonsContainer.querySelectorAll('button');
             const myPlayerId = multiplayerMode ? (isHost ? 1 : 2) : 1;
             const isMyTurn = multiplayerMode ? (state.currentPlayerId === myPlayerId) : state.isPlayerTurn;
             
             console.log(`🎮 버튼 업데이트 - 내 플레이어ID: ${myPlayerId}, 현재 플레이어ID: ${state.currentPlayerId}, 내 턴: ${isMyTurn}, 턴 진행중: ${state.turnInProgress}, 게임종료: ${state.isGameOver}`);
+            
+            // 턴 상태가 이상한 경우 자동 새로고침
+            if (multiplayerMode && state.isPlayerTurn && !isMyTurn) {
+                console.log('⚠️ 턴 상태 불일치 감지 - 자동 새로고침 실행');
+                setTimeout(() => {
+                    safeRefreshGameState();
+                }, 1000);
+            }
             
             buttons.forEach(btn => {
                 const spellNum = parseInt(btn.dataset.spell);
@@ -1254,6 +1407,12 @@
                 const myPlayerId = isHost ? 1 : 2;
                 const myName = state.players[myPlayerId - 1].name;
                 addLog(`${myName}${getJosa(myName, '의')} 턴이 시작되었습니다.`);
+                
+                // 내 턴 시작 시 자동 새로고침 실행
+                console.log('🎯 내 턴 시작 - 자동 새로고침 실행');
+                setTimeout(() => {
+                    safeRefreshGameState();
+                }, 500);
             }
         }
 
@@ -2289,6 +2448,42 @@
             }
         }
         
+        function updateOpponentName() {
+            const opponentArea = document.getElementById('opponent-area');
+            const opponentTitle = opponentArea.querySelector('h2');
+            if (opponentTitle) {
+                let displayName;
+                let titleClass = 'text-xl font-bold text-green-300';
+                
+                if (multiplayerMode) {
+                    // 멀티플레이어 모드: 실제 유저
+                    displayName = opponentName || 'Player';
+                } else {
+                    // 싱글플레이어 모드: AI
+                    displayName = 'AI';
+                    
+                    // AI 난이도별 색상 설정
+                    switch(aiDifficulty) {
+                        case 'easy':
+                            titleClass = 'text-xl font-bold text-green-300';
+                            break;
+                        case 'normal':
+                            titleClass = 'text-xl font-bold text-yellow-300';
+                            break;
+                        case 'hard':
+                            titleClass = 'text-xl font-bold text-red-300';
+                            break;
+                        default:
+                            titleClass = 'text-xl font-bold text-red-300';
+                    }
+                }
+                
+                opponentTitle.textContent = `상대 (${displayName})`;
+                opponentTitle.className = titleClass;
+                console.log('👤 상대방 이름 업데이트:', displayName, '모드:', multiplayerMode ? '멀티플레이어' : '싱글플레이어');
+            }
+        }
+        
         function showSurrenderConfirmModal() {
             const modal = document.createElement('div');
             modal.className = 'fixed inset-0 flex items-center justify-center z-50 modal-bg';
@@ -2359,6 +2554,9 @@
                 console.log('✅ 매칭 성공:', data);
                 opponentName = data.opponent.name;
                 isHost = data.isHost;
+                
+                // 상대방 이름 즉시 업데이트
+                updateOpponentName();
                 
                 // 매칭 모달 숨기기
                 const matchingModal = document.getElementById('matching-modal');
@@ -2452,11 +2650,8 @@
             // 플레이어 이름 업데이트
             updatePlayerName();
             
-            // 상대방 정보 표시
-            const opponentArea = document.getElementById('opponent-area');
-            const opponentTitle = opponentArea.querySelector('h2');
-            opponentTitle.textContent = `상대 (${opponentName || 'Player2'})`;
-            opponentTitle.className = 'text-xl font-bold text-green-300';
+            // 상대방 정보 표시 (즉시 업데이트)
+            updateOpponentName();
             
             // 호스트인 경우에만 게임 초기화 (게스트는 호스트의 결정을 기다림)
             if (isHost) {
@@ -2478,6 +2673,11 @@
                 createSpellButtons();
                 updatePlayerName();
                 render();
+                
+                // 게스트의 경우 안전 새로고침 실행
+                setTimeout(() => {
+                    safeRefreshGameState();
+                }, 1000);
             }
         }
 
@@ -2635,6 +2835,7 @@
                     handleCardPlayed(message.card, message.playerId, message.gameState);
                     break;
                 case 'turnEnd':
+                    console.log('📥 턴 종료 메시지 수신');
                     handleTurnEnd(message.gameState);
                     break;
                 case 'gameOver':
@@ -2698,6 +2899,14 @@
                 // 턴 전환 후 현재 플레이어 턴 시작 로그
                 const currentPlayerName = state.currentPlayerId === 1 ? state.players[0].name : state.players[1].name;
                 addLog(`${currentPlayerName}${getJosa(currentPlayerName, '의')} 턴이 시작되었습니다.`);
+                
+                // 턴을 받은 플레이어의 경우 자동 새로고침 실행
+                if (multiplayerMode && state.isPlayerTurn) {
+                    console.log('🎯 내 턴 시작 - 자동 새로고침 실행');
+                    setTimeout(() => {
+                        safeRefreshGameState();
+                    }, 500);
+                }
             } else {
                 state.isPlayerTurn = !state.isPlayerTurn;
                 state.currentPlayerId = state.currentPlayerId === 1 ? 2 : 1;
@@ -2735,31 +2944,16 @@
             resetGame();
             
             // AI 정보 표시 (난이도별)
-            const aiArea = document.getElementById('ai-area');
-            const aiTitle = aiArea.querySelector('h2');
             const difficultyText = aiDifficulty === 'easy' ? '쉬움' : aiDifficulty === 'normal' ? '보통' : '어려움';
             const aiName = `AI ${difficultyText}`;
-            aiTitle.textContent = `상대 (${aiName})`;
             
             // 게임 상태 초기화 시 AI 이름 설정
             if (state.players && state.players[1]) {
                 state.players[1].name = aiName;
             }
             
-            // 난이도별 색상
-            switch(aiDifficulty) {
-                case 'easy':
-                    aiTitle.className = 'text-xl font-bold text-green-300';
-                    break;
-                case 'normal':
-                    aiTitle.className = 'text-xl font-bold text-yellow-300';
-                    break;
-                case 'hard':
-                    aiTitle.className = 'text-xl font-bold text-red-300';
-                    break;
-                default:
-                    aiTitle.className = 'text-xl font-bold text-red-300';
-            }
+            // 상대방 이름 업데이트
+            updateOpponentName();
         }
         
         // AI 난이도 선택 모달 표시
@@ -2845,6 +3039,9 @@
         
         // 포기 버튼 이벤트 리스너
         document.getElementById('surrender-btn').addEventListener('click', surrenderGame);
+        
+        // 새로고침 버튼 이벤트 리스너
+        document.getElementById('refresh-game-btn').addEventListener('click', safeRefreshGameState);
         
         // 내 정보 버튼 이벤트 리스너
         document.getElementById('profile-btn').addEventListener('click', showProfileModal);
