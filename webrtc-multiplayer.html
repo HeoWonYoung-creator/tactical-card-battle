@@ -845,8 +845,8 @@
             const player = state.players[0];
             const opponent = state.players[1];
             
-            // 내가 플레이어 1인지 2인지에 따라 표시할 정보 결정
-            const myPlayerId = 1; // 항상 플레이어 1로 고정
+            // 멀티플레이어에서는 호스트가 플레이어 1, 게스트가 플레이어 2
+            const myPlayerId = multiplayerMode ? (isHost ? 1 : 2) : 1;
             const myPlayer = state.players[myPlayerId - 1];
             const opponentPlayer = state.players[2 - myPlayerId]; // 상대는 나머지 플레이어
             
@@ -1015,7 +1015,8 @@
             buttons.forEach(btn => {
                 const spellNum = parseInt(btn.dataset.spell);
                 // 멀티플레이어에서는 현재 플레이어의 턴일 때만 활성화
-                const isMyTurn = multiplayerMode ? (state.currentPlayerId === 1) : state.isPlayerTurn;
+                const myPlayerId = multiplayerMode ? (isHost ? 1 : 2) : 1;
+                const isMyTurn = multiplayerMode ? (state.currentPlayerId === myPlayerId) : state.isPlayerTurn;
                 const isDisabled = !isMyTurn || state.turnInProgress || spellNum < state.lastSuccessfulSpell || state.isGameOver;
                 btn.disabled = isDisabled;
                 
@@ -1024,14 +1025,16 @@
                     console.log(`🔘 전략 ${spellNum} 버튼 비활성화 - 이유: ${!isMyTurn ? '내 턴 아님' : state.turnInProgress ? '턴 진행 중' : spellNum < state.lastSuccessfulSpell ? '연속 전략 조건 불만족' : '게임 종료'}`);
                 }
             });
-            const isMyTurn = multiplayerMode ? (state.currentPlayerId === 1) : state.isPlayerTurn;
+            const myPlayerId = multiplayerMode ? (isHost ? 1 : 2) : 1;
+            const isMyTurn = multiplayerMode ? (state.currentPlayerId === myPlayerId) : state.isPlayerTurn;
             endTurnBtn.disabled = !isMyTurn || state.turnInProgress || state.isGameOver;
         }
 
         async function handleSpellCast(spellNumber) {
             console.log(`🎯 전략 시도: ${spellNumber}번`);
             // 멀티플레이어에서는 현재 플레이어의 턴일 때만 활성화
-            const isMyTurn = multiplayerMode ? (state.currentPlayerId === 1) : state.isPlayerTurn;
+            const myPlayerId = multiplayerMode ? (isHost ? 1 : 2) : 1;
+            const isMyTurn = multiplayerMode ? (state.currentPlayerId === myPlayerId) : state.isPlayerTurn;
             if (!isMyTurn || state.turnInProgress || state.isGameOver) {
                 console.log('❌ 전략 시도 실패 - 조건 불만족');
                 return;
@@ -1055,10 +1058,11 @@
                 
                 // 멀티플레이어 모드에서 상대방에게 전송
                 if (multiplayerMode && dataChannel && dataChannel.readyState === 'open') {
+                    const myPlayerId = isHost ? 1 : 2;
                     dataChannel.send(JSON.stringify({
                         type: 'cardPlayed',
                         card: spellNumber,
-                        playerId: 1,
+                        playerId: myPlayerId,
                         gameState: state
                     }));
                 }
@@ -1067,24 +1071,18 @@
                 playSuccessSound();
                 addSuccessAnimation(myArea);
                 
-                                    addLog(`✅ ${state.players[0].name}${getJosa(state.players[0].name, '이/가')} ${spellNumber}번 전략을 성공적으로 실행했습니다!`);
+                                    const myPlayerId = multiplayerMode ? (isHost ? 1 : 2) : 1;
+                addLog(`✅ ${state.players[myPlayerId - 1].name}${getJosa(state.players[myPlayerId - 1].name, '이/가')} ${spellNumber}번 전략을 성공적으로 실행했습니다!`);
                 render();
-                await executeSpellEffect(1, spellNumber);
+                await executeSpellEffect(myPlayerId, spellNumber);
                 state.lastSuccessfulSpell = spellNumber;
                 
                 // 성공한 경우 연속 전략 가능하도록 턴 유지
                 state.turnInProgress = false;
                 updateButtons();
                 
-                // 연속 전략 가능한지 확인
-                const availableSpells = player.hand.filter(spell => spell >= spellNumber);
-                if (availableSpells.length > 0) {
-                    addLog(`💡 연속 전략이 가능합니다! ${spellNumber}번 이상의 전략을 선택하거나 턴을 종료하세요.`);
-                } else {
-                    addLog(`💡 더 이상 연속 전략이 불가능합니다. 턴을 종료합니다.`);
-                    await sleep(1000);
-                    endTurn();
-                }
+                // 연속 전략 안내 메시지
+                addLog(`💡 연속 전략이 가능합니다! ${spellNumber}번 이상의 전략을 선택하거나 턴을 종료하세요.`);
                 return;
             } else {
                 player.health--;
@@ -1095,7 +1093,8 @@
                 addFailureAnimation(myArea);
                 showDamageEffect(myArea, 1);
                 
-                addLog(`❌ ${state.players[0].name}${getJosa(state.players[0].name, '이/가')} ${spellNumber}번 전략을 실행했지만 실패하여, 병력이 1 감소하였습니다.`);
+                const myPlayerId = multiplayerMode ? (isHost ? 1 : 2) : 1;
+                addLog(`❌ ${state.players[myPlayerId - 1].name}${getJosa(state.players[myPlayerId - 1].name, '이/가')} ${spellNumber}번 전략을 실행했지만 실패하여, 병력이 1 감소하였습니다.`);
                 render();
                 await sleep(1000);
                 endTurn();
@@ -1686,8 +1685,8 @@
             } else if (multiplayerMode && !isHost) {
                 // 게스트는 호스트의 결정을 기다림
                 console.log('⏳ 호스트의 첫 번째 턴 결정 대기 중...');
-                // 임시로 기본값 설정 (호스트의 결정으로 덮어씌워짐)
-                firstPlayer = 1;
+                // 게스트는 호스트의 결정을 기다리므로 게임 초기화를 하지 않음
+                return;
             } else {
                 // AI 모드에서는 랜덤 결정
                 firstPlayer = Math.random() < 0.5 ? 1 : 2;
@@ -2497,6 +2496,13 @@
                 // 상대방이 보낸 게임 상태로 업데이트
                 state = gameState;
                 console.log('🔄 게임 상태 동기화됨');
+                
+                // 상대방의 카드 플레이 효과 실행
+                const player = state.players.find(p => p.id === playerId);
+                const opponent = state.players.find(p => p.id !== playerId);
+                
+                // 카드 효과 실행 (상대방이 플레이한 카드)
+                executeSpellEffect(playerId, card);
             } else {
                 // 카드 효과 적용
                 const player = state.players.find(p => p.id === playerId);
@@ -2655,9 +2661,10 @@
         endTurnBtn.addEventListener('click', () => {
             console.log('🔄 턴 종료 버튼 클릭');
             // 멀티플레이어에서는 현재 플레이어의 턴일 때만 활성화
-            const isMyTurn = multiplayerMode ? (state.currentPlayerId === 1) : state.isPlayerTurn;
+            const myPlayerId = multiplayerMode ? (isHost ? 1 : 2) : 1;
+            const isMyTurn = multiplayerMode ? (state.currentPlayerId === myPlayerId) : state.isPlayerTurn;
             if (isMyTurn && !state.turnInProgress && !state.isGameOver) {
-                addLog(`- ${state.players[0].name}${getJosa(state.players[0].name, '이/가')} 턴을 수동으로 종료했습니다.`);
+                addLog(`- ${state.players[myPlayerId - 1].name}${getJosa(state.players[myPlayerId - 1].name, '이/가')} 턴을 수동으로 종료했습니다.`);
                 endTurn();
             }
         });
