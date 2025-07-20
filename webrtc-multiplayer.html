@@ -1120,7 +1120,7 @@
             spellButtonsContainer.innerHTML = '';
             
             const spellData = [
-                { number: 1, name: '운명 변환', icon: '🔮', desc: '비밀 주문 3개 공개,<br>회복 2' },
+                { number: 1, name: '운명 변환', icon: '🔮', desc: '비밀 주문 3개 공개' },
                 { number: 2, name: '마력 착취', icon: '💫', desc: '피해 1, 회복 1' },
                 { number: 3, name: '정신 교란', icon: '🌀', desc: '공개되지 않은 비밀 주문<br>하나를 상대 패에 투입' },
                 { number: 4, name: '화염 화살', icon: '🔥', desc: '피해 1' },
@@ -1635,11 +1635,6 @@
                         console.log(`🔮 공개된 주문: [${revealedStones.join(', ')}]`);
                         addLog(`운명 변환! 비밀 주문 [${revealedStones.join(', ')}]${getJosa(revealedStones.join(', '), '이/가')} 공개되었습니다.`);
                     }
-                    if (player.health < 3) player.health = Math.min(3, player.health + 2);
-                    console.log(`💚 운명 변환 회복: ${player.name} 체력 ${player.health}`);
-                    playHealSound();
-                    showHealEffect(player.id === 1 ? myArea : opponentArea, 2);
-                    addLog(`${player.name}${getJosa(player.name, '의')} 체력이 2 회복되었습니다.`);
                     break;
             }
             render();
