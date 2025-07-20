@@ -915,6 +915,12 @@
                 return;
             }
             
+            // 플레이어 객체들이 유효한지 추가 검사
+            if (!state.players[0] || !state.players[1]) {
+                console.log('⚠️ 플레이어 객체가 유효하지 않아 렌더링을 건너뜁니다');
+                return;
+            }
+            
             const player = state.players[0];
             const opponent = state.players[1];
             
@@ -1193,7 +1199,7 @@
                 }
                 
                 // 게임 상태가 유효한지 확인하고 복구
-                if (!state.players || state.players.length < 2) {
+                if (!state.players || state.players.length < 2 || !state.players[0] || !state.players[1]) {
                     console.log('⚠️ 게임 상태 복구 필요');
                     // 기본 게임 상태로 복구
                     if (multiplayerMode) {
@@ -2718,25 +2724,26 @@
                 updatePlayerName();
                 
                 // 기본 게임 상태 초기화 (렌더링 전에)
-                if (!state || !state.players || state.players.length < 2) {
-                    console.log('🔄 게스트: 기본 게임 상태 초기화');
-                    state = {
-                        players: [
-                            { id: 1, name: playerName, health: 3, hand: [], knownSecretStones: [] },
-                            { id: 2, name: opponentName || 'Player2', health: 3, hand: [], knownSecretStones: [] }
-                        ],
-                        secretStones: [],
-                        usedStones: [],
-                        publiclyRevealedSecretStones: [],
-                        currentPlayerId: 1,
-                        isPlayerTurn: false, // 게스트는 처음에 턴이 아님
-                        lastSuccessfulSpell: 0,
-                        turnInProgress: false,
-                        isGameOver: false,
-                        gameStarted: true,
-                        gameLog: ['게임이 시작되었습니다. 호스트의 결정을 기다리는 중...']
-                    };
-                }
+                console.log('🔄 게스트: 기본 게임 상태 초기화');
+                state = {
+                    players: [
+                        { id: 1, name: playerName, health: 3, hand: [], knownSecretStones: [] },
+                        { id: 2, name: opponentName || 'Player2', health: 3, hand: [], knownSecretStones: [] }
+                    ],
+                    secretStones: [],
+                    usedStones: [],
+                    publiclyRevealedSecretStones: [],
+                    currentPlayerId: 1,
+                    isPlayerTurn: false, // 게스트는 처음에 턴이 아님
+                    lastSuccessfulSpell: 0,
+                    turnInProgress: false,
+                    isGameOver: false,
+                    gameStarted: true,
+                    gameLog: ['게임이 시작되었습니다. 호스트의 결정을 기다리는 중...']
+                };
+                
+                // 게임 상태가 올바르게 초기화되었는지 확인
+                console.log('✅ 게임 상태 초기화 완료:', state);
                 
                 render();
                 
@@ -2883,7 +2890,7 @@
             console.log('📨 받은 메시지:', message);
             
             // 게임 상태가 유효하지 않으면 기본 상태로 초기화
-            if (!state || !state.players || state.players.length < 2) {
+            if (!state || !state.players || state.players.length < 2 || !state.players[0] || !state.players[1]) {
                 console.log('⚠️ 게임 상태가 유효하지 않아 기본 상태로 초기화');
                 const currentPlayerName = localStorage.getItem('playerName') || 'Player';
                 state = {
@@ -2902,6 +2909,7 @@
                     gameStarted: true,
                     gameLog: ['게임 상태가 복구되었습니다.']
                 };
+                console.log('✅ 게임 상태 복구 완료:', state);
             }
             
             switch (message.type) {
