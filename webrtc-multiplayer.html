@@ -852,6 +852,15 @@
             
             // 게임 시작 사운드
             playGameStartSound();
+            
+            // 디버그: UI 상태 확인
+            console.log('🎮 게임 UI 렌더링 완료');
+            console.log('📊 현재 상태:', {
+                isPlayerTurn: state.isPlayerTurn,
+                currentPlayerId: state.currentPlayerId,
+                gameStarted: state.gameStarted,
+                isGameOver: state.isGameOver
+            });
         }
 
         function updateDebugInfo() {
@@ -1766,8 +1775,8 @@
             } else if (multiplayerMode && !isHost) {
                 // 게스트는 호스트의 결정을 기다림
                 console.log('⏳ 호스트의 첫 번째 턴 결정 대기 중...');
-                // 게스트는 호스트의 결정을 기다리므로 게임 초기화를 하지 않음
-                return;
+                // 게스트도 기본 게임 상태는 초기화하되, 첫 번째 턴은 호스트의 결정을 기다림
+                firstPlayer = 1; // 임시값, 호스트가 결정한 값으로 덮어씌워짐
             } else {
                 // AI 모드에서는 랜덤 결정
                 firstPlayer = Math.random() < 0.5 ? 1 : 2;
@@ -2399,16 +2408,26 @@
             opponentTitle.textContent = `상대 (${opponentName || 'Player2'})`;
             opponentTitle.className = 'text-xl font-bold text-green-300';
             
-            // 게임 초기화
-            resetGame();
-            
-            // 호스트인 경우 초기 게임 상태를 상대방에게 전송
-            if (isHost && dataChannel && dataChannel.readyState === 'open') {
-                console.log('📤 초기 게임 상태 전송');
-                dataChannel.send(JSON.stringify({
-                    type: 'gameState',
-                    state: state
-                }));
+            // 호스트인 경우에만 게임 초기화 (게스트는 호스트의 결정을 기다림)
+            if (isHost) {
+                console.log('🎯 호스트: 게임 초기화 시작');
+                resetGame();
+                
+                // 호스트인 경우 초기 게임 상태를 상대방에게 전송
+                if (dataChannel && dataChannel.readyState === 'open') {
+                    console.log('📤 초기 게임 상태 전송');
+                    dataChannel.send(JSON.stringify({
+                        type: 'gameState',
+                        state: state
+                    }));
+                }
+            } else {
+                console.log('⏳ 게스트: 호스트의 게임 초기화 대기 중...');
+                // 게스트는 호스트의 firstTurn 메시지를 기다림
+                // 기본 UI 렌더링을 위해 빈 상태로 초기화
+                createSpellButtons();
+                updatePlayerName();
+                render();
             }
         }
 
@@ -2549,7 +2568,10 @@
             switch (message.type) {
                 case 'gameStart':
                     opponentName = isHost ? message.guestName : message.hostName;
-                    startMultiplayerGame();
+                    // 게스트인 경우에만 startMultiplayerGame 호출 (호스트는 이미 호출됨)
+                    if (!isHost) {
+                        startMultiplayerGame();
+                    }
                     break;
                 case 'firstTurn':
                     console.log(`🎯 호스트의 첫 번째 턴 결정 수신: 플레이어 ${message.firstPlayer}`);
