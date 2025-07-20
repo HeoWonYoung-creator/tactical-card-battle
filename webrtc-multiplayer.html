@@ -300,6 +300,9 @@
             position: relative;
             overflow: hidden;
             font-family: 'Exo 2', sans-serif;
+            /* 비활성화된 버튼도 항상 보이도록 설정 */
+            display: block !important;
+            visibility: visible !important;
         }
         .spell-button:hover:not(:disabled) {
             transform: translateY(-3px) scale(1.05);
@@ -958,6 +961,14 @@
             // 현재 턴에 따라 영역 하이라이트 (내 턴이면 내 영역, 상대 턴이면 상대 영역)
             myArea.classList.toggle('player-area-glow', state.currentPlayerId === 1 && !state.isGameOver);
             opponentArea.classList.toggle('player-area-glow', state.currentPlayerId === 2 && !state.isGameOver);
+            
+            // 버튼들이 항상 보이도록 강제 설정
+            const spellButtons = spellButtonsContainer.querySelectorAll('button');
+            spellButtons.forEach(btn => {
+                btn.style.display = 'block';
+                btn.style.visibility = 'visible';
+            });
+            
             updateButtons();
             updateDebugInfo();
             
@@ -990,7 +1001,13 @@
                 button.classList.add('py-3', 'rounded-lg', 'font-bold', 'btn-primary', 'spell-button', 'flex', 'flex-col', 'items-center', 'justify-center', 'h-20');
                 button.dataset.spell = spell.number;
                 button.addEventListener('click', () => handleSpellCast(spell.number));
+                
+                // 버튼이 항상 보이도록 강제 설정
+                button.style.display = 'block';
+                button.style.visibility = 'visible';
+                
                 spellButtonsContainer.appendChild(button);
+                console.log(`🔘 전략 ${spell.number} 버튼 생성 완료`);
             });
             
             createMemoButtons();
@@ -1078,20 +1095,42 @@
 
         function updateButtons() {
             const buttons = spellButtonsContainer.querySelectorAll('button');
-            buttons.forEach(btn => {
-                const spellNum = parseInt(btn.dataset.spell);
-                // 멀티플레이어에서는 현재 플레이어의 턴일 때만 활성화
-                const myPlayerId = multiplayerMode ? (isHost ? 1 : 2) : 1;
-                const isMyTurn = multiplayerMode ? (state.currentPlayerId === myPlayerId) : state.isPlayerTurn;
-                const isDisabled = !isMyTurn || state.turnInProgress || spellNum < state.lastSuccessfulSpell || state.isGameOver;
-                btn.disabled = isDisabled;
-                
-                // 디버그용: 버튼 상태 로그 (모든 버튼에 대해 로그)
-                console.log(`🔘 전략 ${spellNum} 버튼 - 내 플레이어ID: ${myPlayerId}, 현재 플레이어ID: ${state.currentPlayerId}, 내 턴: ${isMyTurn}, 턴 진행중: ${state.turnInProgress}, 마지막 성공: ${state.lastSuccessfulSpell}, 게임종료: ${state.isGameOver}, 비활성화: ${isDisabled}`);
-            });
             const myPlayerId = multiplayerMode ? (isHost ? 1 : 2) : 1;
             const isMyTurn = multiplayerMode ? (state.currentPlayerId === myPlayerId) : state.isPlayerTurn;
+            
+            console.log(`🎮 버튼 업데이트 - 내 플레이어ID: ${myPlayerId}, 현재 플레이어ID: ${state.currentPlayerId}, 내 턴: ${isMyTurn}, 턴 진행중: ${state.turnInProgress}, 게임종료: ${state.isGameOver}`);
+            
+            buttons.forEach(btn => {
+                const spellNum = parseInt(btn.dataset.spell);
+                const isDisabled = !isMyTurn || state.turnInProgress || spellNum < state.lastSuccessfulSpell || state.isGameOver;
+                
+                // 버튼을 완전히 숨기지 말고 비활성화만 하기
+                btn.disabled = isDisabled;
+                
+                // 비활성화된 버튼도 시각적으로 보이도록 스타일 조정
+                if (isDisabled) {
+                    btn.style.opacity = '0.5';
+                    btn.style.cursor = 'not-allowed';
+                } else {
+                    btn.style.opacity = '1';
+                    btn.style.cursor = 'pointer';
+                }
+                
+                // 디버그용: 버튼 상태 로그
+                console.log(`🔘 전략 ${spellNum} 버튼 - 내 플레이어ID: ${myPlayerId}, 현재 플레이어ID: ${state.currentPlayerId}, 내 턴: ${isMyTurn}, 턴 진행중: ${state.turnInProgress}, 마지막 성공: ${state.lastSuccessfulSpell}, 게임종료: ${state.isGameOver}, 비활성화: ${isDisabled}`);
+            });
+            
             endTurnBtn.disabled = !isMyTurn || state.turnInProgress || state.isGameOver;
+            
+            // 턴 종료 버튼도 시각적으로 보이도록 조정
+            if (endTurnBtn.disabled) {
+                endTurnBtn.style.opacity = '0.5';
+                endTurnBtn.style.cursor = 'not-allowed';
+            } else {
+                endTurnBtn.style.opacity = '1';
+                endTurnBtn.style.cursor = 'pointer';
+            }
+            
             console.log(`🔄 턴 종료 버튼 - 내 플레이어ID: ${myPlayerId}, 현재 플레이어ID: ${state.currentPlayerId}, 내 턴: ${isMyTurn}, 턴 진행중: ${state.turnInProgress}, 게임종료: ${state.isGameOver}, 비활성화: ${endTurnBtn.disabled}`);
         }
 
@@ -1100,6 +1139,8 @@
             // 멀티플레이어에서는 현재 플레이어의 턴일 때만 활성화
             const myPlayerId = multiplayerMode ? (isHost ? 1 : 2) : 1;
             const isMyTurn = multiplayerMode ? (state.currentPlayerId === myPlayerId) : state.isPlayerTurn;
+            console.log(`🎮 전략 시도 조건 - 내 플레이어ID: ${myPlayerId}, 현재 플레이어ID: ${state.currentPlayerId}, 내 턴: ${isMyTurn}, 턴 진행중: ${state.turnInProgress}, 게임종료: ${state.isGameOver}`);
+            
             if (!isMyTurn || state.turnInProgress || state.isGameOver) {
                 console.log('❌ 전략 시도 실패 - 조건 불만족');
                 return;
@@ -1175,7 +1216,14 @@
             addLog(`- ${currentPlayerName}${getJosa(currentPlayerName, '의')} 턴이 종료되었습니다.`);
             state.lastSuccessfulSpell = 0;
             state.currentPlayerId = state.currentPlayerId === 1 ? 2 : 1;
-            state.isPlayerTurn = !state.isPlayerTurn;
+            
+            // 멀티플레이어에서는 currentPlayerId를 기준으로 isPlayerTurn 설정
+            if (multiplayerMode) {
+                const myPlayerId = isHost ? 1 : 2;
+                state.isPlayerTurn = (state.currentPlayerId === myPlayerId);
+            } else {
+                state.isPlayerTurn = !state.isPlayerTurn;
+            }
             
             // 멀티플레이어 모드에서 상대방에게 턴 종료 전송
             if (multiplayerMode && dataChannel && dataChannel.readyState === 'open') {
@@ -1185,8 +1233,10 @@
                 }));
             }
             
-            const nextPlayerName = state.isPlayerTurn ? state.players[0].name : (multiplayerMode ? state.players[1].name : 'AI');
-            console.log(`🔄 턴 전환: ${nextPlayerName} 턴`);
+            const nextPlayerName = state.currentPlayerId === 1 ? state.players[0].name : state.players[1].name;
+            console.log(`🔄 턴 전환: ${nextPlayerName} 턴 (플레이어 ${state.currentPlayerId})`);
+            console.log(`🎮 내 플레이어ID: ${isHost ? 1 : 2}, 현재 플레이어ID: ${state.currentPlayerId}, 내 턴: ${state.isPlayerTurn}`);
+            
             render();
             updateButtons(); // 버튼 상태 업데이트 추가
             
@@ -2637,6 +2687,13 @@
                 // 상대방이 보낸 게임 상태로 업데이트
                 state = gameState;
                 console.log('🔄 턴 종료 시 게임 상태 동기화됨');
+                
+                // 멀티플레이어에서는 currentPlayerId를 기준으로 isPlayerTurn 재설정
+                if (multiplayerMode) {
+                    const myPlayerId = isHost ? 1 : 2;
+                    state.isPlayerTurn = (state.currentPlayerId === myPlayerId);
+                    console.log(`🎮 턴 동기화 - 내 플레이어ID: ${myPlayerId}, 현재 플레이어ID: ${state.currentPlayerId}, 내 턴: ${state.isPlayerTurn}`);
+                }
                 
                 // 턴 전환 후 현재 플레이어 턴 시작 로그
                 const currentPlayerName = state.currentPlayerId === 1 ? state.players[0].name : state.players[1].name;
