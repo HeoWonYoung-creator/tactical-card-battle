@@ -951,7 +951,8 @@
                     dataChannel.send(JSON.stringify({
                         type: 'cardPlayed',
                         card: spellNumber,
-                        playerId: 1
+                        playerId: 1,
+                        gameState: state
                     }));
                 }
                 
@@ -998,7 +999,8 @@
             // 멀티플레이어 모드에서 상대방에게 턴 종료 전송
             if (multiplayerMode && dataChannel && dataChannel.readyState === 'open') {
                 dataChannel.send(JSON.stringify({
-                    type: 'turnEnd'
+                    type: 'turnEnd',
+                    gameState: state
                 }));
             }
             
@@ -1152,6 +1154,16 @@
                     await executeSpellEffect(2, chosenSpell);
                     state.lastSuccessfulSpell = chosenSpell;
                     
+                    // 멀티플레이어 모드에서 상대방에게 AI 카드 플레이 전송
+                    if (multiplayerMode && dataChannel && dataChannel.readyState === 'open') {
+                        dataChannel.send(JSON.stringify({
+                            type: 'cardPlayed',
+                            card: chosenSpell,
+                            playerId: 2,
+                            gameState: state
+                        }));
+                    }
+                    
                     if (checkGameOver()) {
                         continueTurn = false;
                         break;
@@ -1173,6 +1185,17 @@
                     
                     addLog(`❌ ${opponentName}${getJosa(opponentName, '이/가')} ${chosenSpell}번 전략을 실행했지만 실패했습니다. (병력 1 감소)`);
                     render();
+                    
+                    // 멀티플레이어 모드에서 상대방에게 AI 실패 전송
+                    if (multiplayerMode && dataChannel && dataChannel.readyState === 'open') {
+                        dataChannel.send(JSON.stringify({
+                            type: 'cardPlayed',
+                            card: chosenSpell,
+                            playerId: 2,
+                            gameState: state
+                        }));
+                    }
+                    
                     continueTurn = false;
                 }
             }
@@ -1291,7 +1314,8 @@
                 if (multiplayerMode && dataChannel && dataChannel.readyState === 'open') {
                     dataChannel.send(JSON.stringify({
                         type: 'gameOver',
-                        winner: winner.id
+                        winner: winner.id,
+                        gameState: state
                     }));
                 }
                 
@@ -2143,6 +2167,15 @@
             if (state.players && state.players[1]) {
                 state.players[1].name = opponentName;
             }
+            
+            // 호스트인 경우 초기 게임 상태를 상대방에게 전송
+            if (isHost && dataChannel && dataChannel.readyState === 'open') {
+                console.log('📤 초기 게임 상태 전송');
+                dataChannel.send(JSON.stringify({
+                    type: 'gameState',
+                    state: state
+                }));
+            }
         }
 
         // WebRTC 초기화
@@ -2278,6 +2311,7 @@
 
         // 게임 메시지 처리
         function handleGameMessage(message) {
+            console.log('📨 받은 메시지:', message);
             switch (message.type) {
                 case 'gameStart':
                     opponentName = isHost ? message.guestName : message.hostName;
@@ -2287,13 +2321,13 @@
                     updateGameState(message.state);
                     break;
                 case 'cardPlayed':
-                    handleCardPlayed(message.card, message.playerId);
+                    handleCardPlayed(message.card, message.playerId, message.gameState);
                     break;
                 case 'turnEnd':
-                    handleTurnEnd();
+                    handleTurnEnd(message.gameState);
                     break;
                 case 'gameOver':
-                    handleGameOver(message.winner);
+                    handleGameOver(message.winner, message.gameState);
                     break;
             }
         }
@@ -2307,25 +2341,50 @@
         }
 
         // 카드 플레이 처리
-        function handleCardPlayed(card, playerId) {
-            // 카드 효과 적용
-            const player = state.players.find(p => p.id === playerId);
-            const opponent = state.players.find(p => p.id !== playerId);
+        function handleCardPlayed(card, playerId, gameState = null) {
+            console.log(`🎯 카드 플레이 처리: ${card}, 플레이어 ${playerId}`);
             
-            applyCardEffect(card, player, opponent);
+            if (gameState) {
+                // 상대방이 보낸 게임 상태로 업데이트
+                state = gameState;
+                console.log('🔄 게임 상태 동기화됨');
+            } else {
+                // 카드 효과 적용
+                const player = state.players.find(p => p.id === playerId);
+                const opponent = state.players.find(p => p.id !== playerId);
+                
+                applyCardEffect(card, player, opponent);
+            }
             render();
         }
 
         // 턴 종료 처리
-        function handleTurnEnd() {
-            state.isPlayerTurn = !state.isPlayerTurn;
-            state.currentPlayerId = state.currentPlayerId === 1 ? 2 : 1;
+        function handleTurnEnd(gameState = null) {
+            console.log('🔄 턴 종료 처리');
+            
+            if (gameState) {
+                // 상대방이 보낸 게임 상태로 업데이트
+                state = gameState;
+                console.log('🔄 턴 종료 시 게임 상태 동기화됨');
+            } else {
+                state.isPlayerTurn = !state.isPlayerTurn;
+                state.currentPlayerId = state.currentPlayerId === 1 ? 2 : 1;
+            }
             render();
         }
 
         // 게임 종료 처리
-        function handleGameOver(winner) {
-            state.isGameOver = true;
+        function handleGameOver(winner, gameState = null) {
+            console.log('🏆 게임 종료 처리');
+            
+            if (gameState) {
+                // 상대방이 보낸 게임 상태로 업데이트
+                state = gameState;
+                console.log('🔄 게임 종료 시 게임 상태 동기화됨');
+            } else {
+                state.isGameOver = true;
+            }
+            
             const isPlayerWin = winner === myPlayerId;
             
             // 전적 업데이트
