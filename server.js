@@ -19,7 +19,25 @@ const io = socketIo(server, {
 
 // CORS 설정
 app.use(cors());
+
+// 정적 파일 제공 개선
 app.use(express.static(path.join(__dirname)));
+
+// 메인 페이지 라우트
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'webrtc-multiplayer.html'));
+});
+
+// webrtc-multiplayer.html 직접 라우트
+app.get('/webrtc-multiplayer.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'webrtc-multiplayer.html'));
+});
+
+// 404 에러 처리
+app.use((req, res) => {
+    console.log(`404 에러: ${req.method} ${req.url}`);
+    res.status(404).send('파일을 찾을 수 없습니다.');
+});
 
 // 게임 상태 관리
 const waitingPlayers = new Map(); // 대기 중인 플레이어들
@@ -35,25 +53,37 @@ const rankings = {
 
 // 랭킹 업데이트 함수
 function updateRanking(category, playerName, stats) {
-    if (!rankings[category].has(playerName)) {
-        rankings[category].set(playerName, {
-            name: playerName,
-            wins: 0,
-            losses: 0,
-            winStreak: 0,
-            maxWinStreak: 0,
-            lastUpdated: Date.now()
-        });
+    // 기존에 같은 이름의 기록이 있는지 확인
+    let existingPlayer = null;
+    for (const [existingName, playerData] of rankings[category]) {
+        if (existingName === playerName) {
+            existingPlayer = playerData;
+            break;
+        }
     }
     
-    const playerRanking = rankings[category].get(playerName);
-    playerRanking.wins = stats.wins;
-    playerRanking.losses = stats.losses;
-    playerRanking.winStreak = stats.currentWinStreak || 0;
-    playerRanking.maxWinStreak = stats.maxWinStreak || 0;
-    playerRanking.lastUpdated = Date.now();
-    
-    console.log(`📊 랭킹 업데이트: ${category} - ${playerName} (승리: ${stats.wins}, 연승: ${stats.currentWinStreak})`);
+    if (existingPlayer) {
+        // 기존 기록 업데이트
+        existingPlayer.wins = stats.wins;
+        existingPlayer.losses = stats.losses;
+        existingPlayer.winStreak = stats.currentWinStreak || 0;
+        existingPlayer.maxWinStreak = stats.maxWinStreak || 0;
+        existingPlayer.lastUpdated = Date.now();
+        
+        console.log(`📊 랭킹 업데이트: ${category} - ${playerName} (기존 기록 업데이트, 승리: ${stats.wins}, 연승: ${stats.currentWinStreak})`);
+    } else {
+        // 새로운 기록 생성
+        rankings[category].set(playerName, {
+            name: playerName,
+            wins: stats.wins,
+            losses: stats.losses,
+            winStreak: stats.currentWinStreak || 0,
+            maxWinStreak: stats.maxWinStreak || 0,
+            lastUpdated: Date.now()
+        });
+        
+        console.log(`📊 랭킹 업데이트: ${category} - ${playerName} (새 기록 생성, 승리: ${stats.wins}, 연승: ${stats.currentWinStreak})`);
+    }
 }
 
 // 랭킹 정렬 함수
@@ -67,6 +97,43 @@ function getSortedRanking(category) {
         }
         return b.winStreak - a.winStreak;
     });
+}
+
+// 중복 이름 정리 함수
+function cleanupDuplicateNames(category) {
+    const nameCounts = new Map();
+    const toRemove = [];
+    
+    // 각 이름의 등장 횟수 확인
+    for (const [name, data] of rankings[category]) {
+        if (nameCounts.has(name)) {
+            nameCounts.set(name, nameCounts.get(name) + 1);
+            toRemove.push(name);
+        } else {
+            nameCounts.set(name, 1);
+        }
+    }
+    
+    // 중복된 이름들 제거 (가장 최근 업데이트된 것만 유지)
+    for (const name of toRemove) {
+        let latestEntry = null;
+        let latestTime = 0;
+        
+        for (const [entryName, data] of rankings[category]) {
+            if (entryName === name && data.lastUpdated > latestTime) {
+                latestTime = data.lastUpdated;
+                latestEntry = { name: entryName, data: data };
+            }
+        }
+        
+        // 최신 기록을 제외한 모든 중복 제거
+        for (const [entryName, data] of rankings[category]) {
+            if (entryName === name && data.lastUpdated !== latestTime) {
+                rankings[category].delete(entryName);
+                console.log(`🧹 중복 이름 정리: ${category} - ${entryName} 제거`);
+            }
+        }
+    }
 }
 
 // 서버 상태
@@ -367,6 +434,10 @@ io.on('connection', (socket) => {
     socket.on('getRanking', (data) => {
         try {
             const { category } = data;
+            
+            // 중복 이름 정리
+            cleanupDuplicateNames(category);
+            
             const ranking = getSortedRanking(category);
             socket.emit('rankingData', {
                 category: category,
@@ -469,6 +540,10 @@ setInterval(() => {
             serverStats.activeGames = Math.max(0, serverStats.activeGames - 1);
         }
     }
+    
+    // 중복 이름 정리 (5분마다)
+    cleanupDuplicateNames('ai');
+    cleanupDuplicateNames('multiplayer');
 }, 30000);
 
 // 서버 상태 모니터링
