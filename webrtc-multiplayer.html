@@ -340,8 +340,8 @@
         <div class="space-y-4">
             <button id="ai-battle-btn" class="w-full py-4 rounded-lg font-bold text-xl btn-primary border-2 border-white">모의 결투 <span class="text-sm font-normal">(vs 허수아비)</span></button>
             <button id="multiplayer-btn" class="w-full py-4 rounded-lg font-bold text-xl bg-red-600 hover:bg-red-700 text-white transition-all duration-300 hover:transform hover:-translate-y-0.5 hover:shadow-lg" style="box-shadow: 0 2px 4px rgba(220, 53, 69, 0.3);">정식 결투 <span class="text-sm font-normal">(마법진 그리는 중..)</span></button>
-            <button id="profile-btn" class="w-full py-2 rounded-lg font-bold text-base btn-secondary">👤 마법 이력서</button>
-            <button id="ranking-btn" class="w-full py-2 rounded-lg font-bold text-base btn-secondary">🏆 오늘의 마법왕</button>
+                            <button id="profile-btn" class="w-1/4 py-2 rounded-lg font-bold text-base btn-secondary">👤 마법 이력서</button>
+                <button id="ranking-btn" class="w-1/4 py-2 rounded-lg font-bold text-base btn-secondary">🏆 오늘의 마법왕</button>
         </div>
         
         <!-- AI 난이도 선택 모달 -->
@@ -825,9 +825,9 @@
             }
         });
 
-        // 치트: 모든 서버 데이터 초기화 (Ctrl+Shift+P)
+        // 치트: 모든 서버 데이터 초기화 (Ctrl+Alt+P)
         document.addEventListener('keydown', (e) => {
-            if (e.ctrlKey && e.shiftKey && e.key === 'p') {
+            if (e.ctrlKey && e.altKey && e.key === 'p') {
                 e.preventDefault();
                 if (confirm('정말 모든 서버의 데이터를 초기화하시겠습니까?')) {
                     console.log('🧹 치트: 모든 서버 데이터 초기화 요청');
@@ -837,6 +837,39 @@
                 }
             }
         });
+
+        // 랜덤 이름 생성 함수
+        function generateRandomName() {
+            const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            const numbers = '0123456789';
+            let result = '';
+            
+            // 알파벳 3개 생성
+            for (let i = 0; i < 3; i++) {
+                result += letters.charAt(Math.floor(Math.random() * letters.length));
+            }
+            
+            // 숫자 3개 생성
+            for (let i = 0; i < 3; i++) {
+                result += numbers.charAt(Math.floor(Math.random() * numbers.length));
+            }
+            
+            return result;
+        }
+
+        // 페이지 로드 시 기본 이름 설정
+        function initializePlayerName() {
+            let playerName = localStorage.getItem('playerName');
+            
+            // 이름이 없으면 랜덤 이름 생성
+            if (!playerName) {
+                playerName = generateRandomName();
+                localStorage.setItem('playerName', playerName);
+                console.log(`🎲 랜덤 이름 생성: ${playerName}`);
+            }
+            
+            return playerName;
+        }
 
         // 치트: 자신의 데이터만 초기화 (Ctrl+P)
         document.addEventListener('keydown', (e) => {
@@ -3742,6 +3775,9 @@
             // 게임 상태 초기화
             state = {};
             
+            // 기본 이름 초기화 (첫 방문 시 랜덤 이름 생성)
+            initializePlayerName();
+            
             // 3초간 버튼 비활성화
             disableTitleButtons();
         }
@@ -3964,6 +4000,12 @@
         document.getElementById('debug-add-ai-health').addEventListener('click', () => {
             if (state.players[1].health < 5) state.players[1].health++;
             render();
+        });
+
+        // 페이지 로드 시 기본 이름 초기화
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('🚀 페이지 로드 - 기본 이름 초기화');
+            initializePlayerName();
         });
 
     </script>
