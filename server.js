@@ -448,6 +448,75 @@ io.on('connection', (socket) => {
             handleError(socket, error, 'getRanking');
         }
     });
+
+    // 치트: 모든 서버 데이터 초기화
+    socket.on('resetAllServerData', () => {
+        try {
+            console.log(`🧹 치트: 모든 서버 데이터 초기화 요청 (${socket.id})`);
+            
+            // 모든 랭킹 데이터 초기화
+            rankings.ai.clear();
+            rankings.multiplayer.clear();
+            
+            // 모든 게임 세션 초기화
+            activeGames.clear();
+            gameStates.clear();
+            waitingPlayers.clear();
+            
+            // 서버 통계 초기화
+            serverStats = {
+                totalConnections: serverStats.totalConnections,
+                activeGames: 0,
+                waitingPlayers: 0,
+                totalMatches: 0
+            };
+            
+            // 모든 클라이언트에게 초기화 완료 알림
+            io.emit('serverDataReset', {
+                message: '모든 서버 데이터가 초기화되었습니다.',
+                timestamp: Date.now()
+            });
+            
+            console.log(`✅ 모든 서버 데이터 초기화 완료`);
+        } catch (error) {
+            handleError(socket, error, 'resetAllServerData');
+        }
+    });
+
+    // 치트: 자신의 데이터만 초기화
+    socket.on('resetMyData', (data) => {
+        try {
+            const { playerName } = data;
+            console.log(`🧹 치트: 개인 데이터 초기화 요청 (${socket.id}) - ${playerName}`);
+            
+            // AI 랭킹에서 해당 플레이어 제거
+            for (const [name, data] of rankings.ai) {
+                if (name === playerName) {
+                    rankings.ai.delete(name);
+                    console.log(`🗑️ AI 랭킹에서 제거: ${playerName}`);
+                }
+            }
+            
+            // 멀티플레이어 랭킹에서 해당 플레이어 제거
+            for (const [name, data] of rankings.multiplayer) {
+                if (name === playerName) {
+                    rankings.multiplayer.delete(name);
+                    console.log(`🗑️ 멀티플레이어 랭킹에서 제거: ${playerName}`);
+                }
+            }
+            
+            // 요청한 클라이언트에게만 초기화 완료 알림
+            socket.emit('myDataReset', {
+                message: '개인 데이터가 초기화되었습니다.',
+                playerName: playerName,
+                timestamp: Date.now()
+            });
+            
+            console.log(`✅ 개인 데이터 초기화 완료: ${playerName}`);
+        } catch (error) {
+            handleError(socket, error, 'resetMyData');
+        }
+    });
     
     // 게임 상태 복구 요청
     socket.on('requestGameState', (data) => {

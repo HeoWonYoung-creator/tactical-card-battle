@@ -824,6 +824,33 @@
                 console.log('🔧 디버그 패널 토글됨');
             }
         });
+
+        // 치트: 모든 서버 데이터 초기화 (Ctrl+Shift+P)
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.shiftKey && e.key === 'p') {
+                e.preventDefault();
+                if (confirm('정말 모든 서버의 데이터를 초기화하시겠습니까?')) {
+                    console.log('🧹 치트: 모든 서버 데이터 초기화 요청');
+                    if (socket) {
+                        socket.emit('resetAllServerData');
+                    }
+                }
+            }
+        });
+
+        // 치트: 자신의 데이터만 초기화 (Ctrl+P)
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && !e.shiftKey && e.key === 'p') {
+                e.preventDefault();
+                const playerName = localStorage.getItem('playerName') || 'Player';
+                if (confirm('정말 데이터를 초기화하시겠습니까?')) {
+                    console.log('🧹 치트: 개인 데이터 초기화 요청');
+                    if (socket) {
+                        socket.emit('resetMyData', { playerName: playerName });
+                    }
+                }
+            }
+        });
         
         // 메모 패널 토글 (M 키) - 비활성화 (항상 표시)
         // document.addEventListener('keydown', (e) => {
@@ -3060,6 +3087,18 @@
                     updateButtons();
                     addLog('🔄 게임 상태가 복구되었습니다.');
                 }
+            });
+
+            // 치트: 모든 서버 데이터 초기화 완료
+            socket.on('serverDataReset', (data) => {
+                console.log('🧹 모든 서버 데이터 초기화 완료:', data);
+                showToast('모든 서버 데이터가 초기화되었습니다.', 'success');
+            });
+
+            // 치트: 개인 데이터 초기화 완료
+            socket.on('myDataReset', (data) => {
+                console.log('🧹 개인 데이터 초기화 완료:', data);
+                showToast(`${data.playerName}의 데이터가 초기화되었습니다.`, 'success');
             });
         }
         
