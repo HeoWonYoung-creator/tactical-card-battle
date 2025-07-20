@@ -27,6 +27,48 @@ const activeGames = new Map(); // 활성 게임들
 const playerSessions = new Map(); // 플레이어 세션 관리
 const gameStates = new Map(); // 게임 상태 저장
 
+// 랭킹 시스템
+const rankings = {
+    ai: new Map(), // AI 대전 랭킹
+    multiplayer: new Map() // 멀티플레이어 랭킹
+};
+
+// 랭킹 업데이트 함수
+function updateRanking(category, playerName, stats) {
+    if (!rankings[category].has(playerName)) {
+        rankings[category].set(playerName, {
+            name: playerName,
+            wins: 0,
+            losses: 0,
+            winStreak: 0,
+            maxWinStreak: 0,
+            lastUpdated: Date.now()
+        });
+    }
+    
+    const playerRanking = rankings[category].get(playerName);
+    playerRanking.wins = stats.wins;
+    playerRanking.losses = stats.losses;
+    playerRanking.winStreak = stats.currentWinStreak || 0;
+    playerRanking.maxWinStreak = stats.maxWinStreak || 0;
+    playerRanking.lastUpdated = Date.now();
+    
+    console.log(`📊 랭킹 업데이트: ${category} - ${playerName} (승리: ${stats.wins}, 연승: ${stats.currentWinStreak})`);
+}
+
+// 랭킹 정렬 함수
+function getSortedRanking(category) {
+    const players = Array.from(rankings[category].values());
+    
+    // 승리 횟수 우선, 그 다음 연승 횟수로 정렬
+    return players.sort((a, b) => {
+        if (b.wins !== a.wins) {
+            return b.wins - a.wins;
+        }
+        return b.winStreak - a.winStreak;
+    });
+}
+
 // 서버 상태
 let serverStats = {
     totalConnections: 0,
@@ -307,6 +349,32 @@ io.on('connection', (socket) => {
             }
         } catch (error) {
             handleError(socket, error, 'gameOver');
+        }
+    });
+    
+    // 랭킹 업데이트
+    socket.on('updateRanking', (data) => {
+        try {
+            const { category, playerName, stats } = data;
+            updateRanking(category, playerName, stats);
+            console.log(`📊 랭킹 업데이트 요청: ${category} - ${playerName}`);
+        } catch (error) {
+            handleError(socket, error, 'updateRanking');
+        }
+    });
+    
+    // 랭킹 조회
+    socket.on('getRanking', (data) => {
+        try {
+            const { category } = data;
+            const ranking = getSortedRanking(category);
+            socket.emit('rankingData', {
+                category: category,
+                ranking: ranking
+            });
+            console.log(`📊 랭킹 조회: ${category} (${ranking.length}명)`);
+        } catch (error) {
+            handleError(socket, error, 'getRanking');
         }
     });
     

@@ -5,15 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>전술 카드 대전</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Gothic+A1:wght@400;700&family=Cinzel+Decorative:wght@700&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;500;600;700&family=Exo+2:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Pretendard:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body {
-            font-family: 'Rajdhani', sans-serif;
+            font-family: 'Pretendard', sans-serif;
             background: 
-                linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%),
-                radial-gradient(circle at 20% 80%, rgba(255, 0, 0, 0.1) 0%, transparent 50%),
-                radial-gradient(circle at 80% 20%, rgba(0, 0, 255, 0.1) 0%, transparent 50%),
-                radial-gradient(circle at 40% 40%, rgba(255, 165, 0, 0.05) 0%, transparent 50%);
+                linear-gradient(135deg, #000000 0%, #1a1a1a 50%, #2d2d2d 100%),
+                radial-gradient(circle at 20% 80%, rgba(255, 255, 255, 0.05) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.03) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(255, 255, 255, 0.02) 0%, transparent 50%);
             background-size: 100% 100%, 300px 300px, 400px 400px, 200px 200px;
             background-position: 0 0, 0 0, 0 0, 0 0;
             background-repeat: no-repeat, repeat, repeat, repeat;
@@ -34,9 +34,9 @@
                 repeating-linear-gradient(
                     45deg,
                     transparent,
-                    transparent 2px,
-                    rgba(255, 0, 0, 0.03) 2px,
-                    rgba(255, 0, 0, 0.03) 4px
+                    transparent 3px,
+                    rgba(255, 255, 255, 0.08) 3px,
+                    rgba(255, 255, 255, 0.08) 6px
                 );
             pointer-events: none;
             z-index: -1;
@@ -48,13 +48,13 @@
             font-family: 'Orbitron', monospace;
         }
         .font-exo {
-            font-family: 'Exo 2', sans-serif;
+            font-family: 'Pretendard', sans-serif;
         }
         .game-title {
             font-family: 'Orbitron', monospace;
             font-weight: 900;
-            text-shadow: 0 0 20px rgba(162, 155, 254, 0.8);
-            background: linear-gradient(45deg, #a29bfe, #6c5ce7, #fd79a8);
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.8);
+            background: linear-gradient(45deg, #ffffff, #cccccc, #999999);
             background-size: 200% 200%;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -68,7 +68,7 @@
         .card {
             width: 70px;
             height: 100px;
-            border: 2px solid #a29bfe;
+            border: 2px solid #ffffff;
             border-radius: 8px;
             display: flex;
             justify-content: center;
@@ -76,11 +76,17 @@
             font-size: 2rem;
             font-weight: bold;
             cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
             user-select: none;
             position: relative;
             overflow: hidden;
+            animation: cardFloat 3s ease-in-out infinite;
+        }
+        
+        @keyframes cardFloat {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-2px); }
         }
         .card::before {
             content: '';
@@ -97,45 +103,45 @@
         }
         .card-back {
             background: 
-                linear-gradient(145deg, #4a4e69, #22223b),
+                linear-gradient(145deg, #333333, #1a1a1a),
                 repeating-linear-gradient(
                     45deg,
                     transparent,
-                    transparent 2px,
-                    rgba(255, 0, 0, 0.1) 2px,
-                    rgba(255, 0, 0, 0.1) 4px
+                    transparent 3px,
+                    rgba(255, 255, 255, 0.15) 3px,
+                    rgba(255, 255, 255, 0.15) 6px
                 );
             color: #e0e0e0;
             box-shadow: 
-                0 4px 15px rgba(162, 155, 254, 0.3),
-                inset 0 0 20px rgba(255, 0, 0, 0.1);
+                0 4px 15px rgba(255, 255, 255, 0.3),
+                inset 0 0 20px rgba(255, 255, 255, 0.1);
         }
         .card-back:hover {
             transform: translateY(-5px) scale(1.05);
             box-shadow: 
-                0 8px 25px rgba(162, 155, 254, 0.5),
-                inset 0 0 30px rgba(255, 0, 0, 0.2);
+                0 8px 25px rgba(255, 255, 255, 0.5),
+                inset 0 0 30px rgba(255, 255, 255, 0.2);
         }
         .card-front {
             background: 
-                linear-gradient(145deg, #f2e9e4, #c9ada7),
+                linear-gradient(145deg, #f5f5f5, #e0e0e0),
                 repeating-linear-gradient(
                     45deg,
                     transparent,
-                    transparent 2px,
-                    rgba(0, 0, 255, 0.1) 2px,
-                    rgba(0, 0, 255, 0.1) 4px
+                    transparent 3px,
+                    rgba(0, 0, 0, 0.15) 3px,
+                    rgba(0, 0, 0, 0.15) 6px
                 );
-            color: #4a4e69;
+            color: #333333;
             box-shadow: 
-                0 4px 15px rgba(162, 155, 254, 0.3),
-                inset 0 0 20px rgba(0, 0, 255, 0.1);
+                0 4px 15px rgba(255, 255, 255, 0.3),
+                inset 0 0 20px rgba(0, 0, 0, 0.1);
         }
         .card-front:hover {
             transform: translateY(-5px) scale(1.05);
             box-shadow: 
-                0 8px 25px rgba(162, 155, 254, 0.5),
-                inset 0 0 30px rgba(0, 0, 255, 0.2);
+                0 8px 25px rgba(255, 255, 255, 0.5),
+                inset 0 0 30px rgba(0, 0, 0, 0.2);
         }
         .card-pile {
              cursor: help;
@@ -146,20 +152,20 @@
         }
         .btn-primary {
             background: 
-                linear-gradient(135deg, #6c5ce7 0%, #a29bfe 100%),
+                linear-gradient(135deg, #333333 0%, #666666 100%),
                 repeating-linear-gradient(
                     45deg,
                     transparent,
-                    transparent 1px,
-                    rgba(255, 255, 255, 0.1) 1px,
-                    rgba(255, 255, 255, 0.1) 2px
+                    transparent 2px,
+                    rgba(255, 255, 255, 0.15) 2px,
+                    rgba(255, 255, 255, 0.15) 4px
                 );
             color: white;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             border: none;
             position: relative;
             overflow: hidden;
-            font-family: 'Exo 2', sans-serif;
+            font-family: 'Pretendard', sans-serif;
             font-weight: 600;
             text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
         }
@@ -173,13 +179,15 @@
             background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
             transition: left 0.5s;
         }
+        
+
         .btn-primary:hover::before {
             left: 100%;
         }
         .btn-primary:hover:not(:disabled) {
-            background: linear-gradient(135deg, #a29bfe 0%, #6c5ce7 100%);
+            background: linear-gradient(135deg, #666666 0%, #333333 100%);
             transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(162, 155, 254, 0.4);
+            box-shadow: 0 8px 25px rgba(255, 255, 255, 0.4);
         }
         .btn-primary:disabled {
             background: linear-gradient(135deg, #4a4e69 0%, #2d3748 100%);
@@ -190,20 +198,20 @@
         
         .btn-secondary {
             background: transparent;
-            color: #a29bfe;
-            border: 2px solid #a29bfe;
+            color: #ffffff;
+            border: 2px solid #ffffff;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
             overflow: hidden;
-            font-family: 'Exo 2', sans-serif;
+            font-family: 'Pretendard', sans-serif;
             font-weight: 600;
             text-shadow: none;
         }
         
         .btn-secondary:hover:not(:disabled) {
-            background: rgba(162, 155, 254, 0.1);
+            background: rgba(255, 255, 255, 0.1);
             transform: translateY(-1px);
-            box-shadow: 0 4px 15px rgba(162, 155, 254, 0.3);
+            box-shadow: 0 4px 15px rgba(255, 255, 255, 0.3);
         }
         
         .btn-secondary:disabled {
@@ -219,7 +227,7 @@
             color: #9ca3af;
             border: 1px solid #4b5563;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            font-family: 'Exo 2', sans-serif;
+            font-family: 'Pretendard', sans-serif;
             font-weight: 500;
             font-size: 0.6rem;
             min-height: 24px;
@@ -244,11 +252,11 @@
             border: 1px solid #4a4e69;
             border-radius: 8px;
             backdrop-filter: blur(10px);
-            font-family: 'Rajdhani', sans-serif;
+            font-family: 'Pretendard', sans-serif;
         }
         .game-log p {
-            margin: 4px 0;
-            padding: 4px 8px;
+            margin: 2px 0;
+            padding: 3px 8px;
             border-radius: 4px;
             transition: background-color 0.3s ease;
         }
@@ -260,11 +268,11 @@
             backdrop-filter: blur(5px);
         }
         .modal-content {
-            background: linear-gradient(135deg, #22223b 0%, #1a1a2e 100%);
-            border: 2px solid #a29bfe;
+            background: linear-gradient(135deg, #333333 0%, #1a1a1a 100%);
+            border: 2px solid #ffffff;
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
             animation: modalSlideIn 0.3s ease-out;
-            font-family: 'Exo 2', sans-serif;
+            font-family: 'Pretendard', sans-serif;
         }
         @keyframes modalSlideIn {
             from {
@@ -277,12 +285,12 @@
             }
         }
         .player-area-glow {
-            box-shadow: 0 0 30px 10px rgba(162, 155, 254, 0.6);
+            box-shadow: 0 0 30px 10px rgba(255, 255, 255, 0.6);
             animation: glowPulse 2s ease-in-out infinite;
         }
         @keyframes glowPulse {
-            0%, 100% { box-shadow: 0 0 30px 10px rgba(162, 155, 254, 0.6); }
-            50% { box-shadow: 0 0 40px 15px rgba(162, 155, 254, 0.8); }
+            0%, 100% { box-shadow: 0 0 30px 10px rgba(255, 255, 255, 0.6); }
+            50% { box-shadow: 0 0 40px 15px rgba(255, 255, 255, 0.8); }
         }
         .health-heart {
             animation: heartBeat 1s ease-in-out infinite;
@@ -299,14 +307,14 @@
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
             overflow: hidden;
-            font-family: 'Exo 2', sans-serif;
+            font-family: 'Pretendard', sans-serif;
             /* 비활성화된 버튼도 항상 보이도록 설정 */
             display: block !important;
             visibility: visible !important;
         }
         .spell-button:hover:not(:disabled) {
             transform: translateY(-3px) scale(1.05);
-            box-shadow: 0 10px 30px rgba(162, 155, 254, 0.4);
+            box-shadow: 0 10px 30px rgba(255, 255, 255, 0.4);
         }
         .spell-button:active:not(:disabled) {
             transform: translateY(-1px) scale(1.02);
@@ -315,8 +323,8 @@
             animation: successGlow 0.5s ease-out;
         }
         @keyframes successGlow {
-            0% { box-shadow: 0 0 20px rgba(34, 197, 94, 0.8); }
-            100% { box-shadow: 0 0 0 rgba(34, 197, 94, 0); }
+            0% { box-shadow: 0 0 20px rgba(255, 255, 255, 0.8); }
+            100% { box-shadow: 0 0 0 rgba(255, 255, 255, 0); }
         }
         .failure-animation {
             animation: failureShake 0.5s ease-out;
@@ -332,7 +340,7 @@
             right: -10px;
             width: 20px;
             height: 20px;
-            background: #a29bfe;
+            background: #ffffff;
             border-radius: 50%;
             animation: turnPulse 1s ease-in-out infinite;
         }
@@ -342,7 +350,7 @@
         }
         .card-damage {
             position: absolute;
-            color: #ef4444;
+            color: #ffffff;
             font-weight: bold;
             font-size: 1.2rem;
             animation: damageFloat 1s ease-out forwards;
@@ -354,12 +362,14 @@
         }
         .card-heal {
             position: absolute;
-            color: #10b981;
+            color: #ffffff;
             font-weight: bold;
             font-size: 1.2rem;
             animation: healFloat 1s ease-out forwards;
             pointer-events: none;
         }
+        
+
         @keyframes healFloat {
             0% { transform: translateY(0); opacity: 1; }
             100% { transform: translateY(-30px); opacity: 0; }
@@ -383,21 +393,21 @@
 
     <!-- 타이틀 화면 -->
     <div id="title-screen" class="w-full max-w-2xl mx-auto text-center">
-        <h1 class="text-5xl game-title mb-4">TACTICAL<br>CARD BATTLE</h1>
-        <h2 class="text-2xl mb-8 font-exo">1:1 대결</h2>
+        <h1 class="text-5xl game-title mb-8">TACTICAL<br>CARD BATTLE</h1>
         <div class="bg-black bg-opacity-20 p-6 rounded-lg text-left mb-8">
-            <h3 class="text-xl font-bold mb-4 text-center font-exo">게임 규칙</h3>
-            <ul class="list-disc list-inside space-y-2">
+            <h3 class="text-xl font-bold mb-4 text-center font-exo flex items-center justify-center"><span>📝</span><span class="ml-1">게임 규칙</span></h3>
+            <ul class="list-disc list-inside space-y-1">
                 <li>자신의 전술 카드는 보지 않고, 상대의 전술 카드를 보고 내 전략을 추리하세요.</li>
                 <li>전략 실행에 성공하면 연속으로 더 높은 숫자의 전략을 실행할 수 있습니다.</li>
-                <li>전략 실행에 실패하면 병력이 1 감소하고 턴이 종료됩니다.</li>
-                <li>상대의 병력을 0으로 만들거나, 내 전술 카드 7개를 모두 사용하면 승리합니다!</li>
+                <li>전략 실행에 실패하면 체력이 1 감소하고 턴이 종료됩니다.</li>
+                <li>상대의 체력을 0으로 만들거나, 내 전술 카드 7개를 모두 사용하면 승리합니다!</li>
             </ul>
         </div>
         <div class="space-y-4">
-            <button id="ai-battle-btn" class="w-full py-4 rounded-lg font-bold text-xl btn-primary">AI와 모의 전투</button>
-            <button id="multiplayer-btn" class="w-full py-4 rounded-lg font-bold text-xl btn-primary">다른 유저와 전투</button>
-            <button id="profile-btn" class="w-full py-2 rounded-lg font-bold text-base btn-secondary">내 정보</button>
+            <button id="ai-battle-btn" class="w-full py-4 rounded-lg font-bold text-xl btn-primary border-2 border-white">AI와 모의 전투</button>
+            <button id="multiplayer-btn" class="w-full py-4 rounded-lg font-bold text-xl btn-primary border-2 border-white">다른 유저와 전투</button>
+            <button id="profile-btn" class="w-full py-2 rounded-lg font-bold text-base btn-secondary">👤 내 정보</button>
+            <button id="ranking-btn" class="w-full py-2 rounded-lg font-bold text-base btn-secondary">🏆 랭킹 보기</button>
         </div>
         
         <!-- AI 난이도 선택 모달 -->
@@ -431,7 +441,7 @@
 
         <!-- 중앙 영역 -->
         <div class="flex justify-between items-center p-4 h-48">
-            <div id="secret-stones-pile" class="flex flex-col items-center space-y-2 card-pile">
+            <div id="secret-stones-pile" class="flex flex-col items-center space-y-1 card-pile">
                 <div class="card card-back flex flex-col items-center justify-center">
                     <div class="text-2xl mb-1">❓</div>
                     <div class="text-sm font-bold">?</div>
@@ -442,7 +452,7 @@
             <div class="flex-grow mx-4">
                 <div id="game-log" class="game-log p-2 rounded-lg overflow-y-auto flex flex-col-reverse"></div>
             </div>
-            <div id="used-stones-pile" class="flex flex-col items-center space-y-2 card-pile">
+            <div id="used-stones-pile" class="flex flex-col items-center space-y-1 card-pile">
                  <div class="card card-front" style="color: #9d8189;">X</div>
                 <div class="font-bold">사용한 전술</div>
                 <div id="used-stones-count" class="text-lg"></div>
@@ -460,7 +470,19 @@
 
         <!-- 컨트롤 영역 -->
         <div class="p-4 bg-black bg-opacity-20 rounded-lg">
-            <div id="spell-buttons" class="grid grid-cols-6 gap-2 mb-4"></div>
+            <div id="spell-buttons" class="relative mb-4">
+                <!-- 게이지바 배경 -->
+                <div class="absolute inset-0 bg-gray-800 bg-opacity-30 rounded-lg border border-gray-600"></div>
+                
+                <!-- 게이지바 -->
+                <div id="turn-gauge" class="absolute inset-0 rounded-lg overflow-hidden">
+                    <div id="blue-gauge" class="absolute left-0 top-0 h-full bg-blue-500 bg-opacity-30 transition-all duration-50 ease-out" style="width: 0%"></div>
+                    <div id="red-gauge" class="absolute right-0 top-0 h-full bg-red-500 bg-opacity-30 transition-all duration-50 ease-out" style="width: 0%"></div>
+                </div>
+                
+                <!-- 전략 버튼들 -->
+                <div id="spell-buttons-container" class="relative grid grid-cols-6 gap-2 p-4"></div>
+            </div>
             <div id="memo-buttons" class="grid grid-cols-6 gap-2 mb-4"></div>
             <button id="end-turn-btn" class="w-full py-3 rounded-lg font-bold text-lg btn-primary">턴 종료</button>
         </div>
@@ -469,23 +491,17 @@
         <div class="flex justify-between items-center p-2">
             <button id="surrender-btn" class="px-6 py-2 rounded-lg font-bold btn-secondary text-sm whitespace-nowrap">포기</button>
             
-            <!-- 새로고침 버튼 (중앙) -->
-            <button id="refresh-game-btn" class="px-4 py-2 rounded-lg font-bold btn-secondary text-sm whitespace-nowrap flex items-center space-x-2">
-                <span>🔄</span>
-                <span>새로고침</span>
-            </button>
-            
             <div class="relative">
                 <button id="help-btn" class="px-6 py-2 rounded-lg font-bold btn-secondary text-sm whitespace-nowrap min-w-[100px]" 
                         onmousedown="showHelpTooltip()" onmouseup="hideHelpTooltip()" onmouseleave="hideHelpTooltip()"
-                        ontouchstart="showHelpTooltip()" ontouchend="hideHelpTooltip()">게임 규칙</button>
+                        ontouchstart="showHelpTooltip()" ontouchend="hideHelpTooltip()">📝 게임 규칙</button>
                 <div id="help-tooltip" class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 p-4 bg-black bg-opacity-90 rounded-lg text-sm w-80 hidden z-50">
                     <div class="text-center font-bold mb-3 text-base">게임 규칙</div>
-                    <ul class="list-disc list-inside space-y-2 text-sm">
+                    <ul class="list-disc list-inside space-y-1 text-sm">
                         <li>자신의 전술 카드는 보지 않고, 상대의 전술 카드를 보고 내 전략을 추리하세요.</li>
                         <li>전략 실행에 성공하면 연속으로 더 높은 숫자의 전략을 실행할 수 있습니다.</li>
-                        <li>전략 실행에 실패하면 병력이 1 감소하고 턴이 종료됩니다.</li>
-                        <li>상대의 병력을 0으로 만들거나, 내 전술 카드 7개를 모두 사용하면 승리합니다!</li>
+                                        <li>전략 실행에 실패하면 체력이 1 감소하고 턴이 종료됩니다.</li>
+                <li>상대의 체력을 0으로 만들거나, 내 전술 카드 7개를 모두 사용하면 승리합니다!</li>
                     </ul>
                 </div>
             </div>
@@ -528,7 +544,7 @@
                 <div class="w-2 h-2 bg-blue-400 rounded-full animate-pulse" style="animation-delay: 0.4s;"></div>
             </div>
             <p class="text-sm text-gray-300 mb-4">상대방을 찾는 중입니다...</p>
-            <p class="text-xs text-gray-400 mb-4">실제 멀티플레이어를 위해서는 시그널링 서버가 필요합니다.</p>
+            <p class="text-xs text-gray-400 mb-4">멀티 플레이를 위한 서버가 필요합니다.</p>
             <button id="cancel-matching-btn" class="px-6 py-2 rounded-lg btn-primary">매칭 취소</button>
         </div>
     </div>
@@ -629,7 +645,7 @@
         const secretStonesCountEl = document.getElementById('secret-stones-count');
         const usedStonesCountEl = document.getElementById('used-stones-count');
         const gameLogEl = document.getElementById('game-log');
-        const spellButtonsContainer = document.getElementById('spell-buttons');
+        const spellButtonsContainer = document.getElementById('spell-buttons-container');
         const endTurnBtn = document.getElementById('end-turn-btn');
         const modal = document.getElementById('modal');
         const modalTitle = document.getElementById('modal-title');
@@ -644,6 +660,11 @@
         let lastMyHealth = 3;
         let lastOpponentHealth = 3;
         
+        // 턴 타이머 관련 변수
+        let turnTimer = null;
+        let turnTimeLeft = 20; // 20초
+        const TURN_DURATION = 20; // 20초
+        
         // 연승 관련 변수
         let currentWinStreak = parseInt(localStorage.getItem('currentWinStreak')) || 0;
         let maxWinStreak = parseInt(localStorage.getItem('maxWinStreak')) || 0;
@@ -651,6 +672,94 @@
         // 디버그: 변수 초기화 확인
         console.log('🎮 변수 초기화:', { lastMyHealth, lastOpponentHealth });
 
+        // 턴 타이머 관련 함수들
+        function startTurnTimer() {
+            if (turnTimer) {
+                clearInterval(turnTimer);
+            }
+            
+            turnTimeLeft = TURN_DURATION;
+            updateTurnGauge();
+            
+            console.log(`⏰ 타이머 시작 - 현재플레이어: ${state.currentPlayerId}, 내턴: ${state.isPlayerTurn}`);
+            
+            // 더 부드러운 애니메이션을 위해 100ms마다 업데이트
+            turnTimer = setInterval(() => {
+                turnTimeLeft -= 0.1; // 0.1초씩 감소
+                updateTurnGauge();
+                
+                if (turnTimeLeft <= 0) {
+                    clearInterval(turnTimer);
+                    turnTimer = null;
+                    console.log('⏰ 턴 시간 초과! 자동 턴 종료');
+                    addLog('⏰ 시간 초과로 턴이 자동 종료되었습니다.');
+                    endTurn();
+                }
+            }, 100); // 100ms마다 업데이트
+        }
+        
+        function stopTurnTimer() {
+            if (turnTimer) {
+                clearInterval(turnTimer);
+                turnTimer = null;
+            }
+        }
+        
+        function resetTurnGauge() {
+            const blueGauge = document.getElementById('blue-gauge');
+            const redGauge = document.getElementById('red-gauge');
+            
+            if (blueGauge && redGauge) {
+                blueGauge.style.width = '0%';
+                redGauge.style.width = '0%';
+                console.log('🔄 게이지 초기화 완료');
+            }
+        }
+        
+        function updateTurnGauge() {
+            const blueGauge = document.getElementById('blue-gauge');
+            const redGauge = document.getElementById('red-gauge');
+            
+            if (!blueGauge || !redGauge) return;
+            
+            const progress = (TURN_DURATION - turnTimeLeft) / TURN_DURATION;
+            const gaugeWidth = progress * 100;
+            
+            // 멀티플레이어 모드에서 내 턴인지 확인
+            const myPlayerId = multiplayerMode ? (isHost ? 1 : 2) : 1;
+            const isMyTurn = (state.currentPlayerId === myPlayerId);
+            
+            console.log(`🎯 게이지 업데이트 - 현재플레이어: ${state.currentPlayerId}, 내플레이어ID: ${myPlayerId}, 내턴: ${isMyTurn}, 진행률: ${gaugeWidth.toFixed(1)}%`);
+            
+            // AI 모드에서는 플레이어 1이 항상 내 턴
+            if (multiplayerMode) {
+                if (isMyTurn) {
+                    // 내 턴 - 파란색 게이지 (왼쪽부터)
+                    blueGauge.style.width = `${gaugeWidth}%`;
+                    redGauge.style.width = '0%';
+                    console.log('🔵 파란색 게이지 업데이트 (멀티플레이어)');
+                } else {
+                    // 상대 턴 - 빨간색 게이지 (오른쪽부터)
+                    blueGauge.style.width = '0%';
+                    redGauge.style.width = `${gaugeWidth}%`;
+                    console.log('🔴 빨간색 게이지 업데이트 (멀티플레이어)');
+                }
+            } else {
+                // AI 모드
+                if (state.currentPlayerId === 1) {
+                    // 내 턴 - 파란색 게이지 (왼쪽부터)
+                    blueGauge.style.width = `${gaugeWidth}%`;
+                    redGauge.style.width = '0%';
+                    console.log('🔵 파란색 게이지 업데이트 (AI 모드)');
+                } else {
+                    // AI 턴 - 빨간색 게이지 (오른쪽부터)
+                    blueGauge.style.width = '0%';
+                    redGauge.style.width = `${gaugeWidth}%`;
+                    console.log('🔴 빨간색 게이지 업데이트 (AI 모드)');
+                }
+            }
+        }
+        
         // 시각적 피드백 함수들
         function showDamageEffect(element, amount) {
             const damageEl = document.createElement('div');
@@ -823,6 +932,10 @@
         function resetGameWithFirstPlayer(firstPlayer) {
             console.log('🔄 호스트의 첫 번째 턴 결정으로 게임 초기화');
             
+            // 게임 시작 시 타이머 정지 및 게이지 초기화
+            stopTurnTimer();
+            resetTurnGauge();
+            
             // 올바른 덱 생성 (1번은 1개, 2번은 2개, 3번은 3개...)
             let deck = [];
             for (let i = 1; i <= 6; i++) {
@@ -885,6 +998,11 @@
                 gameStarted: state.gameStarted,
                 isGameOver: state.isGameOver
             });
+            
+            // 첫 번째 턴 타이머 시작
+            setTimeout(() => {
+                startTurnTimer();
+            }, 1000);
             
             // 게임 상태 안전 새로고침 실행
             setTimeout(() => {
@@ -1040,7 +1158,7 @@
             spellButtonsContainer.innerHTML = '';
             
             const spellData = [
-                { number: 1, name: '전세 역전', icon: '⚡', desc: '비밀 전술 3개 공개,<br>병력 2 회복' },
+                { number: 1, name: '전세 역전', icon: '⚡', desc: '비밀 전술 3개 공개,<br>회복 2' },
                 { number: 2, name: '기습', icon: '💀', desc: '피해 1, 회복 1' },
                 { number: 3, name: '스파이', icon: '🕵️', desc: '공개되지 않은 비밀 전술<br>하나를 상대 패에 투입' },
                 { number: 4, name: '공격', icon: '⚔️', desc: '피해 1' },
@@ -1376,12 +1494,15 @@
                 state.turnInProgress = false;
                 updateButtons();
                 
+                // 연속 전략 시 타이머 계속 유지 (재시작하지 않음)
+                console.log('💡 연속 전략 성공 - 타이머 계속 유지');
+                
                 // 연속 전략 안내 메시지
                 addLog(`💡 연속 전략이 가능합니다! ${spellNumber}번 이상의 전략을 선택하거나 턴을 종료하세요.`);
                 return;
             } else {
                 player.health--;
-                console.log(`❌ 전략 실패! 플레이어 병력 감소: ${player.health}`);
+                console.log(`❌ 전략 실패! 플레이어 체력 감소: ${player.health}`);
                 
                 // 실패 효과
                 playFailureSound();
@@ -1389,7 +1510,7 @@
                 showDamageEffect(myArea, 1);
                 
                 const myPlayerId = multiplayerMode ? (isHost ? 1 : 2) : 1;
-                addLog(`❌ ${state.players[myPlayerId - 1].name}${getJosa(state.players[myPlayerId - 1].name, '이/가')} ${spellNumber}번 전략을 실행했지만 실패하여, 병력이 1 감소하였습니다.`);
+                addLog(`❌ ${state.players[myPlayerId - 1].name}${getJosa(state.players[myPlayerId - 1].name, '이/가')} ${spellNumber}번 전략을 실행했지만 실패하여, 체력이 1 감소하였습니다.`);
                 render();
                 await sleep(1000);
                 endTurn();
@@ -1400,6 +1521,9 @@
         function endTurn() {
             console.log('🔄 턴 종료');
             if (state.isGameOver) return;
+            
+            // 현재 턴 타이머 정지
+            stopTurnTimer();
             
             const currentPlayerName = state.currentPlayerId === 1 ? state.players[0].name : (multiplayerMode ? state.players[1].name : 'AI');
             addLog(`- ${currentPlayerName}${getJosa(currentPlayerName, '의')} 턴이 종료되었습니다.`);
@@ -1431,24 +1555,33 @@
             
             if (checkGameOver()) return;
 
-            // 멀티플레이어에서는 상대방이 턴을 처리하므로 AI 턴을 실행하지 않음
+            // 모든 턴에서 타이머 시작
             if (!state.isPlayerTurn && !multiplayerMode) {
+                // AI 턴 시작 - 타이머 시작
+                startTurnTimer();
                 aiTurn();
             } else if (!state.isPlayerTurn && multiplayerMode) {
                 // 멀티플레이어에서 상대방 턴 시작 로그
                 const opponentName = state.players[1].name;
                 addLog(`${opponentName}${getJosa(opponentName, '의')} 턴이 시작되었습니다.`);
-            } else if (state.isPlayerTurn && multiplayerMode) {
-                // 멀티플레이어에서 내 턴 시작 로그
-                const myPlayerId = isHost ? 1 : 2;
+                // 상대방 턴 시작 - 타이머 시작
+                startTurnTimer();
+            } else if (state.isPlayerTurn) {
+                // 내 턴 시작 (AI 모드 또는 멀티플레이어)
+                const myPlayerId = multiplayerMode ? (isHost ? 1 : 2) : 1;
                 const myName = state.players[myPlayerId - 1].name;
                 addLog(`${myName}${getJosa(myName, '의')} 턴이 시작되었습니다.`);
                 
-                // 내 턴 시작 시 자동 새로고침 실행
-                console.log('🎯 내 턴 시작 - 자동 새로고침 실행');
-                setTimeout(() => {
-                    safeRefreshGameState();
-                }, 500);
+                // 내 턴 시작 - 타이머 시작
+                startTurnTimer();
+                
+                // 멀티플레이어에서 내 턴 시작 시 자동 새로고침 실행
+                if (multiplayerMode) {
+                    console.log('🎯 내 턴 시작 - 자동 새로고침 실행');
+                    setTimeout(() => {
+                        safeRefreshGameState();
+                    }, 500);
+                }
             }
         }
 
@@ -1494,10 +1627,10 @@
                 case 5: // 휴식
                     console.log('😴 휴식 효과 실행');
                     if (player.health < 3) player.health++;
-                    console.log(`💚 휴식 회복: ${player.name} 병력 ${player.health}`);
+                    console.log(`💚 휴식 회복: ${player.name} 체력 ${player.health}`);
                     playHealSound();
                     showHealEffect(player.id === 1 ? myArea : opponentArea, 1);
-                    addLog(`${player.name}${getJosa(player.name, '이/가')} 휴식을 취해 병력이 1 회복되었습니다.`);
+                    addLog(`${player.name}${getJosa(player.name, '이/가')} 휴식을 취해 체력이 1 회복되었습니다.`);
                     break;
                 case 4: // 공격
                     opponent.health--;
@@ -1533,12 +1666,12 @@
                 case 2: // 기습
                     opponent.health--;
                     if (player.health < 3) player.health++;
-                    console.log(`💀 기습: ${opponent.name} 병력 ${opponent.health}, ${player.name} 병력 ${player.health}`);
+                    console.log(`💀 기습: ${opponent.name} 체력 ${opponent.health}, ${player.name} 체력 ${player.health}`);
                     playDamageSound();
                     playHealSound();
                     showDamageEffect(opponent.id === 1 ? myArea : opponentArea, 1);
                     showHealEffect(player.id === 1 ? myArea : opponentArea, 1);
-                    addLog(`${player.name}${getJosa(player.name, '이/가')} ${opponent.name}${getJosa(opponent.name, '의')} 병력을 흡수하여 피해 1을 입히고 병력을 1 회복했습니다.`);
+                    addLog(`${player.name}${getJosa(player.name, '이/가')} ${opponent.name}${getJosa(opponent.name, '의')} 체력을 흡수하여 피해 1을 입히고 체력을 1 회복했습니다.`);
                     break;
                 case 1: // 전세 역전
                     console.log('🔄 전세 역전 효과 실행');
@@ -1550,10 +1683,10 @@
                         addLog(`전세 역전! 비밀 전술 [${revealedStones.join(', ')}]${getJosa(revealedStones.join(', '), '이/가')} 공개되었습니다.`);
                     }
                     if (player.health < 3) player.health = Math.min(3, player.health + 2);
-                    console.log(`💚 전세 역전 회복: ${player.name} 병력 ${player.health}`);
+                    console.log(`💚 전세 역전 회복: ${player.name} 체력 ${player.health}`);
                     playHealSound();
                     showHealEffect(player.id === 1 ? myArea : opponentArea, 2);
-                    addLog(`${player.name}${getJosa(player.name, '의')} 병력이 2 회복되었습니다.`);
+                    addLog(`${player.name}${getJosa(player.name, '의')} 체력이 2 회복되었습니다.`);
                     break;
             }
             render();
@@ -1592,7 +1725,7 @@
                 }
 
                 let chosenSpell = chooseAISpell(castableSpells, ai, player);
-                console.log(`🤖 AI 선택한 전략: ${chosenSpell} (플레이어 병력: ${player.health}, AI 병력: ${ai.health})`);
+                console.log(`🤖 AI 선택한 전략: ${chosenSpell} (플레이어 체력: ${player.health}, AI 체력: ${ai.health})`);
                 
                 const handIndex = ai.hand.indexOf(chosenSpell);
                 const successRate = getAISuccessRate();
@@ -1632,14 +1765,14 @@
                     }
                 } else {
                     ai.health--;
-                    console.log(`❌ ${opponentName} 전략 실패: ${chosenSpell}번 (${opponentName} 병력: ${ai.health})`);
+                    console.log(`❌ ${opponentName} 전략 실패: ${chosenSpell}번 (${opponentName} 체력: ${ai.health})`);
                     
                     // AI 실패 효과
                     playFailureSound();
                     addFailureAnimation(opponentArea);
                     showDamageEffect(opponentArea, 1);
                     
-                    addLog(`❌ ${opponentName}${getJosa(opponentName, '이/가')} ${chosenSpell}번 전략을 실행했지만 실패했습니다. (병력 1 감소)`);
+                    addLog(`❌ ${opponentName}${getJosa(opponentName, '이/가')} ${chosenSpell}번 전략을 실행했지만 실패했습니다. (체력 1 감소)`);
                     render();
                     
                     // 멀티플레이어 모드에서 상대방에게 AI 실패 전송
@@ -1767,8 +1900,13 @@
             
             if (winner && !state.isGameOver) {
                 state.isGameOver = true;
+                
+                // 게임 종료 시 타이머 정지 및 게이지 초기화
+                stopTurnTimer();
+                resetTurnGauge();
+                
                 let message = `${winner.name}의 승리!`;
-                if (player.health <= 0 || ai.health <= 0) message += ' 상대의 병력을 모두 소진시켰습니다.';
+                if (player.health <= 0 || ai.health <= 0) message += ' 상대의 체력을 모두 소진시켰습니다.';
                 else message += ' 자신의 전술 카드를 모두 사용했습니다.';
                 console.log(`🏆 게임 종료: ${winner.name} 승리!`);
                 
@@ -1824,8 +1962,8 @@
             const player = state.players[0];
             const ai = state.players[1];
             debugInfo.innerHTML = `
-                <div>플레이어 병력: ${player.health}</div>
-                <div>AI 병력: ${ai.health}</div>
+                <div>플레이어 체력: ${player.health}</div>
+                <div>AI 체력: ${ai.health}</div>
                 <div>플레이어 손패: [${player.hand.join(', ')}]</div>
                 <div>AI 손패: [${ai.hand.join(', ')}]</div>
                 <div>비밀 전술: ${state.secretStones.length}개</div>
@@ -2016,6 +2154,10 @@
         function resetGame() {
             console.log('🔄 게임 리셋');
             
+            // 게임 시작 시 타이머 정지 및 게이지 초기화
+            stopTurnTimer();
+            resetTurnGauge();
+            
             // 올바른 덱 생성 (1번은 1개, 2번은 2개, 3번은 3개...)
             let deck = [];
             for (let i = 1; i <= 6; i++) {
@@ -2085,12 +2227,15 @@
             render();
             updateButtons();
             
-            // AI가 먼저 시작하는 경우 AI 턴 실행
-            if (!state.isPlayerTurn && !multiplayerMode) {
-                setTimeout(() => {
+            // 첫 번째 턴 타이머 시작 (AI 또는 플레이어 모두)
+            setTimeout(() => {
+                startTurnTimer();
+                
+                // AI가 먼저 시작하는 경우 AI 턴 실행
+                if (!state.isPlayerTurn && !multiplayerMode) {
                     aiTurn();
-                }, 1000);
-            }
+                }
+            }, 1000);
         }
 
         // 사운드 효과 함수들
@@ -2265,8 +2410,8 @@
             const player = state.players[0];
             const ai = state.players[1];
             debugInfo.innerHTML = `
-                <div>플레이어 병력: ${player.health}</div>
-                <div>AI 병력: ${ai.health}</div>
+                <div>플레이어 체력: ${player.health}</div>
+                <div>AI 체력: ${ai.health}</div>
                 <div>플레이어 손패: [${player.hand.join(', ')}]</div>
                 <div>AI 손패: [${ai.hand.join(', ')}]</div>
                 <div>비밀 전술: ${state.secretStones.length}개</div>
@@ -2366,11 +2511,117 @@
             
             if (isWin) {
                 stats[category].wins++;
+                currentWinStreak++;
+                if (currentWinStreak > maxWinStreak) {
+                    maxWinStreak = currentWinStreak;
+                }
             } else {
                 stats[category].losses++;
+                currentWinStreak = 0;
             }
+            
+            // 로컬 스토리지에 저장
+            localStorage.setItem('currentWinStreak', currentWinStreak.toString());
+            localStorage.setItem('maxWinStreak', maxWinStreak.toString());
             saveStats(stats);
+            
+            // 서버에 랭킹 업데이트 요청
+            const playerName = localStorage.getItem('playerName') || 'Player';
+            if (socket) {
+                socket.emit('updateRanking', {
+                    category: category,
+                    playerName: playerName,
+                    stats: {
+                        wins: stats[category].wins,
+                        losses: stats[category].losses,
+                        currentWinStreak: currentWinStreak,
+                        maxWinStreak: maxWinStreak
+                    }
+                });
+            }
+            
             console.log(`📊 전적 업데이트: ${category} - 승리 ${stats[category].wins}, 패배 ${stats[category].losses}`);
+        }
+        
+        function showRankingModal() {
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 flex items-center justify-center z-50 modal-bg';
+            modal.innerHTML = `
+                <div class="modal-content p-6 rounded-lg max-w-4xl w-full mx-4 max-h-[80vh] overflow-y-auto">
+                    <h3 class="text-xl font-bold mb-4 text-center">🏆 랭킹</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <h4 class="text-lg font-bold mb-3 text-yellow-300 text-center">🤖 AI 대전 랭킹</h4>
+                            <div id="ai-ranking" class="space-y-2">
+                                <div class="text-center text-gray-400">로딩 중...</div>
+                            </div>
+                        </div>
+                        <div>
+                            <h4 class="text-lg font-bold mb-3 text-green-300 text-center">👥 멀티플레이어 랭킹</h4>
+                            <div id="multiplayer-ranking" class="space-y-2">
+                                <div class="text-center text-gray-400">로딩 중...</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex justify-center mt-4">
+                        <button id="close-ranking-btn" class="px-6 py-2 rounded-lg font-bold btn-secondary">닫기</button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            playCardSound();
+            
+            // 랭킹 데이터 요청
+            if (socket) {
+                socket.emit('getRanking', { category: 'ai' });
+                socket.emit('getRanking', { category: 'multiplayer' });
+            }
+            
+            // 랭킹 데이터 수신 이벤트 리스너
+            const handleRankingData = (data) => {
+                const rankingContainer = document.getElementById(`${data.category}-ranking`);
+                if (rankingContainer) {
+                    if (data.ranking.length === 0) {
+                        rankingContainer.innerHTML = '<div class="text-center text-gray-400">아직 기록이 없습니다.</div>';
+                    } else {
+                        const rankingHtml = data.ranking.map((player, index) => {
+                            const rank = index + 1;
+                            const rankIcon = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : `${rank}.`;
+                            return `
+                                <div class="flex items-center justify-between p-3 bg-gray-800 bg-opacity-50 rounded-lg">
+                                    <div class="flex items-center space-x-3">
+                                        <span class="text-lg">${rankIcon}</span>
+                                        <span class="font-bold">${player.name}</span>
+                                    </div>
+                                    <div class="text-right">
+                                        <div class="text-sm text-green-400">${player.wins}승 ${player.losses}패</div>
+                                        <div class="text-xs text-blue-400">최고 ${player.maxWinStreak}연승</div>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('');
+                        rankingContainer.innerHTML = rankingHtml;
+                    }
+                }
+            };
+            
+            // 소켓 이벤트 리스너 추가
+            if (socket) {
+                socket.on('rankingData', handleRankingData);
+            }
+            
+            return new Promise(resolve => {
+                const closeBtn = modal.querySelector('#close-ranking-btn');
+                
+                closeBtn.addEventListener('click', () => {
+                    if (socket) {
+                        socket.off('rankingData', handleRankingData);
+                    }
+                    document.body.removeChild(modal);
+                    resolve();
+                });
+            });
         }
         
         function showProfileModal() {
@@ -3091,6 +3342,11 @@
                 const currentPlayerName = state.currentPlayerId === 1 ? state.players[0].name : state.players[1].name;
                 addLog(`${currentPlayerName}${getJosa(currentPlayerName, '의')} 턴이 시작되었습니다.`);
                 
+                // 타이머 시작
+                setTimeout(() => {
+                    startTurnTimer();
+                }, 500);
+                
                 // 턴을 받은 플레이어의 경우 자동 새로고침 실행
                 if (multiplayerMode && state.isPlayerTurn) {
                     console.log('🎯 내 턴 시작 - 자동 새로고침 실행');
@@ -3101,6 +3357,11 @@
             } else {
                 state.isPlayerTurn = !state.isPlayerTurn;
                 state.currentPlayerId = state.currentPlayerId === 1 ? 2 : 1;
+                
+                // AI 모드에서도 타이머 시작
+                setTimeout(() => {
+                    startTurnTimer();
+                }, 500);
             }
             render();
             updateButtons(); // 버튼 상태 업데이트 추가
@@ -3170,6 +3431,11 @@
             console.log('🏠 타이틀 화면으로 돌아가기');
             gameScreen.classList.add('hidden');
             titleScreen.classList.remove('hidden');
+            
+            // 타이머 정지 및 게이지 초기화
+            stopTurnTimer();
+            resetTurnGauge();
+            
             // 게임 상태 초기화
             state = {};
         }
@@ -3231,11 +3497,11 @@
         // 포기 버튼 이벤트 리스너
         document.getElementById('surrender-btn').addEventListener('click', surrenderGame);
         
-        // 새로고침 버튼 이벤트 리스너
-        document.getElementById('refresh-game-btn').addEventListener('click', safeRefreshGameState);
-        
         // 내 정보 버튼 이벤트 리스너
         document.getElementById('profile-btn').addEventListener('click', showProfileModal);
+        
+        // 랭킹 버튼 이벤트 리스너
+        document.getElementById('ranking-btn').addEventListener('click', showRankingModal);
 
         usedStonesPile.addEventListener('click', () => {
             playCardSound();
