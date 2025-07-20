@@ -770,53 +770,52 @@
         function resetGameWithFirstPlayer(firstPlayer) {
             console.log('🔄 호스트의 첫 번째 턴 결정으로 게임 초기화');
             
-            // 덱 생성 및 셔플
-            const deck = [];
+            // 올바른 덱 생성 (1번은 1개, 2번은 2개, 3번은 3개...)
+            let deck = [];
             for (let i = 1; i <= 6; i++) {
-                for (let j = 0; j < 3; j++) {
+                for (let j = 0; j < i; j++) {
                     deck.push(i);
                 }
             }
             console.log('📦 초기 덱 생성:', deck);
             
-            for (let i = deck.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [deck[i], deck[j]] = [deck[j], deck[i]];
-            }
+            // 덱 셔플
+            shuffleArray(deck);
             console.log('🔄 덱 셔플 완료');
             
-            const aiName = `AI ${aiDifficulty === 'easy' ? '쉬움' : aiDifficulty === 'normal' ? '보통' : '어려움'}`;
+            const playerName = localStorage.getItem('playerName') || 'Player';
+            const opponentName = multiplayerMode ? (opponentName || 'Player2') : 'AI';
+            
             state = {
                 players: [
-                    { id: 1, name: 'Player', health: 3, hand: deck.slice(0, 6).sort((a, b) => a - b), knownSecretStones: [] },
-                    { id: 2, name: multiplayerMode ? 'Opponent' : aiName, health: 3, hand: deck.slice(6, 12).sort((a, b) => a - b), knownSecretStones: [] }
+                    { id: 1, name: playerName, health: 3, hand: deck.slice(0, 7).sort((a, b) => a - b), knownSecretStones: [] },
+                    { id: 2, name: opponentName, health: 3, hand: deck.slice(7, 14).sort((a, b) => a - b), knownSecretStones: [] }
                 ],
-                secretStones: deck.slice(12),
+                secretStones: deck.slice(14),
                 usedStones: [],
                 publiclyRevealedSecretStones: [],
                 currentPlayerId: firstPlayer,
-                lastSuccessfulSpell: 0,
                 isPlayerTurn: firstPlayer === 1,
+                lastSuccessfulSpell: 0,
                 turnInProgress: false,
-                gameLog: [`게임이 시작되었습니다. ${firstPlayer === 1 ? playerName : (multiplayerMode ? opponentName : aiName)}가 먼저 시작합니다.`],
                 isGameOver: false,
-                memoNotes: {},
-                memoPanelActive: false,
+                gameStarted: true,
+                gameLog: [`새로운 전투가 시작됩니다! ${firstPlayer === 1 ? playerName : opponentName}가 먼저 시작합니다.`]
             };
             
             console.log('🎯 게스트 초기 게임 상태:', {
                 playerHand: state.players[0].hand,
-                aiHand: state.players[1].hand,
+                opponentHand: state.players[1].hand,
                 secretStones: state.secretStones,
                 playerHealth: state.players[0].health,
-                aiHealth: state.players[1].health,
+                opponentHealth: state.players[1].health,
                 firstPlayer: firstPlayer
             });
             
             createSpellButtons();
             updatePlayerName();
             render();
-            updateDebugInfo();
+            updateButtons();
             
             // 메모 패널 표시
             showMemoPanel();
@@ -1671,7 +1670,8 @@
             } else if (multiplayerMode && !isHost) {
                 // 게스트는 호스트의 결정을 기다림
                 console.log('⏳ 호스트의 첫 번째 턴 결정 대기 중...');
-                return; // 호스트의 결정을 기다린 후 다시 호출됨
+                // 임시로 기본값 설정 (호스트의 결정으로 덮어씌워짐)
+                firstPlayer = 1;
             } else {
                 // AI 모드에서는 랜덤 결정
                 firstPlayer = Math.random() < 0.5 ? 1 : 2;
@@ -1682,7 +1682,7 @@
             state = {
                 players: [
                     { id: 1, name: playerName, health: 3, hand: deck.slice(0, 7).sort((a, b) => a - b), knownSecretStones: [] },
-                    { id: 2, name: multiplayerMode ? opponentName : 'AI', health: 3, hand: deck.slice(7, 14).sort((a, b) => a - b), knownSecretStones: [] }
+                    { id: 2, name: multiplayerMode ? (opponentName || 'Player2') : 'AI', health: 3, hand: deck.slice(7, 14).sort((a, b) => a - b), knownSecretStones: [] }
                 ],
                 secretStones: deck.slice(14),
                 usedStones: [],
@@ -1692,7 +1692,8 @@
                 lastSuccessfulSpell: 0,
                 turnInProgress: false,
                 isGameOver: false,
-                gameLog: [`새로운 전투가 시작됩니다! ${firstPlayer === 1 ? playerName : (multiplayerMode ? opponentName : 'AI')}가 먼저 시작합니다.`]
+                gameStarted: true,
+                gameLog: [`새로운 전투가 시작됩니다! ${firstPlayer === 1 ? playerName : (multiplayerMode ? (opponentName || 'Player2') : 'AI')}가 먼저 시작합니다.`]
             };
             
             console.log('🎯 초기 게임 상태:', {
@@ -2279,7 +2280,6 @@
             
             titleScreen.classList.add('hidden');
             gameScreen.classList.remove('hidden');
-            resetGame();
             
             // 플레이어 이름 업데이트
             updatePlayerName();
@@ -2287,13 +2287,11 @@
             // 상대방 정보 표시
             const opponentArea = document.getElementById('opponent-area');
             const opponentTitle = opponentArea.querySelector('h2');
-            opponentTitle.textContent = `상대 (${opponentName})`;
+            opponentTitle.textContent = `상대 (${opponentName || 'Player2'})`;
             opponentTitle.className = 'text-xl font-bold text-green-300';
             
-            // 게임 상태 초기화 시 상대방 이름 설정
-            if (state.players && state.players[1]) {
-                state.players[1].name = opponentName;
-            }
+            // 게임 초기화
+            resetGame();
             
             // 호스트인 경우 초기 게임 상태를 상대방에게 전송
             if (isHost && dataChannel && dataChannel.readyState === 'open') {
