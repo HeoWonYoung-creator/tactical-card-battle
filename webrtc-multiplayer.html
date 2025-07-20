@@ -2802,7 +2802,7 @@
             }
             
             // Socket.IO 연결 (개선된 설정)
-            socket = io('http://localhost:3000', {
+            socket = io('https://tactical-card-battle.onrender.com', {
                 transports: ['websocket', 'polling'],
                 timeout: 60000,
                 reconnection: true,
