@@ -2600,8 +2600,14 @@
                 socket.disconnect();
             }
             
-            // Socket.IO 연결
-            socket = io('http://localhost:3000');
+            // Socket.IO 연결 (개선된 설정)
+            socket = io('http://localhost:3000', {
+                transports: ['websocket', 'polling'],
+                timeout: 60000,
+                reconnection: true,
+                reconnectionAttempts: 5,
+                reconnectionDelay: 1000
+            });
             
             socket.on('connect', () => {
                 console.log('🔌 Socket.IO 연결 성공');
@@ -2611,6 +2617,23 @@
             socket.on('disconnect', () => {
                 console.log('🔌 Socket.IO 연결 해제');
                 serverConnected = false;
+                addLog('🔌 서버와의 연결이 해제되었습니다.');
+            });
+            
+            // 연결 재시도
+            socket.on('reconnect', (attemptNumber) => {
+                console.log(`🔄 Socket.IO 재연결 성공 (시도 ${attemptNumber})`);
+                serverConnected = true;
+                addLog('🔄 서버와의 연결이 복구되었습니다.');
+            });
+            
+            socket.on('reconnect_attempt', (attemptNumber) => {
+                console.log(`🔄 Socket.IO 재연결 시도 ${attemptNumber}`);
+            });
+            
+            socket.on('reconnect_failed', () => {
+                console.log('❌ Socket.IO 재연결 실패');
+                addLog('❌ 서버 재연결에 실패했습니다.');
             });
             
             socket.on('serverStats', (stats) => {
@@ -2660,6 +2683,35 @@
             socket.on('iceCandidate', (data) => {
                 console.log('📥 ICE Candidate 수신:', data);
                 handleIceCandidate(data.from, data.candidate);
+            });
+            
+            // 서버 에러 처리
+            socket.on('error', (error) => {
+                console.error('❌ 서버 에러:', error);
+                addLog(`❌ 서버 오류: ${error.message}`);
+                
+                // 연결 재시도
+                if (error.context === 'offer' || error.context === 'answer') {
+                    setTimeout(() => {
+                        console.log('🔄 WebRTC 연결 재시도...');
+                        if (peerConnection) {
+                            peerConnection.close();
+                            peerConnection = null;
+                        }
+                        initializeWebRTC(opponentId);
+                    }, 2000);
+                }
+            });
+            
+            // 게임 상태 복구
+            socket.on('gameStateRecovery', (data) => {
+                console.log('🔄 게임 상태 복구 수신:', data);
+                if (data.gameState) {
+                    state = data.gameState;
+                    render();
+                    updateButtons();
+                    addLog('🔄 게임 상태가 복구되었습니다.');
+                }
             });
         }
         
