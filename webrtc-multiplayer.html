@@ -1090,7 +1090,7 @@
                     <div>${state.players[1].name} 손패: [${ai.hand.join(', ')}]</div>
                     <div>비밀의 돌: ${state.secretStones.length}개</div>
                     <div>사용한 돌: ${state.usedStones.length}개</div>
-                    <div>마지막 성공 영창: ${state.lastSuccessfulSpell}</div>
+                    <div>마지막 성공 영창: ${state.lastSuccessfulSpell} ${state.lastSuccessfulSpell > 0 ? `(연속 영창: ${state.lastSuccessfulSpell}번 이상)` : '(연속 영창 없음)'}</div>
                     <div>게임 종료: ${state.isGameOver}</div>
                 `;
             }
@@ -1471,7 +1471,7 @@
             
             buttons.forEach(btn => {
                 const spellNum = parseInt(btn.dataset.spell);
-                const isDisabled = !isMyTurn || state.turnInProgress || spellNum < state.lastSuccessfulSpell || state.isGameOver || spellButtonsDisabled;
+                const isDisabled = !isMyTurn || state.turnInProgress || (state.lastSuccessfulSpell > 0 && spellNum < state.lastSuccessfulSpell) || state.isGameOver || spellButtonsDisabled;
                 
                 // 버튼을 완전히 숨기지 말고 비활성화만 하기
                 btn.disabled = isDisabled;
@@ -1480,9 +1480,56 @@
                 if (isDisabled) {
                     btn.style.opacity = '0.5';
                     btn.style.cursor = 'not-allowed';
+                    // 연속 영창 규칙 위반 시 추가 시각적 표시
+                    if (state.lastSuccessfulSpell > 0 && spellNum < state.lastSuccessfulSpell) {
+                        btn.style.border = '2px solid #dc3545';
+                        btn.style.color = '#dc3545';
+                        // 연속 영창 규칙 위반 시 추가 텍스트 표시 (더 간단하게)
+                        const descElement = btn.querySelector('.text-xs.opacity-75');
+                        if (descElement) {
+                            descElement.innerHTML = `${state.lastSuccessfulSpell}번 이상`;
+                        }
+                    } else {
+                        btn.style.border = '';
+                        btn.style.color = '';
+                        // 원래 설명 복원
+                        const descElement = btn.querySelector('.text-xs.opacity-75');
+                        if (descElement) {
+                            const spellData = [
+                                { number: 1, desc: '비밀 주문 3개 공개' },
+                                { number: 2, desc: '피해 1, 회복 1' },
+                                { number: 3, desc: '공개되지 않은 비밀 주문<br>하나를 상대 패에 투입' },
+                                { number: 4, desc: '피해 1' },
+                                { number: 5, desc: '회복 1' },
+                                { number: 6, desc: '비밀 주문 1개 공개' }
+                            ];
+                            const spell = spellData.find(s => s.number === spellNum);
+                            if (spell) {
+                                descElement.innerHTML = spell.desc;
+                            }
+                        }
+                    }
                 } else {
                     btn.style.opacity = '1';
                     btn.style.cursor = 'pointer';
+                    btn.style.border = '';
+                    btn.style.color = '';
+                    // 원래 설명 복원
+                    const descElement = btn.querySelector('.text-xs.opacity-75');
+                    if (descElement) {
+                        const spellData = [
+                            { number: 1, desc: '비밀 주문 3개 공개' },
+                            { number: 2, desc: '피해 1, 회복 1' },
+                            { number: 3, desc: '공개되지 않은 비밀 주문<br>하나를 상대 패에 투입' },
+                            { number: 4, desc: '피해 1' },
+                            { number: 5, desc: '회복 1' },
+                            { number: 6, desc: '비밀 주문 1개 공개' }
+                        ];
+                        const spell = spellData.find(s => s.number === spellNum);
+                        if (spell) {
+                            descElement.innerHTML = spell.desc;
+                        }
+                    }
                 }
                 
                 // 디버그용: 버튼 상태 로그
@@ -1509,6 +1556,12 @@
             // 이미 영창 진행 중이거나 버튼이 비활성화되어 있으면 중단
             if (state.turnInProgress || spellButtonsDisabled) {
                 console.log('❌ 영창 진행 중 또는 버튼 비활성화 - 중복 클릭 방지');
+                return;
+            }
+            
+            // 연속 영창 규칙 검증 (강화된 검증)
+            if (state.lastSuccessfulSpell > 0 && spellNumber < state.lastSuccessfulSpell) {
+                console.log(`❌ 연속 영창 규칙 위반: ${spellNumber} < ${state.lastSuccessfulSpell}`);
                 return;
             }
             
@@ -1542,8 +1595,10 @@
             endTurnBtn.style.opacity = '0.5';
             endTurnBtn.style.cursor = 'not-allowed';
             
-            // 현재 턴인 플레이어의 패에서 카드 찾기
+            // 현재 턴인 플레이어 찾기
             const currentPlayer = state.players.find(p => p.id === state.currentPlayerId);
+            
+            // 현재 턴인 플레이어의 패에서 카드 찾기
             const handIndex = currentPlayer.hand.indexOf(spellNumber);
             
             console.log(`🔍 손패에서 ${spellNumber} 찾기:`, {
@@ -1573,19 +1628,28 @@
                 playSuccessSound();
                 addSuccessAnimation(myArea);
                 
-                                    const myPlayerId = multiplayerMode ? (isHost ? 1 : 2) : 1;
-                                    addLog(`✅ ${state.players[myPlayerId - 1].name}${getJosa(state.players[myPlayerId - 1].name, '이/가')} ${spellNumber}번 영창을 성공적으로 시전했습니다!`);
+                const myPlayerId = multiplayerMode ? (isHost ? 1 : 2) : 1;
+                addLog(`✅ ${state.players[myPlayerId - 1].name}${getJosa(state.players[myPlayerId - 1].name, '이/가')} ${spellNumber}번 영창을 성공적으로 시전했습니다!`);
+                
+                // 먼저 lastSuccessfulSpell 업데이트
+                state.lastSuccessfulSpell = spellNumber;
+                console.log(`📊 연속 영창 업데이트: ${spellNumber}번 (이제 ${spellNumber}번 이상만 사용 가능)`);
+                
                 render();
                 await executeSpellEffect(myPlayerId, spellNumber);
-                state.lastSuccessfulSpell = spellNumber;
                 
                 // 성공한 경우 연속 영창 가능하도록 턴 유지
                 state.turnInProgress = false;
+                
+                // 버튼 상태 즉시 업데이트
+                updateButtons();
+                
                 // 성공 시에도 안전 시간 후 버튼 활성화
                 setTimeout(() => {
                     enableSpellButtons();
+                    // 버튼 활성화 후 다시 한 번 상태 확인
+                    updateButtons();
                 }, 500); // 0.5초 안전 시간
-                updateButtons();
                 
                 // 연속 영창 시 타이머 계속 유지 (재시작하지 않음)
                 console.log('💡 연속 영창 성공 - 타이머 계속 유지');
