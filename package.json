@@ -1,7 +1,7 @@
 {
   "name": "tactical-card-battle-signaling",
   "version": "1.0.0",
-  "description": "Signaling server for tactical card battle multiplayer",
+  "description": "WebRTC signaling server for tactical card battle multiplayer game with real-time communication",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
@@ -15,7 +15,7 @@
   "devDependencies": {
     "nodemon": "^3.0.1"
   },
-  "keywords": ["webrtc", "signaling", "multiplayer", "game"],
+  "keywords": ["webrtc", "signaling", "multiplayer", "game", "real-time", "socket.io", "express", "card-game", "tactical"],
   "author": "",
   "license": "MIT"
 } 

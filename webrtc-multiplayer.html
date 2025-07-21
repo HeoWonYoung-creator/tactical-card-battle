@@ -202,12 +202,83 @@
             }
         }
         .player-area-glow {
-            box-shadow: 0 0 30px 10px rgba(255, 255, 255, 0.6);
-            animation: glowPulse 2s ease-in-out infinite;
+            box-shadow: 0 0 10px 4px rgba(0, 123, 255, 0.6);
+            animation: glowPulse 1.5s ease-in-out infinite;
+            border: 1px solid rgba(0, 123, 255, 0.7);
+            border-radius: 12px;
+            position: relative;
+        }
+        .player-area-glow.opponent-turn {
+            box-shadow: 0 0 10px 4px rgba(220, 53, 69, 0.6);
+            border-color: rgba(220, 53, 69, 0.7);
+            border: 1px solid rgba(220, 53, 69, 0.7);
+        }
+        .player-area-glow.opponent-turn::before {
+            content: '';
+            position: absolute;
+            top: -3px;
+            left: -3px;
+            right: -3px;
+            bottom: -3px;
+            background: linear-gradient(45deg, rgba(220, 53, 69, 0.05), rgba(220, 53, 69, 0.15));
+            border-radius: 14px;
+            z-index: -1;
+            animation: backgroundPulseRed 2s ease-in-out infinite;
+        }
+        .player-area-glow::before {
+            content: '';
+            position: absolute;
+            top: -3px;
+            left: -3px;
+            right: -3px;
+            bottom: -3px;
+            background: linear-gradient(45deg, rgba(0, 123, 255, 0.05), rgba(0, 123, 255, 0.15));
+            border-radius: 14px;
+            z-index: -1;
+            animation: backgroundPulse 2s ease-in-out infinite;
         }
         @keyframes glowPulse {
-            0%, 100% { box-shadow: 0 0 30px 10px rgba(255, 255, 255, 0.6); }
-            50% { box-shadow: 0 0 40px 15px rgba(255, 255, 255, 0.8); }
+            0%, 100% { 
+                box-shadow: 0 0 10px 4px rgba(0, 123, 255, 0.6);
+                border-color: rgba(0, 123, 255, 0.7);
+            }
+            50% { 
+                box-shadow: 0 0 15px 6px rgba(0, 123, 255, 0.8);
+                border-color: rgba(0, 123, 255, 0.8);
+            }
+        }
+        .player-area-glow.opponent-turn {
+            animation: glowPulseRed 1.5s ease-in-out infinite;
+        }
+        @keyframes glowPulseRed {
+            0%, 100% { 
+                box-shadow: 0 0 10px 4px rgba(220, 53, 69, 0.6);
+                border-color: rgba(220, 53, 69, 0.7);
+            }
+            50% { 
+                box-shadow: 0 0 15px 6px rgba(220, 53, 69, 0.8);
+                border-color: rgba(220, 53, 69, 0.8);
+            }
+        }
+        @keyframes backgroundPulseRed {
+            0%, 100% { 
+                opacity: 0.3;
+                transform: scale(1);
+            }
+            50% { 
+                opacity: 0.6;
+                transform: scale(1.02);
+            }
+        }
+        @keyframes backgroundPulse {
+            0%, 100% { 
+                opacity: 0.3;
+                transform: scale(1);
+            }
+            50% { 
+                opacity: 0.6;
+                transform: scale(1.02);
+            }
         }
         .health-heart {
             animation: heartBeat 1s ease-in-out infinite;
@@ -253,17 +324,53 @@
         }
         .turn-indicator {
             position: absolute;
-            top: -10px;
-            right: -10px;
-            width: 20px;
-            height: 20px;
-            background: #ffffff;
+            top: -15px;
+            right: -15px;
+            width: 35px;
+            height: 35px;
+            background: linear-gradient(135deg, #007bff, #0056b3);
             border-radius: 50%;
             animation: turnPulse 1s ease-in-out infinite;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 9px;
+            font-weight: bold;
+            box-shadow: 0 1px 4px rgba(0, 123, 255, 0.3);
+            z-index: 10;
+        }
+        .turn-indicator.opponent-turn {
+            background: linear-gradient(135deg, #dc3545, #c82333);
+            box-shadow: 0 1px 4px rgba(220, 53, 69, 0.3);
+            animation: turnPulseRed 1s ease-in-out infinite;
         }
         @keyframes turnPulse {
-            0%, 100% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(1.2); opacity: 0.7; }
+            0%, 100% { 
+                transform: scale(1); 
+                opacity: 1;
+                box-shadow: 0 1px 4px rgba(0, 123, 255, 0.3);
+            }
+            50% { 
+                transform: scale(1.2); 
+                opacity: 0.9;
+                box-shadow: 0 3px 10px rgba(0, 123, 255, 0.5);
+            }
+        }
+        .turn-indicator.opponent-turn {
+            animation: turnPulseRed 1s ease-in-out infinite;
+        }
+        @keyframes turnPulseRed {
+            0%, 100% { 
+                transform: scale(1); 
+                opacity: 1;
+                box-shadow: 0 1px 4px rgba(220, 53, 69, 0.3);
+            }
+            50% { 
+                transform: scale(1.2); 
+                opacity: 0.9;
+                box-shadow: 0 3px 10px rgba(220, 53, 69, 0.5);
+            }
         }
         .card-damage {
             position: absolute;
@@ -339,9 +446,26 @@
         
         <div class="space-y-4">
             <button id="ai-battle-btn" class="w-full py-4 rounded-lg font-bold text-xl btn-primary border-2 border-white">모의 결투 <span class="text-sm font-normal">(vs 허수아비)</span></button>
-            <button id="multiplayer-btn" class="w-full py-4 rounded-lg font-bold text-xl bg-red-600 hover:bg-red-700 text-white transition-all duration-300 hover:transform hover:-translate-y-0.5 hover:shadow-lg" style="box-shadow: 0 2px 4px rgba(220, 53, 69, 0.3);">정식 결투 <span class="text-sm font-normal">(마법진 그리는 중..)</span></button>
-                            <button id="profile-btn" class="w-1/4 py-2 rounded-lg font-bold text-base btn-secondary">👤 마법 이력서</button>
-                <button id="ranking-btn" class="w-1/4 py-2 rounded-lg font-bold text-base btn-secondary">🏆 오늘의 마법왕</button>
+            <button id="multiplayer-btn" class="w-full py-4 rounded-lg font-bold text-xl bg-red-600 hover:bg-red-700 text-white transition-all duration-300 hover:transform hover:-translate-y-0.5 hover:shadow-lg" style="box-shadow: 0 2px 4px rgba(220, 53, 69, 0.3);">정식 결투 <span class="text-sm font-normal">(vs 다른 마법사)</span></button>
+            
+            <!-- 승리의 증표 표시 영역 -->
+            <div class="flex justify-center items-center space-x-4 mb-4">
+                <div class="text-2xl">🏅</div>
+                <div class="flex items-center space-x-2">
+                    <div class="text-sm font-bold text-yellow-300">모의 결투</div>
+                    <div id="ai-trophy-count" class="text-lg font-bold text-yellow-200">0</div>
+                </div>
+                <div class="text-gray-400">|</div>
+                <div class="flex items-center space-x-2">
+                    <div class="text-sm font-bold text-red-300">정식 결투</div>
+                    <div id="multiplayer-trophy-count" class="text-lg font-bold text-red-200">0</div>
+                </div>
+            </div>
+            
+            <div class="flex space-x-2">
+                <button id="profile-btn" class="w-1/2 py-2 rounded-lg font-bold text-base btn-secondary">👤 마법 이력서</button>
+                <button id="ranking-btn" class="w-1/2 py-2 rounded-lg font-bold text-base btn-secondary">🏆 오늘의 마법왕</button>
+            </div>
         </div>
         
         <!-- AI 난이도 선택 모달 -->
@@ -354,7 +478,7 @@
                     <div class="space-y-3">
                         <button id="easy-ai-btn" class="w-full py-3 rounded-lg font-bold btn-primary text-green-400 hover:text-green-300">입문용</button>
                         <button id="normal-ai-btn" class="w-full py-3 rounded-lg font-bold btn-primary text-yellow-400 hover:text-yellow-300">연습용</button>
-                        <button id="hard-ai-btn" class="w-full py-3 rounded-lg font-bold btn-primary text-red-400 hover:text-red-300">오작동</button>
+                        <button id="hard-ai-btn" class="w-full py-3 rounded-lg font-bold btn-primary text-red-400 hover:text-red-300">고수용</button>
                         <button id="cancel-difficulty-btn" class="w-full py-2 rounded-lg font-bold btn-secondary">취소</button>
                     </div>
                 </div>
@@ -365,12 +489,13 @@
     <!-- 게임 화면 -->
     <div id="game-screen" class="w-full max-w-4xl mx-auto space-y-2 hidden">
         <!-- 상대 영역 (항상 상단) -->
-        <div id="opponent-area" class="p-4 border-2 border-red-400 rounded-lg transition-all duration-500">
+        <div id="opponent-area" class="p-4 border-2 border-red-400 rounded-lg transition-all duration-500 relative">
             <div class="flex justify-between items-center mb-4">
                 <h2 class="text-xl font-bold text-red-300">상대</h2>
                 <div id="opponent-health" class="flex items-center space-x-1 text-2xl"></div>
             </div>
             <div id="opponent-hand" class="flex justify-center space-x-2"></div>
+            <div id="opponent-turn-indicator" class="turn-indicator hidden">상대 턴!</div>
         </div>
 
         <!-- 중앙 영역 -->
@@ -397,12 +522,13 @@
         </div>
 
         <!-- 내 영역 (항상 하단) -->
-        <div id="my-area" class="p-4 border-2 border-blue-400 rounded-lg transition-all duration-500">
+        <div id="my-area" class="p-4 border-2 border-blue-400 rounded-lg transition-all duration-500 relative">
             <div id="my-hand" class="flex justify-center space-x-2 mb-4"></div>
             <div class="flex justify-between items-center">
                 <div id="my-health" class="flex items-center space-x-1 text-2xl"></div>
                 <h2 id="my-title" class="text-xl font-bold text-blue-300">나</h2>
             </div>
+            <div id="my-turn-indicator" class="turn-indicator hidden">내 턴!</div>
         </div>
 
         <!-- 컨트롤 영역 -->
@@ -496,6 +622,32 @@
         // 사운드 효과 (Web Audio API 사용)
         const audioContext = new (window.AudioContext || window.webkitAudioContext)();
         
+        // 사운드 설정 객체
+        const SOUNDS = {
+            card: { freq: 150, dur: 0.1, type: 'square', sequence: [[200, 0.1, 'square', 50]] },
+            success: { freq: 523.25, dur: 0.2, type: 'sine', sequence: [
+                [659.25, 0.2, 'sine', 100], [783.99, 0.3, 'sine', 200]
+            ]},
+            failure: { freq: 220, dur: 0.3, type: 'sawtooth', sequence: [
+                [196, 0.3, 'sawtooth', 150]
+            ]},
+            damage: { freq: 100, dur: 0.2, type: 'square', sequence: [
+                [80, 0.2, 'square', 100], [60, 0.3, 'square', 200]
+            ]},
+            heal: { freq: 660, dur: 0.2, type: 'triangle', sequence: [
+                [880, 0.2, 'triangle', 100], [1108.73, 0.3, 'triangle', 200]
+            ]},
+            gameStart: { freq: 440, dur: 0.3, type: 'sine', sequence: [
+                [554.37, 0.3, 'sine', 200], [659.25, 0.4, 'sine', 400]
+            ]},
+            gameWin: { freq: 523.25, dur: 0.3, type: 'sine', sequence: [
+                [659.25, 0.3, 'sine', 200], [783.99, 0.3, 'sine', 400], [1046.50, 0.4, 'sine', 600]
+            ]},
+            gameLose: { freq: 220, dur: 0.4, type: 'sawtooth', sequence: [
+                [196, 0.4, 'sawtooth', 300], [174.61, 0.5, 'sawtooth', 600]
+            ]}
+        };
+        
         function playSound(frequency, duration, type = 'sine') {
             if (audioContext.state === 'suspended') {
                 audioContext.resume();
@@ -517,90 +669,88 @@
             oscillator.stop(audioContext.currentTime + duration);
         }
         
-        function playCardSound() {
-            // 주문 클릭 시 전쟁 드럼 소리
-            playSound(150, 0.1, 'square');
-            setTimeout(() => playSound(200, 0.1, 'square'), 50);
+        function playSoundEffect(type) {
+            const sound = SOUNDS[type];
+            if (!sound) return;
+            
+            playSound(sound.freq, sound.dur, sound.type);
+            
+            // 시퀀스 사운드 재생
+            sound.sequence?.forEach(([freq, dur, type, delay]) => {
+                setTimeout(() => playSound(freq, dur, type), delay);
+            });
         }
         
-        function playSuccessSound() {
-            // 성공 시 승리 팡파르
-            playSound(523.25, 0.2, 'sine'); // C5
-            setTimeout(() => playSound(659.25, 0.2, 'sine'), 100); // E5
-            setTimeout(() => playSound(783.99, 0.3, 'sine'), 200); // G5
-        }
-        
-        function playFailureSound() {
-            // 실패 시 경고음
-            playSound(220, 0.3, 'sawtooth');
-            setTimeout(() => playSound(196, 0.3, 'sawtooth'), 150);
-        }
-        
-        function playDamageSound() {
-            // 피해 시 폭발음
-            playSound(100, 0.2, 'square');
-            setTimeout(() => playSound(80, 0.2, 'square'), 100);
-            setTimeout(() => playSound(60, 0.3, 'square'), 200);
-        }
-        
-        function playHealSound() {
-            // 회복 시 치유음
-            playSound(660, 0.2, 'triangle'); // E5
-            setTimeout(() => playSound(880, 0.2, 'triangle'), 100); // A5
-            setTimeout(() => playSound(1108.73, 0.3, 'triangle'), 200); // C#6
-        }
-        
-        function playGameStartSound() {
-            // 게임 시작 시 전쟁 호른
-            playSound(440, 0.3, 'sine'); // A4
-            setTimeout(() => playSound(554.37, 0.3, 'sine'), 200); // C#5
-            setTimeout(() => playSound(659.25, 0.4, 'sine'), 400); // E5
-        }
-        
-        function playGameOverSound(isWin) {
-            if (isWin) {
-                // 승리 시 영웅적 팡파르
-                playSound(523.25, 0.3, 'sine'); // C5
-                setTimeout(() => playSound(659.25, 0.3, 'sine'), 200);
-                setTimeout(() => playSound(783.99, 0.3, 'sine'), 400);
-                setTimeout(() => playSound(1046.50, 0.4, 'sine'), 600); // C6
-            } else {
-                // 패배 시 비극적 음악
-                playSound(220, 0.4, 'sawtooth');
-                setTimeout(() => playSound(196, 0.4, 'sawtooth'), 300);
-                setTimeout(() => playSound(174.61, 0.5, 'sawtooth'), 600);
-            }
-        }
+        // 기존 함수명 호환성 유지
+        const playCardSound = () => playSoundEffect('card');
+        const playSuccessSound = () => playSoundEffect('success');
+        const playFailureSound = () => playSoundEffect('failure');
+        const playDamageSound = () => playSoundEffect('damage');
+        const playHealSound = () => playSoundEffect('heal');
+        const playGameStartSound = () => playSoundEffect('gameStart');
+        const playGameOverSound = (isWin) => playSoundEffect(isWin ? 'gameWin' : 'gameLose');
 
-        // DOM 요소
-        const titleScreen = document.getElementById('title-screen');
-        const gameScreen = document.getElementById('game-screen');
-        const startGameBtn = document.getElementById('start-game-btn');
-        const myArea = document.getElementById('my-area');
-        const opponentArea = document.getElementById('opponent-area');
-        const myHealthEl = document.getElementById('my-health');
-        const opponentHealthEl = document.getElementById('opponent-health');
-        const myHandEl = document.getElementById('my-hand');
-        const opponentHandEl = document.getElementById('opponent-hand');
-        const secretStonesPile = document.getElementById('secret-stones-pile');
-        const usedStonesPile = document.getElementById('used-stones-pile');
-        const secretStonesCountEl = document.getElementById('secret-stones-count');
-        const usedStonesCountEl = document.getElementById('used-stones-count');
-        const gameLogEl = document.getElementById('game-log');
-        const spellButtonsContainer = document.getElementById('spell-buttons-container');
-        const endTurnBtn = document.getElementById('end-turn-btn');
-        const modal = document.getElementById('modal');
-        const modalTitle = document.getElementById('modal-title');
-        const modalBody = document.getElementById('modal-body');
-        const modalCloseBtn = document.getElementById('modal-close-btn');
+        // DOM 요소 캐시
+        const DOM = {
+            elements: {},
+            
+            get(id) {
+                if (!this.elements[id]) {
+                    this.elements[id] = document.getElementById(id);
+                }
+                return this.elements[id];
+            },
+            
+            // 자주 사용되는 요소들 미리 캐시
+            init() {
+                const commonElements = [
+                    'title-screen', 'game-screen', 'start-game-btn',
+                    'my-area', 'opponent-area', 'my-health', 'opponent-health',
+                    'my-hand', 'opponent-hand', 'secret-stones-pile', 'used-stones-pile',
+                    'secret-stones-count', 'used-stones-count', 'game-log',
+                    'spell-buttons-container', 'end-turn-btn', 'modal',
+                    'modal-title', 'modal-body', 'modal-close-btn',
+                    'debug-panel', 'debug-info', 'memo-buttons', 'my-title',
+                    'help-tooltip', 'matching-modal', 'matching-message',
+                    'ai-difficulty-modal', 'toast', 'toast-message',
+                    'player-name-input', 'save-name-btn', 'name-save-status',
+                    'my-turn-indicator', 'opponent-turn-indicator',
+                    'ai-trophy-count', 'multiplayer-trophy-count'
+                ];
+                
+                commonElements.forEach(id => this.get(id));
+            }
+        };
+
+        // DOM 요소 (기존 변수명 호환성 유지)
+        const titleScreen = DOM.get('title-screen');
+        const gameScreen = DOM.get('game-screen');
+        const startGameBtn = DOM.get('start-game-btn');
+        const myArea = DOM.get('my-area');
+        const opponentArea = DOM.get('opponent-area');
+        const myHealthEl = DOM.get('my-health');
+        const opponentHealthEl = DOM.get('opponent-health');
+        const myHandEl = DOM.get('my-hand');
+        const opponentHandEl = DOM.get('opponent-hand');
+        const secretStonesPile = DOM.get('secret-stones-pile');
+        const usedStonesPile = DOM.get('used-stones-pile');
+        const secretStonesCountEl = DOM.get('secret-stones-count');
+        const usedStonesCountEl = DOM.get('used-stones-count');
+        const gameLogEl = DOM.get('game-log');
+        const spellButtonsContainer = DOM.get('spell-buttons-container');
+        const endTurnBtn = DOM.get('end-turn-btn');
+        const modal = DOM.get('modal');
+        const modalTitle = DOM.get('modal-title');
+        const modalBody = DOM.get('modal-body');
+        const modalCloseBtn = DOM.get('modal-close-btn');
         
         // 디버그 패널 요소들
-        const debugPanel = document.getElementById('debug-panel');
-        const debugInfo = document.getElementById('debug-info');
+        const debugPanel = DOM.get('debug-panel');
+        const debugInfo = DOM.get('debug-info');
 
         let state = {};
-        let lastMyHealth = 3;
-        let lastOpponentHealth = 3;
+        let previousMyHealth = 3;
+        let previousOpponentHealth = 3;
         
         // 턴 타이머 관련 변수
         let turnTimer = null;
@@ -639,26 +789,14 @@
         }
         
         // 디버그: 변수 초기화 확인
-        console.log('🎮 변수 초기화:', { lastMyHealth, lastOpponentHealth });
+        console.log('🎮 변수 초기화:', { previousMyHealth, previousOpponentHealth });
 
         // AI 난이도별 시간 제한 설정
         function setTurnDurationByDifficulty() {
             if (multiplayerMode) {
-                TURN_DURATION = 30; // 멀티플레이어는 항상 30초
+                TURN_DURATION = GAME_CONFIG.turnDuration.multiplayer;
             } else {
-                switch(aiDifficulty) {
-                    case 'easy':
-                        TURN_DURATION = Infinity; // 쉬움: 시간 제한 없음
-                        break;
-                    case 'normal':
-                        TURN_DURATION = 30; // 보통: 30초
-                        break;
-                    case 'hard':
-                        TURN_DURATION = 20; // 어려움: 20초
-                        break;
-                    default:
-                        TURN_DURATION = 30;
-                }
+                TURN_DURATION = GAME_CONFIG.turnDuration[aiDifficulty] || GAME_CONFIG.turnDuration.normal;
             }
             console.log(`⏰ AI 난이도: ${aiDifficulty}, 시간 제한: ${TURN_DURATION === Infinity ? '무제한' : TURN_DURATION + '초'}`);
         }
@@ -677,6 +815,7 @@
             
             // AI 난이도별 시간 제한 설정
             setTurnDurationByDifficulty();
+            console.log(`⏰ 시간 제한 설정 완료 - TURN_DURATION: ${TURN_DURATION}초`);
             
             // 시간 제한이 없으면 타이머를 시작하지 않음
             if (TURN_DURATION === Infinity) {
@@ -686,9 +825,11 @@
             }
             
             turnTimeLeft = TURN_DURATION;
+            
+            // 첫 턴 시작 시 게이지를 즉시 표시
             updateTurnGauge();
             
-            console.log(`⏰ 타이머 시작 - 현재플레이어: ${state.currentPlayerId}, 내턴: ${state.isPlayerTurn}, 제한시간: ${TURN_DURATION}초`);
+            console.log(`⏰ 타이머 시작 - 현재플레이어: ${state.currentPlayerId}, 내턴: ${state.isPlayerTurn}, 제한시간: ${TURN_DURATION}초, 남은시간: ${turnTimeLeft}초`);
             
             // 더 부드러운 애니메이션을 위해 100ms마다 업데이트
             turnTimer = setInterval(() => {
@@ -699,7 +840,7 @@
                     clearInterval(turnTimer);
                     turnTimer = null;
                     console.log('⏰ 턴 시간 초과! 자동 턴 종료');
-                    addLog('⏰ 시간 초과로 턴이 자동 종료되었습니다.');
+                    addLog(Messages.timeOut());
                     endTurn();
                 }
             }, 100); // 100ms마다 업데이트
@@ -713,8 +854,8 @@
         }
         
         function resetTurnGauge() {
-            const blueGauge = document.getElementById('blue-gauge');
-            const redGauge = document.getElementById('red-gauge');
+            const blueGauge = DOM.get('blue-gauge');
+            const redGauge = DOM.get('red-gauge');
             
             if (blueGauge && redGauge) {
                 blueGauge.style.width = '0%';
@@ -724,8 +865,8 @@
         }
         
         function updateTurnGauge() {
-            const blueGauge = document.getElementById('blue-gauge');
-            const redGauge = document.getElementById('red-gauge');
+            const blueGauge = DOM.get('blue-gauge');
+            const redGauge = DOM.get('red-gauge');
             
             if (!blueGauge || !redGauge) return;
             
@@ -743,8 +884,20 @@
                 return;
             }
             
-            const progress = (TURN_DURATION - turnTimeLeft) / TURN_DURATION;
-            const gaugeWidth = progress * 100;
+            // 첫 턴 시작 시에도 게이지가 표시되도록 수정
+            let progress;
+            if (turnTimeLeft === TURN_DURATION) {
+                // 첫 턴 시작 시 - 게이지가 0%에서 시작하도록
+                progress = 0;
+            } else {
+                progress = turnTimeLeft >= 0 ? (TURN_DURATION - turnTimeLeft) / TURN_DURATION : 0;
+            }
+            const gaugeWidth = Math.min(progress * 100, 100);
+            
+            // 디버그: 게이지 계산 로그 (첫 턴 시작 시에만)
+            if (turnTimeLeft === TURN_DURATION) {
+                console.log(`🎯 첫 턴 게이지 계산 - TURN_DURATION: ${TURN_DURATION}, turnTimeLeft: ${turnTimeLeft}, progress: ${progress}, gaugeWidth: ${gaugeWidth}%`);
+            }
             
             // 멀티플레이어 모드에서 내 턴인지 확인
             const myPlayerId = multiplayerMode ? (isHost ? 1 : 2) : 1;
@@ -840,21 +993,21 @@
 
         // 랜덤 이름 생성 함수
         function generateRandomName() {
-            const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-            const numbers = '0123456789';
-            let result = '';
+            const alphabetChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            const numericChars = '0123456789';
+            let randomName = '';
             
             // 알파벳 3개 생성
-            for (let i = 0; i < 3; i++) {
-                result += letters.charAt(Math.floor(Math.random() * letters.length));
+            for (let charIndex = 0; charIndex < 3; charIndex++) {
+                randomName += alphabetChars.charAt(Math.floor(Math.random() * alphabetChars.length));
             }
             
             // 숫자 3개 생성
-            for (let i = 0; i < 3; i++) {
-                result += numbers.charAt(Math.floor(Math.random() * numbers.length));
+            for (let charIndex = 0; charIndex < 3; charIndex++) {
+                randomName += numericChars.charAt(Math.floor(Math.random() * numericChars.length));
             }
             
-            return result;
+            return randomName;
         }
 
         // 페이지 로드 시 기본 이름 설정
@@ -898,16 +1051,16 @@
         function initGame() {
             console.log('🎮 게임 초기화 시작');
             let deck = [];
-            for (let i = 1; i <= 6; i++) {
-                for (let j = 0; j < i; j++) {
-                    deck.push(i);
+            for (let spellNumber = 1; spellNumber <= GAME_CONFIG.deckStructure.maxSpell; spellNumber++) {
+                for (let cardCount = 0; cardCount < GAME_CONFIG.deckStructure.cardsPerSpell(spellNumber); cardCount++) {
+                    deck.push(spellNumber);
                 }
             }
             console.log('📦 초기 덱 생성:', deck);
             
-            for (let i = deck.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [deck[i], deck[j]] = [deck[j], deck[i]];
+            for (let currentIndex = deck.length - 1; currentIndex > 0; currentIndex--) {
+                const randomIndex = Math.floor(Math.random() * (currentIndex + 1));
+                [deck[currentIndex], deck[randomIndex]] = [deck[randomIndex], deck[currentIndex]];
             }
             console.log('🔄 덱 셔플 완료');
             
@@ -934,11 +1087,11 @@
                 console.log(`🎯 AI 모드 첫 번째 턴 결정: 플레이어 ${firstPlayer}`);
             }
             
-            const aiName = aiDifficulty === 'easy' ? '입문용 허수아비' : aiDifficulty === 'normal' ? '훈련용 허수아비' : '오작동 허수아비';
+            const aiName = aiDifficulty === 'easy' ? '입문용 허수아비' : aiDifficulty === 'normal' ? '훈련용 허수아비' : '고수용 허수아비';
             state = {
                 players: [
-                    { id: 1, name: 'Player', health: 3, hand: deck.slice(0, 6).sort((a, b) => a - b), knownSecretStones: [] },
-                    { id: 2, name: multiplayerMode ? 'Opponent' : aiName, health: 3, hand: deck.slice(6, 12).sort((a, b) => a - b), knownSecretStones: [] }
+                                    { id: 1, name: 'Player', health: GAME_CONFIG.maxHealth, hand: deck.slice(0, 6).sort((a, b) => a - b), knownSecretStones: [] },
+                { id: 2, name: multiplayerMode ? 'Opponent' : aiName, health: GAME_CONFIG.maxHealth, hand: deck.slice(6, 12).sort((a, b) => a - b), knownSecretStones: [] }
                 ],
                 secretStones: deck.slice(12),
                 usedStones: [],
@@ -974,6 +1127,9 @@
             // 승리 처리 (상대방이 도망쳤으므로 내가 승리)
             updateStats(true, true);
             
+            // 승리의 증표 추가 (멀티플레이어 승리)
+            TrophySystem.addVictoryTrophy('multiplayer');
+            
             // 연승 처리
             currentWinStreak++;
             if (currentWinStreak > maxWinStreak) {
@@ -984,11 +1140,27 @@
             
             let message = '상대가 도망쳐서 승리하였습니다!';
             if (currentWinStreak >= 2) {
-                message += `\n\n🔥 ${currentWinStreak}연승 중!`;
+                message += `\n\n${Messages.streak(currentWinStreak)}`;
             }
+            message += '\n\n🏅 승점 +3';
             
             addLog('상대방이 도망쳤습니다.');
             addLog('승리가 기록되었습니다.');
+            
+            // 게임 상태 완전 초기화
+            state = {
+                gameStarted: false,
+                isGameOver: true,
+                players: [],
+                secretStones: [],
+                usedStones: [],
+                publiclyRevealedSecretStones: [],
+                currentPlayerId: null,
+                isPlayerTurn: false,
+                lastSuccessfulSpell: 0,
+                turnInProgress: false,
+                gameLog: []
+            };
             
             // 승리한 플레이어에게 메시지 표시
             await showModal('게임 종료', message, true);
@@ -996,6 +1168,61 @@
             // 타이틀 화면으로 돌아가기
             showTitleScreen();
         }
+
+        // 승리의 증표 시스템
+        const TrophySystem = {
+            // 증표 데이터 로드
+            loadTrophies() {
+                const aiTrophies = localStorage.getItem('aiTrophies') || '0';
+                const multiplayerTrophies = localStorage.getItem('multiplayerTrophies') || '0';
+                return {
+                    ai: Math.max(0, parseInt(aiTrophies)),
+                    multiplayer: Math.max(0, parseInt(multiplayerTrophies))
+                };
+            },
+            
+            // 증표 데이터 저장
+            saveTrophies(trophies) {
+                localStorage.setItem('aiTrophies', trophies.ai.toString());
+                localStorage.setItem('multiplayerTrophies', trophies.multiplayer.toString());
+            },
+            
+            // 증표 업데이트
+            updateTrophy(type, change) {
+                const trophies = this.loadTrophies();
+                trophies[type] = Math.max(0, trophies[type] + change);
+                this.saveTrophies(trophies);
+                this.displayTrophies(trophies);
+                return trophies[type];
+            },
+            
+            // 증표 표시
+            displayTrophies(trophies) {
+                const aiCount = DOM.get('ai-trophy-count');
+                const multiplayerCount = DOM.get('multiplayer-trophy-count');
+                
+                if (aiCount) aiCount.textContent = `${trophies.ai}점`;
+                if (multiplayerCount) multiplayerCount.textContent = `${trophies.multiplayer}점`;
+            },
+            
+            // 승리 시 증표 추가
+            addVictoryTrophy(type) {
+                const newCount = this.updateTrophy(type, 3);
+                showToast(`🎉 승리의 증표 +3 획득! (${type === 'ai' ? '모의 결투' : '정식 결투'} 점수: ${newCount})`, 'success');
+            },
+            
+            // 패배 시 증표 감소
+            addDefeatTrophy(type) {
+                const newCount = this.updateTrophy(type, -1);
+                showToast(`💔 패배로 점수 -1... (${type === 'ai' ? '모의 결투' : '정식 결투'} 점수: ${newCount})`, 'warning');
+            },
+            
+            // 초기화
+            init() {
+                const trophies = this.loadTrophies();
+                this.displayTrophies(trophies);
+            }
+        };
 
         // 호스트의 첫 번째 턴 결정으로 게임 초기화
         function resetGameWithFirstPlayer(firstPlayer) {
@@ -1007,9 +1234,9 @@
             
             // 올바른 덱 생성 (1번은 1개, 2번은 2개, 3번은 3개...)
             let deck = [];
-            for (let i = 1; i <= 6; i++) {
-                for (let j = 0; j < i; j++) {
-                    deck.push(i);
+            for (let spellNumber = 1; spellNumber <= GAME_CONFIG.deckStructure.maxSpell; spellNumber++) {
+                for (let cardCount = 0; cardCount < GAME_CONFIG.deckStructure.cardsPerSpell(spellNumber); cardCount++) {
+                    deck.push(spellNumber);
                 }
             }
             console.log('📦 초기 덱 생성:', deck);
@@ -1024,8 +1251,8 @@
             
             state = {
                 players: [
-                    { id: 1, name: playerName, health: 3, hand: deck.slice(0, 7).sort((a, b) => a - b), knownSecretStones: [] },
-                    { id: 2, name: opponentName, health: 3, hand: deck.slice(7, 14).sort((a, b) => a - b), knownSecretStones: [] }
+                                    { id: 1, name: playerName, health: GAME_CONFIG.maxHealth, hand: deck.slice(0, GAME_CONFIG.maxHandSize).sort((a, b) => a - b), knownSecretStones: [] },
+                { id: 2, name: opponentName, health: GAME_CONFIG.maxHealth, hand: deck.slice(GAME_CONFIG.maxHandSize, GAME_CONFIG.maxHandSize * 2).sort((a, b) => a - b), knownSecretStones: [] }
                 ],
                 secretStones: deck.slice(14),
                 usedStones: [],
@@ -1036,7 +1263,7 @@
                 turnInProgress: false,
                 isGameOver: false,
                 gameStarted: true,
-                gameLog: [`새로운 결투가 시작됩니다! ${firstPlayer === 1 ? playerName : opponentName}가 먼저 시작합니다.`]
+                gameLog: [Messages.gameStart(firstPlayer === 1 ? playerName : opponentName)]
             };
             
             console.log('🎯 게스트 초기 게임 상태:', {
@@ -1118,28 +1345,28 @@
             const opponentPlayer = state.players[2 - myPlayerId]; // 상대는 나머지 플레이어
             
             // 하트 변화 감지 (하트 업데이트 전에)
-            const newMyHealth = myPlayer.health;
-            const newOpponentHealth = opponentPlayer.health;
+            const currentMyHealth = myPlayer.health;
+            const currentOpponentHealth = opponentPlayer.health;
             
-            console.log(`🔍 하트 변화 체크 - 내: ${lastMyHealth} → ${newMyHealth}, 상대: ${lastOpponentHealth} → ${newOpponentHealth}`);
+            console.log(`🔍 하트 변화 체크 - 내: ${previousMyHealth} → ${currentMyHealth}, 상대: ${previousOpponentHealth} → ${currentOpponentHealth}`);
             
             // 하트 변화 감지 (로깅만)
-            if (newMyHealth < lastMyHealth) {
-                console.log(`💔 내 하트 손실: ${lastMyHealth} → ${newMyHealth}`);
+            if (currentMyHealth < previousMyHealth) {
+                console.log(`💔 내 하트 손실: ${previousMyHealth} → ${currentMyHealth}`);
             }
-            if (newMyHealth > lastMyHealth) {
-                console.log(`💚 내 하트 회복: ${lastMyHealth} → ${newMyHealth}`);
+            if (currentMyHealth > previousMyHealth) {
+                console.log(`💚 내 하트 회복: ${previousMyHealth} → ${currentMyHealth}`);
             }
-            if (newOpponentHealth < lastOpponentHealth) {
-                console.log(`💔 상대 하트 손실: ${lastOpponentHealth} → ${newOpponentHealth}`);
+            if (currentOpponentHealth < previousOpponentHealth) {
+                console.log(`💔 상대 하트 손실: ${previousOpponentHealth} → ${currentOpponentHealth}`);
             }
-            if (newOpponentHealth > lastOpponentHealth) {
-                console.log(`💚 상대 하트 회복: ${lastOpponentHealth} → ${newOpponentHealth}`);
+            if (currentOpponentHealth > previousOpponentHealth) {
+                console.log(`💚 상대 하트 회복: ${previousOpponentHealth} → ${currentOpponentHealth}`);
             }
             
             // 현재 하트 상태 저장
-            lastMyHealth = newMyHealth;
-            lastOpponentHealth = newOpponentHealth;
+            previousMyHealth = currentMyHealth;
+            previousOpponentHealth = currentOpponentHealth;
             
             // 체력 표시 업데이트 (파티클 생성 후)
             myHealthEl.innerHTML = '<span class="health-heart">❤️</span>'.repeat(Math.max(0, myPlayer.health));
@@ -1150,7 +1377,7 @@
             hearts.forEach(heart => heart.classList.add('health-heart'));
             
             // 디버그: 하트 변화 로그
-            console.log(`💔 하트 변화 감지 - 내 하트: ${lastMyHealth} → ${newMyHealth}, 상대 하트: ${lastOpponentHealth} → ${newOpponentHealth}`);
+            console.log(`💔 하트 변화 감지 - 내 하트: ${previousMyHealth} → ${currentMyHealth}, 상대 하트: ${previousOpponentHealth} → ${currentOpponentHealth}`);
             
             // 내 손패 (뒷면) - 항상 하단에 표시
             myHandEl.innerHTML = myPlayer.hand.map(() => `<div class="card card-back"></div>`).join('');
@@ -1183,9 +1410,27 @@
                 return `<p class="${className}">${log}</p>`;
             }).join('');
             
-            // 현재 턴에 따라 영역 하이라이트 (내 턴이면 내 영역, 상대 턴이면 상대 영역)
-            myArea.classList.toggle('player-area-glow', state.currentPlayerId === 1 && !state.isGameOver);
-            opponentArea.classList.toggle('player-area-glow', state.currentPlayerId === 2 && !state.isGameOver);
+            // 현재 턴에 따라 영역 하이라이트 및 색상 구분
+            const currentMyPlayerId = isHost ? 1 : 2;
+            const isMyTurn = (state.currentPlayerId === currentMyPlayerId);
+            
+            // 글로우 효과: 현재 턴인 플레이어에게만 표시
+            myArea.classList.toggle('player-area-glow', isMyTurn && !state.isGameOver);
+            opponentArea.classList.toggle('player-area-glow', !isMyTurn && !state.isGameOver);
+            opponentArea.classList.toggle('opponent-turn', !isMyTurn && !state.isGameOver);
+            
+            // 턴 인디케이터: 현재 턴인 플레이어에게만 표시
+            const myTurnIndicator = DOM.get('my-turn-indicator');
+            const opponentTurnIndicator = DOM.get('opponent-turn-indicator');
+            
+            if (myTurnIndicator && opponentTurnIndicator) {
+                // 내 턴 인디케이터: 내 턴일 때만 표시
+                myTurnIndicator.classList.toggle('hidden', !isMyTurn || state.isGameOver);
+                
+                // 상대 턴 인디케이터: 상대 턴일 때만 표시 (빨간색)
+                opponentTurnIndicator.classList.toggle('hidden', isMyTurn || state.isGameOver);
+                opponentTurnIndicator.classList.toggle('opponent-turn', !isMyTurn && !state.isGameOver);
+            }
             
             // 버튼들이 항상 보이도록 강제 설정
             const spellButtons = spellButtonsContainer.querySelectorAll('button');
@@ -1226,7 +1471,7 @@
             console.log('🔘 영창 버튼 생성');
             spellButtonsContainer.innerHTML = '';
             
-            const spellData = [
+            const spellDescriptions = [
                 { number: 1, name: '운명 변환', icon: '🔮', desc: '비밀 주문 3개 공개' },
                 { number: 2, name: '마력 착취', icon: '💫', desc: '피해 1, 회복 1' },
                 { number: 3, name: '정신 교란', icon: '🌀', desc: '공개되지 않은 비밀 주문<br>하나를 상대 패에 투입' },
@@ -1235,7 +1480,7 @@
                 { number: 6, name: '명상', icon: '💤', desc: '비밀 주문 1개 공개' }
             ];
             
-            spellData.forEach(spell => {
+            spellDescriptions.forEach(spell => {
                 const button = document.createElement('button');
                 button.innerHTML = `
                     <div class="text-lg">${spell.icon}</div>
@@ -1259,10 +1504,10 @@
         
         function createMemoButtons() {
             console.log('📝 메모 버튼 생성');
-            const memoButtonsContainer = document.getElementById('memo-buttons');
+            const memoButtonsContainer = DOM.get('memo-buttons');
             memoButtonsContainer.innerHTML = '';
             
-            const spellData = [
+            const spellDescriptions = [
                 { number: 1, name: '운명 변환' },
                 { number: 2, name: '마력 착취' },
                 { number: 3, name: '정신 교란' },
@@ -1271,7 +1516,7 @@
                 { number: 6, name: '명상' }
             ];
             
-            spellData.forEach(spell => {
+            spellDescriptions.forEach(spell => {
                 const button = document.createElement('button');
                 button.innerHTML = `
                     <div class="text-xs">❌</div>
@@ -1313,7 +1558,7 @@
         }
         
         function toggleMemoPanel() {
-            const memoButtons = document.getElementById('memo-buttons');
+            const memoButtons = DOM.get('memo-buttons');
             const isVisible = !memoButtons.classList.contains('hidden');
             
             if (isVisible) {
@@ -1331,7 +1576,7 @@
         
         // 메모 패널을 항상 표시하는 함수
         function showMemoPanel() {
-            const memoButtons = document.getElementById('memo-buttons');
+            const memoButtons = DOM.get('memo-buttons');
             memoButtons.classList.remove('hidden');
             state.memoPanelActive = true;
             console.log('📝 메모 패널 항상 표시');
@@ -1341,7 +1586,7 @@
         function safeRefreshGameState() {
             try {
                 // 게임 상태 유효성 검사
-                if (!state || !state.players || state.players.length < 2) {
+                if (!GameConditions.isGameValid()) {
                     console.log('⚠️ 게임 상태가 유효하지 않음 - 기본 상태로 복구');
                     resetGame();
                     return;
@@ -1376,7 +1621,7 @@
                 createSpellButtons();
                 
                 // 내 이름만 업데이트 (상대방 이름은 건드리지 않음)
-                const myTitle = document.getElementById('my-title');
+                const myTitle = DOM.get('my-title');
                 if (myTitle) {
                     myTitle.textContent = `나 (${currentPlayerName})`;
                 }
@@ -1385,7 +1630,7 @@
                 updateOpponentName();
                 
                 // 상대방 이름 업데이트
-                const opponentArea = document.getElementById('opponent-area');
+                const opponentArea = DOM.get('opponent-area');
                 const opponentTitle = opponentArea.querySelector('h2');
                 if (opponentTitle) {
                     // 현재 표시된 이름이 있으면 유지, 없으면 새로 설정
@@ -1398,14 +1643,14 @@
                 }
                 
                 // 게임 상태가 유효한지 확인하고 복구
-                if (!state.players || state.players.length < 2 || !state.players[0] || !state.players[1]) {
+                if (!GameConditions.isGameValid() || !state.players[0] || !state.players[1]) {
                     // 기본 게임 상태로 복구
                     if (multiplayerMode) {
                         const myPlayerId = isHost ? 1 : 2;
                         state = {
                             players: [
-                                { id: 1, name: currentPlayerName, health: 3, hand: [], knownSecretStones: [] },
-                                { id: 2, name: currentOpponentName, health: 3, hand: [], knownSecretStones: [] }
+                                                { id: 1, name: currentPlayerName, health: GAME_CONFIG.maxHealth, hand: [], knownSecretStones: [] },
+                { id: 2, name: currentOpponentName, health: GAME_CONFIG.maxHealth, hand: [], knownSecretStones: [] }
                             ],
                             secretStones: [],
                             usedStones: [],
@@ -1446,19 +1691,12 @@
 
         function updateButtons() {
             const buttons = spellButtonsContainer.querySelectorAll('button');
-            const myPlayerId = multiplayerMode ? (isHost ? 1 : 2) : 1;
+            const isMyTurn = GameConditions.isMyTurn();
             
-            // 멀티플레이어에서는 currentPlayerId를 기준으로 턴 판단
-            let isMyTurn;
-            if (multiplayerMode) {
-                isMyTurn = (state.currentPlayerId === myPlayerId);
-                // state.isPlayerTurn과 currentPlayerId가 일치하지 않으면 동기화
-                if (state.isPlayerTurn !== isMyTurn) {
+            // 턴 상태 동기화 (멀티플레이어 모드에서)
+            if (multiplayerMode && state.isPlayerTurn !== isMyTurn) {
                     console.log(`🔄 턴 상태 동기화: isPlayerTurn ${state.isPlayerTurn} → ${isMyTurn}`);
                     state.isPlayerTurn = isMyTurn;
-                }
-            } else {
-                isMyTurn = state.isPlayerTurn;
             }
             
             // 턴 진행 상태 강제 초기화 (내 턴이고 턴 진행중이면 초기화)
@@ -1467,11 +1705,12 @@
                 state.turnInProgress = false;
             }
             
+            const myPlayerId = multiplayerMode ? (isHost ? 1 : 2) : 1;
             console.log(`🎮 버튼 업데이트 - 내 플레이어ID: ${myPlayerId}, 현재 플레이어ID: ${state.currentPlayerId}, 내 턴: ${isMyTurn}, 턴 진행중: ${state.turnInProgress}, 게임종료: ${state.isGameOver}`);
             
             buttons.forEach(btn => {
-                const spellNum = parseInt(btn.dataset.spell);
-                const isDisabled = !isMyTurn || state.turnInProgress || (state.lastSuccessfulSpell > 0 && spellNum < state.lastSuccessfulSpell) || state.isGameOver || spellButtonsDisabled;
+                const spellNumber = parseInt(btn.dataset.spell);
+                const isDisabled = !GameConditions.canPlaySpell() || (state.lastSuccessfulSpell > 0 && spellNumber < state.lastSuccessfulSpell) || spellButtonsDisabled;
                 
                 // 버튼을 완전히 숨기지 말고 비활성화만 하기
                 btn.disabled = isDisabled;
@@ -1481,7 +1720,7 @@
                     btn.style.opacity = '0.5';
                     btn.style.cursor = 'not-allowed';
                     // 연속 영창 규칙 위반 시 추가 시각적 표시
-                    if (state.lastSuccessfulSpell > 0 && spellNum < state.lastSuccessfulSpell) {
+                    if (state.lastSuccessfulSpell > 0 && spellNumber < state.lastSuccessfulSpell) {
                         btn.style.border = '2px solid #dc3545';
                         btn.style.color = '#dc3545';
                         // 연속 영창 규칙 위반 시 추가 텍스트 표시 (더 간단하게)
@@ -1495,7 +1734,7 @@
                         // 원래 설명 복원
                         const descElement = btn.querySelector('.text-xs.opacity-75');
                         if (descElement) {
-                            const spellData = [
+                        const spellDescriptions = [
                                 { number: 1, desc: '비밀 주문 3개 공개' },
                                 { number: 2, desc: '피해 1, 회복 1' },
                                 { number: 3, desc: '공개되지 않은 비밀 주문<br>하나를 상대 패에 투입' },
@@ -1503,7 +1742,7 @@
                                 { number: 5, desc: '회복 1' },
                                 { number: 6, desc: '비밀 주문 1개 공개' }
                             ];
-                            const spell = spellData.find(s => s.number === spellNum);
+                        const spell = spellDescriptions.find(s => s.number === spellNumber);
                             if (spell) {
                                 descElement.innerHTML = spell.desc;
                             }
@@ -1517,7 +1756,7 @@
                     // 원래 설명 복원
                     const descElement = btn.querySelector('.text-xs.opacity-75');
                     if (descElement) {
-                        const spellData = [
+                        const spellDescriptions = [
                             { number: 1, desc: '비밀 주문 3개 공개' },
                             { number: 2, desc: '피해 1, 회복 1' },
                             { number: 3, desc: '공개되지 않은 비밀 주문<br>하나를 상대 패에 투입' },
@@ -1525,7 +1764,7 @@
                             { number: 5, desc: '회복 1' },
                             { number: 6, desc: '비밀 주문 1개 공개' }
                         ];
-                        const spell = spellData.find(s => s.number === spellNum);
+                        const spell = spellDescriptions.find(s => s.number === spellNumber);
                         if (spell) {
                             descElement.innerHTML = spell.desc;
                         }
@@ -1533,7 +1772,7 @@
                 }
                 
                 // 디버그용: 버튼 상태 로그
-                console.log(`🔘 영창 ${spellNum} 버튼 - 내 플레이어ID: ${myPlayerId}, 현재 플레이어ID: ${state.currentPlayerId}, 내 턴: ${isMyTurn}, 턴 진행중: ${state.turnInProgress}, 마지막 성공: ${state.lastSuccessfulSpell}, 게임종료: ${state.isGameOver}, 버튼비활성화: ${spellButtonsDisabled}, 비활성화: ${isDisabled}`);
+                console.log(`🔘 영창 ${spellNumber} 버튼 - 내 플레이어ID: ${myPlayerId}, 현재 플레이어ID: ${state.currentPlayerId}, 내 턴: ${isMyTurn}, 턴 진행중: ${state.turnInProgress}, 마지막 성공: ${state.lastSuccessfulSpell}, 게임종료: ${state.isGameOver}, 버튼비활성화: ${spellButtonsDisabled}, 비활성화: ${isDisabled}`);
             });
             
             endTurnBtn.disabled = !isMyTurn || state.turnInProgress || state.isGameOver;
@@ -1629,7 +1868,7 @@
                 addSuccessAnimation(myArea);
                 
                 const myPlayerId = multiplayerMode ? (isHost ? 1 : 2) : 1;
-                addLog(`✅ ${state.players[myPlayerId - 1].name}${getJosa(state.players[myPlayerId - 1].name, '이/가')} ${spellNumber}번 영창을 성공적으로 시전했습니다!`);
+                addLog(Messages.spellSuccess(state.players[myPlayerId - 1].name, spellNumber));
                 
                 // 먼저 lastSuccessfulSpell 업데이트
                 state.lastSuccessfulSpell = spellNumber;
@@ -1655,7 +1894,7 @@
                 console.log('💡 연속 영창 성공 - 타이머 계속 유지');
                 
                 // 연속 영창 안내 메시지
-                                    addLog(`💡 연속 영창이 가능합니다! ${spellNumber}번 이상의 영창을 선택하거나 턴을 종료하세요.`);
+                                    addLog(`💡 ${spellNumber}번 이상 연속 영창 가능`);
                 return;
             } else {
                 // 현재 턴인 플레이어의 체력 감소
@@ -1680,7 +1919,7 @@
                     }));
                 }
                 
-                                    addLog(`❌ ${state.players[myPlayerId - 1].name}${getJosa(state.players[myPlayerId - 1].name, '이/가')} ${spellNumber}번 영창을 시전했지만 실패하여, 체력이 1 감소하였습니다.`);
+                                    addLog(Messages.spellFailure(state.players[myPlayerId - 1].name, spellNumber));
                 render();
                 
                 // 체력 감소 후 바로 게임 종료 체크
@@ -1697,34 +1936,23 @@
             }
         }
 
-        function endTurn() {
-            console.log('🔄 턴 종료');
-            if (state.isGameOver) return;
-            
-            // 게임 상태가 유효하지 않으면 턴 종료 중단
-            if (!state || !state.players || state.players.length < 2) {
-                console.log('⚠️ 게임 상태가 유효하지 않아 턴 종료를 건너뜁니다');
-                return;
-            }
-            
-            // 현재 턴 타이머 정지
-            stopTurnTimer();
-            
+        // 턴 관리 함수들
+        function switchToNextPlayer() {
             const currentPlayerName = state.currentPlayerId === 1 ? state.players[0].name : (multiplayerMode ? state.players[1].name : 'AI');
-            addLog(`- ${currentPlayerName}${getJosa(currentPlayerName, '의')} 턴이 종료되었습니다.`);
+            addLog(Messages.turnEnd(currentPlayerName));
             state.lastSuccessfulSpell = 0;
             state.currentPlayerId = state.currentPlayerId === 1 ? 2 : 1;
             
-            // 멀티플레이어에서는 currentPlayerId를 기준으로 isPlayerTurn 설정
             if (multiplayerMode) {
                 const myPlayerId = isHost ? 1 : 2;
                 state.isPlayerTurn = (state.currentPlayerId === myPlayerId);
             } else {
                 state.isPlayerTurn = !state.isPlayerTurn;
             }
+            }
             
-            // 멀티플레이어 모드에서 상대방에게 턴 종료 전송
-            if (multiplayerMode && dataChannel && dataChannel.readyState === 'open') {
+        function sendTurnEndToOpponent() {
+            if (GameConditions.isMultiplayerConnected()) {
                 console.log('📤 턴 종료 메시지 전송');
                 dataChannel.send(JSON.stringify({
                     type: 'turnEnd',
@@ -1733,35 +1961,22 @@
                     isPlayerTurn: state.isPlayerTurn
                 }));
             }
-            
-            const nextPlayerName = state.currentPlayerId === 1 ? state.players[0].name : state.players[1].name;
-            
-            render();
-            updateButtons(); // 버튼 상태 업데이트 추가
-            
-            if (checkGameOver()) return;
+        }
 
-            // 모든 턴에서 타이머 시작
+        function startNextTurn() {
             if (!state.isPlayerTurn && !multiplayerMode) {
-                // AI 턴 시작 - 타이머 시작
                 startTurnTimer();
                 aiTurn();
             } else if (!state.isPlayerTurn && multiplayerMode) {
-                // 멀티플레이어에서 상대방 턴 시작 로그
                 const opponentName = state.players[1].name;
-                addLog(`${opponentName}${getJosa(opponentName, '의')} 턴이 시작되었습니다.`);
-                // 상대방 턴 시작 - 타이머 시작
+                addLog(Messages.turnStart(opponentName));
                 startTurnTimer();
             } else if (state.isPlayerTurn) {
-                // 내 턴 시작 (AI 모드 또는 멀티플레이어)
                 const myPlayerId = multiplayerMode ? (isHost ? 1 : 2) : 1;
                 const myName = state.players[myPlayerId - 1].name;
-                addLog(`${myName}${getJosa(myName, '의')} 턴이 시작되었습니다.`);
-                
-                // 내 턴 시작 - 타이머 시작
+                addLog(Messages.turnStart(myName));
                 startTurnTimer();
                 
-                // 멀티플레이어에서 내 턴 시작 시 자동 새로고침 실행
                 if (multiplayerMode) {
                     console.log('🎯 내 턴 시작 - 자동 새로고침 실행');
                     setTimeout(() => {
@@ -1771,58 +1986,62 @@
             }
         }
 
-        async function executeSpellEffect(playerId, spellNumber) {
-            console.log(`✨ 영창 효과 실행: 플레이어 ${playerId}, 영창 ${spellNumber}`);
+        function endTurn() {
+            console.log('🔄 턴 종료');
+            if (state.isGameOver) return;
             
-            // 게임 상태가 유효하지 않으면 효과 실행 건너뛰기
-            if (!state || !state.players || state.players.length < 2) {
-                console.log('⚠️ 게임 상태가 유효하지 않아 영창 효과 실행을 건너뜁니다');
+            if (!GameConditions.isGameValid()) {
+                console.log('⚠️ 게임 상태가 유효하지 않아 턴 종료를 건너뜁니다');
                 return;
             }
             
-            const player = state.players.find(p => p.id === playerId);
-            const opponent = state.players.find(p => p.id !== playerId);
+            stopTurnTimer();
+            switchToNextPlayer();
+            sendTurnEndToOpponent();
             
-            // 플레이어 객체가 유효하지 않으면 건너뛰기
-            if (!player || !opponent) {
-                console.log('⚠️ 플레이어 객체가 유효하지 않아 영창 효과 실행을 건너뜁니다');
-                return;
-            }
+            render();
+            updateButtons();
             
-            switch (spellNumber) {
-                case 6: // 명상
+            if (checkGameOver()) return;
+            startNextTurn();
+        }
+
+        // 주문 효과 함수들
+        async function executeMeditation(player, opponent) {
                     console.log('🧘 명상 효과 실행');
                     if (state.secretStones.length > 0) {
                         const revealedStone = state.secretStones.splice(0, 1)[0];
                         state.publiclyRevealedSecretStones.push(revealedStone);
                         console.log(`🧘 비밀 주문 전체 공개: ${revealedStone}`);
-                        addLog(`명상! 비밀 주문 [${revealedStone}]${getJosa(revealedStone.toString(), '이/가')} 전체 공개되었습니다.`);
-                        // 모든 플레이어에게 명상 결과 모달 표시
-                        await showModal('명상', `비밀 주문 [${revealedStone}]${getJosa(revealedStone.toString(), '이/가')} 전체 공개되었습니다.`);
+                addLog(Messages.meditate(revealedStone));
+                        const icon = SpellIcons[revealedStone] || '❓';
+                        await showModal('명상', `비밀 주문 [${icon}${revealedStone}]${getJosa(revealedStone.toString(), '이/가')} 전체 공개되었습니다.`);
                     } else {
                         const message = '명상 종료: 더 이상 공개할 비밀 주문이 없습니다.';
                         console.log('🧘 더 이상 공개할 비밀 주문 없음');
                         addLog(message);
-                        // 모든 플레이어에게 명상 실패 모달 표시
                         await showModal('명상', message);
                     }
-                    break;
-                case 5: // 생명 물약
+        }
+
+        function executeHealPotion(player, opponent) {
                     console.log('🧪 생명 물약 효과 실행');
-                    if (player.health < 3) player.health++;
+            if (player.health < GAME_CONFIG.maxHealth) player.health++;
                     console.log(`💚 생명 물약 회복: ${player.name} 체력 ${player.health}`);
                     playHealSound();
                     showHealEffect(player.id === 1 ? myArea : opponentArea, 1);
-                    addLog(`${player.name}${getJosa(player.name, '이/가')} 생명 물약을 마셔 체력이 1 회복되었습니다.`);
-                    break;
-                case 4: // 화염 화살
+            addLog(Messages.heal(player.name, 1));
+        }
+
+        function executeFireArrow(player, opponent) {
                     opponent.health--;
                     console.log(`🔥 화염 화살: 피해 1`);
                     playDamageSound();
                     showDamageEffect(opponent.id === 1 ? myArea : opponentArea, 1);
-                    addLog(`${player.name}${getJosa(player.name, '이/가')} ${opponent.name}${getJosa(opponent.name, '에게')} 화염 화살을 날려 피해 1을 입혔습니다.`);
-                    break;
-                case 3: // 정신 교란
+            addLog(Messages.damage(opponent.name, 1));
+        }
+
+        async function executeMindControl(player, opponent, playerId) {
                     console.log('🌀 정신 교란 효과 실행');
                     if (state.secretStones.length > 0) {
                         const spyStone = state.secretStones.splice(0, 1)[0];
@@ -1831,76 +2050,180 @@
                         console.log(`🌀 정신 교란 투입: ${spyStone}을(를) ${opponent.name}의 패에 투입`);
                         playCardSound();
                         
-                        // 발동한 사람과 받은 사람의 메시지를 다르게 표시
                         const myPlayerId = multiplayerMode ? (isHost ? 1 : 2) : 1;
+                addLog(Messages.spy(player.name));
+                
                         if (playerId === myPlayerId) {
-                            // 발동한 사람의 메시지
-                            addLog(`${player.name}${getJosa(player.name, '이/가')} 정신 교란을 시전하여 비밀 주문 하나를 상대의 패에 추가했습니다.`);
-                        } else {
-                            // 받은 사람의 메시지
-                            addLog(`${player.name}${getJosa(player.name, '이/가')} 정신 교란을 시전하여 비밀 주문 하나가 패에 추가되었습니다.`);
-                        }
-                        
-                        // 시전자와 대상자에 따라 다른 모달 메시지 표시
-                        if (playerId === myPlayerId) {
-                            // 발동한 사람의 모달 메시지
                             await showModal('정신 교란', `비밀 주문 하나를 상대의 패에 추가했습니다.`);
                         } else {
-                            // 받은 사람의 모달 메시지
                             await showModal('정신 교란', `비밀 주문 하나가 패에 추가되었습니다.`);
                         }
                     } else {
                         console.log('❌ 투입할 비밀 주문 없음');
                         addLog(`정신 교란 종료: 투입할 비밀 주문이 없습니다.`);
-                        // 모든 플레이어에게 정신 교란 실패 모달 표시
                         await showModal('정신 교란', '투입할 비밀 주문이 없습니다.');
                     }
-                    break;
-                case 2: // 마력 착취
+        }
+
+        function executeManaDrain(player, opponent) {
                     opponent.health--;
-                    if (player.health < 3) player.health++;
+            if (player.health < GAME_CONFIG.maxHealth) player.health++;
                     console.log(`💫 마력 착취: ${opponent.name} 체력 ${opponent.health}, ${player.name} 체력 ${player.health}`);
                     playDamageSound();
                     playHealSound();
                     showDamageEffect(opponent.id === 1 ? myArea : opponentArea, 1);
                     showHealEffect(player.id === 1 ? myArea : opponentArea, 1);
-                    addLog(`${player.name}${getJosa(player.name, '이/가')} ${opponent.name}${getJosa(opponent.name, '의')} 마력을 착취하여 피해 1을 입히고 체력을 1 회복했습니다.`);
-                    break;
-                case 1: // 운명 변환
+            addLog(Messages.damage(opponent.name, 1) + ' + ' + Messages.heal(player.name, 1));
+        }
+
+        async function executeDestinyChange(player, opponent) {
                     console.log('🔮 운명 변환 효과 실행');
                     const toRevealCount = Math.min(3, state.secretStones.length);
                     if (toRevealCount > 0) {
                         const revealedStones = state.secretStones.splice(0, toRevealCount);
                         state.publiclyRevealedSecretStones.push(...revealedStones);
                         console.log(`🔮 공개된 주문: [${revealedStones.join(', ')}]`);
-                        addLog(`운명 변환! 비밀 주문 [${revealedStones.join(', ')}]${getJosa(revealedStones.join(', '), '이/가')} 공개되었습니다.`);
+                addLog(Messages.reveal(revealedStones));
+                        
+                        // 공개된 주문들의 아이콘과 함께 팝업 표시
+                        const revealedIcons = revealedStones.map(stone => `${SpellIcons[stone] || '❓'}${stone}`).join(', ');
+                        await showModal('운명 변환', `비밀 주문 [${revealedIcons}]${getJosa(revealedStones.length.toString(), '이/가')} 공개되었습니다.`);
+                    } else {
+                        await showModal('운명 변환', '공개할 비밀 주문이 없습니다.');
                     }
-                    break;
+        }
+
+        // 주문 효과 실행 함수
+        async function executeSpellEffect(playerId, spellNumber) {
+            console.log(`✨ 영창 효과 실행: 플레이어 ${playerId}, 영창 ${spellNumber}`);
+            
+            if (!GameConditions.isGameValid()) {
+                console.log('⚠️ 게임 상태가 유효하지 않아 영창 효과 실행을 건너뜁니다');
+                return;
             }
+            
+            const player = state.players.find(p => p.id === playerId);
+            const opponent = state.players.find(p => p.id !== playerId);
+            
+            if (!player || !opponent) {
+                console.log('⚠️ 플레이어 객체가 유효하지 않아 영창 효과 실행을 건너뜁니다');
+                return;
+            }
+            
+            const spellEffects = {
+                6: () => executeMeditation(player, opponent),
+                5: () => executeHealPotion(player, opponent),
+                4: () => executeFireArrow(player, opponent),
+                3: () => executeMindControl(player, opponent, playerId),
+                2: () => executeManaDrain(player, opponent),
+                1: () => executeDestinyChange(player, opponent)
+            };
+            
+            const effect = spellEffects[spellNumber];
+            if (effect) {
+                await effect();
+            }
+            
             render();
             await sleep(1000);
             checkGameOver();
             
-            // 효과 실행 완료 후 주문 버튼 다시 활성화 (내 턴인 경우에만)
             const myPlayerId = multiplayerMode ? (isHost ? 1 : 2) : 1;
             if (state.currentPlayerId === myPlayerId && state.isPlayerTurn) {
-                // 성공/실패 관계없이 안전 시간 후 버튼 재활성화
                 setTimeout(() => {
                     enableSpellButtons();
-                }, 500); // 0.5초 안전 시간
+                }, 500);
             }
         }
 
+        // AI 턴 관리 함수들
+        function getAIName() {
+            return multiplayerMode ? state.players[1].name : 
+                   (aiDifficulty === 'easy' ? '입문용 허수아비' : 
+                    aiDifficulty === 'normal' ? '훈련용 허수아비' : '고수용 허수아비');
+        }
+
+        function getCastableSpells(ai) {
+            return ai.hand.filter(s => s >= state.lastSuccessfulSpell);
+        }
+
+        async function executeAISpell(ai, player, chosenSpell, opponentName) {
+                const handIndex = ai.hand.indexOf(chosenSpell);
+                const successRate = getAISuccessRate();
+            
+                if (Math.random() < successRate && handIndex > -1) {
+                return await handleAISpellSuccess(ai, chosenSpell, opponentName);
+            } else {
+                return await handleAISpellFailure(ai, chosenSpell, opponentName);
+            }
+        }
+
+        async function handleAISpellSuccess(ai, chosenSpell, opponentName) {
+            const castedStone = ai.hand.splice(ai.hand.indexOf(chosenSpell), 1)[0];
+                    state.usedStones.push(castedStone);
+                    console.log(`✅ ${opponentName} 영창 성공: ${chosenSpell}번 (사용된 주문: ${castedStone})`);
+                    
+                    playSuccessSound();
+                    addSuccessAnimation(opponentArea);
+            addLog(Messages.spellSuccess(opponentName, chosenSpell));
+                    render();
+            
+                    await executeSpellEffect(2, chosenSpell);
+                    state.lastSuccessfulSpell = chosenSpell;
+                    
+            if (GameConditions.isMultiplayerConnected()) {
+                        dataChannel.send(JSON.stringify({
+                            type: 'cardPlayed',
+                            card: chosenSpell,
+                            playerId: 2,
+                            gameState: state
+                        }));
+                    }
+                    
+            return true;
+        }
+
+        async function handleAISpellFailure(ai, chosenSpell, opponentName) {
+                    const currentPlayer = state.players.find(p => p.id === state.currentPlayerId);
+                    currentPlayer.health--;
+                    console.log(`❌ ${opponentName} 영창 실패: ${chosenSpell}번 (플레이어 ${currentPlayer.id} 체력: ${currentPlayer.health})`);
+                    
+                    playFailureSound();
+                    addFailureAnimation(opponentArea);
+                    showDamageEffect(opponentArea, 1);
+            addLog(Messages.spellFailure(opponentName, chosenSpell));
+                    render();
+                    
+            if (GameConditions.isMultiplayerConnected()) {
+                        dataChannel.send(JSON.stringify({
+                            type: 'spellPlayed',
+                            spell: chosenSpell,
+                            playerId: 2,
+                            gameState: state
+                        }));
+                    }
+                    
+            return false;
+        }
+
+        function shouldAIContinue(ai, opponentName) {
+            const continueTurn = ai.hand.length > 0 && Math.random() < getAIContinueRate();
+            console.log(`🤖 ${opponentName} 연속 영창 결정: ${continueTurn ? '계속' : '중단'} (확률: ${Math.random()})`);
+            if (!continueTurn) {
+                addLog(`${opponentName}${getJosa(opponentName, '이/가')} 연속 영창을 중단했습니다.`);
+            }
+            return continueTurn;
+        }
+
         async function aiTurn() {
-            // 게임 상태가 유효하지 않으면 AI 턴 중단
-            if (!state || !state.players || state.players.length < 2) {
+            if (!GameConditions.isGameValid()) {
                 console.log('⚠️ 게임 상태가 유효하지 않아 AI 턴을 건너뜁니다');
                 return;
             }
             
-            const opponentName = multiplayerMode ? state.players[1].name : (aiDifficulty === 'easy' ? '입문용 허수아비' : aiDifficulty === 'normal' ? '훈련용 허수아비' : '오작동 허수아비');
+            const opponentName = getAIName();
             console.log(`🤖 ${opponentName} 턴 시작 (난이도: ${aiDifficulty})`);
-            addLog(`${opponentName}${getJosa(opponentName, '의')} 턴이 시작되었습니다.`);
+            addLog(Messages.turnStart(opponentName));
             state.turnInProgress = true;
             updateButtons();
 
@@ -1910,83 +2233,26 @@
                 
                 const ai = state.players[1];
                 const player = state.players[0];
-                const castableSpells = ai.hand.filter(s => s >= state.lastSuccessfulSpell);
+                const castableSpells = getCastableSpells(ai);
                 
                 console.log(`🤖 AI 가능한 영창: [${castableSpells.join(', ')}] (마지막 성공: ${state.lastSuccessfulSpell})`);
 
                 if (castableSpells.length === 0) {
                     console.log(`🤖 ${opponentName} 실행 가능한 영창 없음`);
                     addLog(`${opponentName}${getJosa(opponentName, '이/가')} 시전할 수 있는 영창이 없습니다.`);
-                    continueTurn = false;
                     break;
                 }
 
-                let chosenSpell = chooseAISpell(castableSpells, ai, player);
+                const chosenSpell = chooseAISpell(castableSpells, ai, player);
                 console.log(`🤖 AI 선택한 영창: ${chosenSpell} (플레이어 체력: ${player.health}, AI 체력: ${ai.health})`);
                 
-                const handIndex = ai.hand.indexOf(chosenSpell);
-                const successRate = getAISuccessRate();
-                if (Math.random() < successRate && handIndex > -1) {
-                    const castedStone = ai.hand.splice(handIndex, 1)[0];
-                    state.usedStones.push(castedStone);
-                    console.log(`✅ ${opponentName} 영창 성공: ${chosenSpell}번 (사용된 주문: ${castedStone})`);
-                    
-                    // AI 성공 효과
-                    playSuccessSound();
-                    addSuccessAnimation(opponentArea);
-                    
-                    addLog(`✅ ${opponentName}${getJosa(opponentName, '이/가')} ${chosenSpell}번 영창을 성공적으로 시전했습니다!`);
-                    render();
-                    await executeSpellEffect(2, chosenSpell);
-                    state.lastSuccessfulSpell = chosenSpell;
-                    
-                    // 멀티플레이어 모드에서 상대방에게 AI 주문 플레이 전송
-                    if (multiplayerMode && dataChannel && dataChannel.readyState === 'open') {
-                        dataChannel.send(JSON.stringify({
-                            type: 'cardPlayed',
-                            card: chosenSpell,
-                            playerId: 2,
-                            gameState: state
-                        }));
-                    }
-                    
-                    if (checkGameOver()) {
-                        continueTurn = false;
-                        break;
-                    }
-                    
-                    continueTurn = ai.hand.length > 0 && Math.random() < getAIContinueRate();
-                    console.log(`🤖 ${opponentName} 연속 영창 결정: ${continueTurn ? '계속' : '중단'} (확률: ${Math.random()})`);
-                    if (!continueTurn) {
-                        addLog(`${opponentName}${getJosa(opponentName, '이/가')} 연속 영창을 중단했습니다.`);
-                    }
+                const success = await executeAISpell(ai, player, chosenSpell, opponentName);
+                
+                if (checkGameOver()) break;
+                
+                if (success) {
+                    continueTurn = shouldAIContinue(ai, opponentName);
                 } else {
-                    // 현재 턴인 플레이어의 체력 감소
-                    const currentPlayer = state.players.find(p => p.id === state.currentPlayerId);
-                    currentPlayer.health--;
-                    console.log(`❌ ${opponentName} 영창 실패: ${chosenSpell}번 (플레이어 ${currentPlayer.id} 체력: ${currentPlayer.health})`);
-                    
-                    // AI 실패 효과
-                    playFailureSound();
-                    addFailureAnimation(opponentArea);
-                    showDamageEffect(opponentArea, 1);
-                    
-                    addLog(`❌ ${opponentName}${getJosa(opponentName, '이/가')} ${chosenSpell}번 영창을 시전했지만 실패했습니다. (체력 1 감소)`);
-                    render();
-                    
-                    // 체력 감소 후 바로 게임 종료 체크
-                    if (checkGameOver()) return;
-                    
-                    // 멀티플레이어 모드에서 상대방에게 AI 실패 전송
-                    if (multiplayerMode && dataChannel && dataChannel.readyState === 'open') {
-                        dataChannel.send(JSON.stringify({
-                            type: 'spellPlayed',
-                            spell: chosenSpell,
-                            playerId: 2,
-                            gameState: state
-                        }));
-                    }
-                    
                     continueTurn = false;
                 }
             }
@@ -1997,16 +2263,14 @@
         
         // AI 영창 선택 함수 (난이도별)
         function chooseAISpell(castableSpells, ai, player) {
-            switch(aiDifficulty) {
-                case 'easy':
-                    return chooseEasyAISpell(castableSpells, ai, player);
-                case 'normal':
-                    return chooseNormalAISpell(castableSpells, ai, player);
-                case 'hard':
-                    return chooseHardAISpell(castableSpells, ai, player);
-                default:
-                    return chooseNormalAISpell(castableSpells, ai, player);
-            }
+            const aiStrategies = {
+                easy: chooseEasyAISpell,
+                normal: chooseNormalAISpell,
+                hard: chooseHardAISpell
+            };
+            
+            const strategy = aiStrategies[aiDifficulty] || chooseNormalAISpell;
+            return strategy(castableSpells, ai, player);
         }
         
         // 쉬운 AI 영창 선택
@@ -2059,32 +2323,20 @@
         
         // AI 성공률 반환 (난이도별)
         function getAISuccessRate() {
-            switch(aiDifficulty) {
-                case 'easy': return 0.7;   // 70% 성공률
-                case 'normal': return 0.95; // 95% 성공률
-                case 'hard': return 0.98;   // 98% 성공률
-                default: return 0.95;
-            }
+            return GAME_CONFIG.aiSuccessRate[aiDifficulty] || GAME_CONFIG.aiSuccessRate.normal;
         }
         
         // AI 연속 영창 확률 반환 (난이도별)
         function getAIContinueRate() {
-            switch(aiDifficulty) {
-                case 'easy': return 0.3;   // 30% 확률로 연속
-                case 'normal': return 0.5;  // 50% 확률로 연속
-                case 'hard': return 0.7;    // 70% 확률로 연속
-                default: return 0.5;
-            }
+            return GAME_CONFIG.aiContinueRate[aiDifficulty] || GAME_CONFIG.aiContinueRate.normal;
         }
 
         function checkGameOver() {
-            // 게임 상태가 유효하지 않으면 게임 종료 체크 건너뛰기
-            if (!state || !state.players || state.players.length < 2 || !state.players[0] || !state.players[1]) {
+            if (!GameConditions.isGameValid() || !state.players[0] || !state.players[1]) {
                 console.log('⚠️ 게임 상태가 유효하지 않아 게임 종료 체크를 건너뜁니다');
                 return false;
             }
             
-            // 멀티플레이어에서는 현재 플레이어와 상대 플레이어를 구분
             const myPlayerId = multiplayerMode ? (isHost ? 1 : 2) : 1;
             const myPlayer = state.players.find(p => p.id === myPlayerId);
             const opponentPlayer = state.players.find(p => p.id !== myPlayerId);
@@ -2156,6 +2408,21 @@
                 // 전적 업데이트
                 updateStats(isPlayerWin, multiplayerMode);
                 
+                // 승리의 증표 업데이트
+                if (isPlayerWin) {
+                    if (multiplayerMode) {
+                        TrophySystem.addVictoryTrophy('multiplayer');
+                    } else {
+                        TrophySystem.addVictoryTrophy('ai');
+                    }
+                } else {
+                    if (multiplayerMode) {
+                        TrophySystem.addDefeatTrophy('multiplayer');
+                    } else {
+                        TrophySystem.addDefeatTrophy('ai');
+                    }
+                }
+                
                 // 연승 처리
                 if (isPlayerWin) {
                     currentWinStreak++;
@@ -2167,13 +2434,19 @@
                     
                     // 2연승 이상일 때 연승 메시지 추가
                     if (currentWinStreak >= 2) {
-                        message += `\n\n🔥 ${currentWinStreak}연승 중!`;
+                        message += `\n\n${Messages.streak(currentWinStreak)}`;
                     }
                 } else {
                     // 패배 시 연승 초기화
                     currentWinStreak = 0;
                     localStorage.setItem('currentWinStreak', '0');
                 }
+                
+                // 승점 변화 메시지 추가
+                const trophyType = multiplayerMode ? 'multiplayer' : 'ai';
+                const trophyChange = isPlayerWin ? '+3' : '-1';
+                const trophyMessage = `\n\n🏅 승점 ${trophyChange}`;
+                message += trophyMessage;
                 
                 // 승리/패배 사운드
                 playGameOverSound(winner.id === myPlayerId);
@@ -2393,9 +2666,9 @@
             
             // 올바른 덱 생성 (1번은 1개, 2번은 2개, 3번은 3개...)
             let deck = [];
-            for (let i = 1; i <= 6; i++) {
-                for (let j = 0; j < i; j++) {
-                    deck.push(i);
+            for (let spellNumber = 1; spellNumber <= GAME_CONFIG.deckStructure.maxSpell; spellNumber++) {
+                for (let cardCount = 0; cardCount < GAME_CONFIG.deckStructure.cardsPerSpell(spellNumber); cardCount++) {
+                    deck.push(spellNumber);
                 }
             }
             console.log('📦 초기 덱 생성:', deck);
@@ -2407,8 +2680,9 @@
             // 멀티플레이어에서는 호스트가 첫 번째 턴을 결정하고 상대방에게 전송
             let firstPlayer;
             if (multiplayerMode && isHost) {
+                // 멀티플레이어에서는 호스트가 항상 1번 플레이어, 첫 턴만 랜덤 결정
                 firstPlayer = Math.random() < 0.5 ? 1 : 2;
-                console.log(`🎯 호스트가 첫 번째 턴 결정: 플레이어 ${firstPlayer}`);
+                console.log(`🎯 호스트가 첫 번째 턴 결정: 플레이어 ${firstPlayer} (호스트는 항상 1번)`);
                 
                 // 상대방에게 첫 번째 턴 정보 전송
                 if (dataChannel && dataChannel.readyState === 'open') {
@@ -2433,8 +2707,8 @@
             
             state = {
                 players: [
-                    { id: 1, name: playerName, health: 3, hand: deck.slice(0, 7).sort((a, b) => a - b), knownSecretStones: [] },
-                    { id: 2, name: multiplayerMode ? (opponentName || 'Player2') : 'AI', health: 3, hand: deck.slice(7, 14).sort((a, b) => a - b), knownSecretStones: [] }
+                    { id: 1, name: playerName, health: GAME_CONFIG.maxHealth, hand: deck.slice(0, GAME_CONFIG.maxHandSize).sort((a, b) => a - b), knownSecretStones: [] },
+                    { id: 2, name: multiplayerMode ? (opponentName || 'Player2') : 'AI', health: GAME_CONFIG.maxHealth, hand: deck.slice(GAME_CONFIG.maxHandSize, GAME_CONFIG.maxHandSize * 2).sort((a, b) => a - b), knownSecretStones: [] }
                 ],
                 secretStones: deck.slice(14),
                 usedStones: [],
@@ -2445,8 +2719,10 @@
                 turnInProgress: false,
                 isGameOver: false,
                 gameStarted: true,
-                gameLog: [`새로운 결투가 시작됩니다! ${firstPlayer === 1 ? playerName : (multiplayerMode ? (opponentName || 'Player2') : 'AI')}가 먼저 시작합니다.`]
+                gameLog: [Messages.gameStart(firstPlayer === 1 ? playerName : (multiplayerMode ? (opponentName || 'Player2') : 'AI'))]
             };
+            
+            console.log(`🎯 게임 상태 설정 완료 - 호스트: ${isHost}, 첫 턴 플레이어: ${firstPlayer}, 내 플레이어 ID: ${myPlayerId}, 내 턴: ${state.isPlayerTurn}`);
             
             console.log('🎯 초기 게임 상태:', {
                 playerHand: state.players[0].hand,
@@ -2471,49 +2747,8 @@
             }, 1000);
         }
 
-        // 사운드 효과 함수들
-        function playCardSound() {
-            playSound(440, 0.1, 'sine');
-        }
-
-        function playSuccessSound() {
-            playSound(523.25, 0.2, 'sine');
-            setTimeout(() => playSound(659.25, 0.2, 'sine'), 100);
-        }
-
-        function playFailureSound() {
-            playSound(220, 0.3, 'sawtooth');
-        }
-
-        function playDamageSound() {
-            playSound(110, 0.2, 'square');
-        }
-
-        function playHealSound() {
-            playSound(880, 0.15, 'sine');
-        }
-
-        function playSound(frequency, duration, type = 'sine') {
-            try {
-                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                const oscillator = audioContext.createOscillator();
-                const gainNode = audioContext.createGain();
-                
-                oscillator.connect(gainNode);
-                gainNode.connect(audioContext.destination);
-                
-                oscillator.frequency.value = frequency;
-                oscillator.type = type;
-                
-                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
-                
-                oscillator.start(audioContext.currentTime);
-                oscillator.stop(audioContext.currentTime + duration);
-            } catch (e) {
-                console.log('🔇 사운드 재생 실패:', e);
-            }
-        }
+        // 사운드 효과 함수들 (상단에서 통합된 버전 사용)
+        // 중복 제거됨 - 상단의 playSoundEffect() 함수 사용
 
         // 애니메이션 효과 함수들
         function addSuccessAnimation(element) {
@@ -2544,9 +2779,9 @@
 
         // 유틸리티 함수들
         function shuffleArray(array) {
-            for (let i = array.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [array[i], array[j]] = [array[j], array[i]];
+            for (let currentIndex = array.length - 1; currentIndex > 0; currentIndex--) {
+                const randomIndex = Math.floor(Math.random() * (currentIndex + 1));
+                [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
             }
         }
 
@@ -2664,6 +2899,77 @@
             showCardListModal('AI 손패', ai.hand, true);
         }
 
+        // 게임 설정 상수
+        const GAME_CONFIG = {
+            maxHealth: 3,
+            maxHandSize: 7,
+            maxLogEntries: 20,
+            turnDuration: {
+                easy: Infinity,
+                normal: 30,
+                hard: 20,
+                multiplayer: 30
+            },
+            aiSuccessRate: {
+                easy: 0.7,
+                normal: 0.95,
+                hard: 0.98
+            },
+            aiContinueRate: {
+                easy: 0.3,
+                normal: 0.5,
+                hard: 0.7
+            },
+            deckStructure: {
+                maxSpell: 6,
+                cardsPerSpell: (spell) => spell // 1번은 1개, 2번은 2개...
+            }
+        };
+
+        // 조건문 단순화를 위한 헬퍼 함수들
+        const GameConditions = {
+            isMultiplayerConnected: () => multiplayerMode && dataChannel && dataChannel.readyState === 'open',
+            isGameValid: () => state && state.players && state.players.length >= 2,
+            isMyTurn: () => {
+                const myPlayerId = multiplayerMode ? (isHost ? 1 : 2) : 1;
+                return multiplayerMode ? (state.currentPlayerId === myPlayerId) : state.isPlayerTurn;
+            },
+            canPlaySpell: () => {
+                const myPlayerId = multiplayerMode ? (isHost ? 1 : 2) : 1;
+                const isMyTurn = multiplayerMode ? (state.currentPlayerId === myPlayerId) : state.isPlayerTurn;
+                return isMyTurn && !state.turnInProgress && !state.isGameOver;
+            },
+            isGameInProgress: () => multiplayerMode && state.gameStarted && !state.isGameOver
+        };
+
+        // 주문 아이콘 정의
+        const SpellIcons = {
+            1: '🔮', // 운명 변환
+            2: '💫', // 마력 착취
+            3: '🌀', // 정신 교란
+            4: '🔥', // 화염 화살
+            5: '🧪', // 생명 물약
+            6: '💤'  // 명상
+        };
+
+        // 메시지 템플릿
+        const Messages = {
+            spellSuccess: (name, spell) => `✅ ${name} ${spell}번 영창 성공`,
+            spellFailure: (name, spell) => `❌ ${name} ${spell}번 영창 실패`,
+            turnStart: (name) => `🔄 ${name} 턴 시작`,
+            turnEnd: (name) => `⏹️ ${name} 턴 종료`,
+            timeOut: () => `⏰ 시간 초과`,
+            gameStart: (name) => `🎮 ${name} 게임 시작`,
+            gameOver: (winner) => `🏆 ${winner} 승리`,
+            damage: (name, amount) => `💔 ${name} 체력 -${amount}`,
+            heal: (name, amount) => `💚 ${name} 체력 +${amount}`,
+            reveal: (stones) => `🔮 비밀 주문 공개: ${stones.map(stone => `${SpellIcons[stone] || '❓'}${stone}`).join(', ')}`,
+            spy: (name) => `🌀 ${name} 정신 교란`,
+            meditate: (stone) => `💤 명상: ${SpellIcons[stone] || '❓'}${stone} 공개`,
+            surrender: (name) => `🏳️ ${name} 도망`,
+            streak: (count) => `🔥 ${count}연승`
+        };
+
         function addLog(message) {
             console.log(`📝 게임 로그: ${message}`);
             
@@ -2676,17 +2982,17 @@
             }
             
             state.gameLog.unshift(message);
-            if (state.gameLog.length > 20) state.gameLog.pop();
+            if (state.gameLog.length > GAME_CONFIG.maxLogEntries) state.gameLog.pop();
         }
 
         // 도움말 툴팁 함수들
         function showHelpTooltip() {
-            const tooltip = document.getElementById('help-tooltip');
+            const tooltip = DOM.get('help-tooltip');
             tooltip.classList.remove('hidden');
         }
         
         function hideHelpTooltip() {
-            const tooltip = document.getElementById('help-tooltip');
+            const tooltip = DOM.get('help-tooltip');
             tooltip.classList.add('hidden');
         }
         
@@ -2758,13 +3064,18 @@
             localStorage.setItem('maxWinStreak', maxWinStreak.toString());
             saveStats(stats);
             
-            // 서버에 랭킹 업데이트 요청 (이름 변경 시 기존 기록 찾아서 업데이트)
+            // 증표 정보 가져오기
+            const trophies = TrophySystem.loadTrophies();
+            const trophyCount = isMultiplayer ? trophies.multiplayer : trophies.ai;
+            
+            // 서버에 랭킹 업데이트 요청 (증표 정보 포함)
             const playerName = localStorage.getItem('playerName') || 'Player';
             if (socket) {
                 socket.emit('updateRanking', {
                     category: category,
                     playerName: playerName,
                     stats: {
+                        trophies: trophyCount,
                         wins: stats[category].wins,
                         losses: stats[category].losses,
                         currentWinStreak: currentWinStreak,
@@ -2773,7 +3084,7 @@
                 });
             }
             
-            console.log(`📊 전적 업데이트: ${category} - ${playerName} (승리: ${stats[category].wins}, 패배: ${stats[category].losses})`);
+            console.log(`📊 전적 업데이트: ${category} - ${playerName} (증표: ${trophyCount}, 승리: ${stats[category].wins}, 패배: ${stats[category].losses})`);
         }
         
         function showRankingModal() {
@@ -2813,7 +3124,7 @@
             
             // 랭킹 데이터 수신 이벤트 리스너
             const handleRankingData = (data) => {
-                const rankingContainer = document.getElementById(`${data.category}-ranking`);
+                const rankingContainer = DOM.get(`${data.category}-ranking`);
                 if (rankingContainer) {
                     if (data.ranking.length === 0) {
                         rankingContainer.innerHTML = '<div class="text-center text-gray-400">아직 기록이 없습니다.</div>';
@@ -2821,6 +3132,7 @@
                         const rankingHtml = data.ranking.map((player, index) => {
                             const rank = index + 1;
                             const rankIcon = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : `${rank}.`;
+                            const trophyIcon = '🏅';
                             return `
                                 <div class="flex items-center justify-between p-3 bg-gray-800 bg-opacity-50 rounded-lg">
                                     <div class="flex items-center space-x-3">
@@ -2828,6 +3140,7 @@
                                         <span class="font-bold">${player.name}</span>
                                     </div>
                                     <div class="text-right">
+                                        <div class="text-sm text-yellow-400">${trophyIcon} ${player.trophies || 0}증표</div>
                                         <div class="text-sm text-green-400">${player.wins}승 ${player.losses}패</div>
                                         <div class="text-xs text-blue-400">최고 ${player.maxWinStreak}연승</div>
                                     </div>
@@ -2870,6 +3183,9 @@
             
             const playerName = localStorage.getItem('playerName') || '';
             
+            // 증표 정보 가져오기
+            const trophies = TrophySystem.loadTrophies();
+            
             const modal = document.createElement('div');
             modal.className = 'fixed inset-0 flex items-center justify-center z-50 modal-bg';
             modal.innerHTML = `
@@ -2886,59 +3202,72 @@
                             <div class="text-center">
                                 <h4 class="text-lg font-bold mb-3 text-yellow-300">🤖 허수아비 학대 기록</h4>
                                 <div class="grid grid-cols-2 gap-4 mb-2">
-                                    <div class="bg-green-900 bg-opacity-30 p-3 rounded-lg">
-                                        <div class="text-xl font-bold text-green-400">${aiStats.wins}</div>
-                                        <div class="text-xs">승리</div>
+                                    <div class="bg-emerald-600 bg-opacity-40 p-3 rounded-lg border border-emerald-400 border-opacity-30 shadow-lg">
+                                        <div class="text-xl font-bold text-emerald-100">${aiStats.wins}</div>
+                                        <div class="text-xs text-emerald-50 font-semibold">승리</div>
                                     </div>
-                                    <div class="bg-red-900 bg-opacity-30 p-3 rounded-lg">
-                                        <div class="text-xl font-bold text-red-400">${aiStats.losses}</div>
-                                        <div class="text-xs">패배</div>
+                                    <div class="bg-rose-600 bg-opacity-40 p-3 rounded-lg border border-rose-400 border-opacity-30 shadow-lg">
+                                        <div class="text-xl font-bold text-rose-100">${aiStats.losses}</div>
+                                        <div class="text-xs text-rose-50 font-semibold">패배</div>
                                     </div>
                                 </div>
                                 <div class="grid grid-cols-2 gap-4">
-                                    <div class="bg-blue-900 bg-opacity-30 p-3 rounded-lg">
-                                        <div class="text-lg font-bold text-blue-400">${aiTotalGames}전</div>
-                                        <div class="text-xs">총 게임</div>
+                                    <div class="bg-cyan-600 bg-opacity-40 p-3 rounded-lg border border-cyan-400 border-opacity-30 shadow-lg">
+                                        <div class="text-lg font-bold text-cyan-100">${aiTotalGames}전</div>
+                                        <div class="text-xs text-cyan-50 font-semibold">총 게임</div>
                                     </div>
-                                    <div class="bg-purple-900 bg-opacity-30 p-3 rounded-lg">
-                                        <div class="text-lg font-bold text-purple-400">${aiWinRate}%</div>
-                                        <div class="text-xs">승률</div>
+                                    <div class="bg-violet-600 bg-opacity-40 p-3 rounded-lg border border-violet-400 border-opacity-30 shadow-lg">
+                                        <div class="text-lg font-bold text-violet-100">${aiWinRate}%</div>
+                                        <div class="text-xs text-violet-50 font-semibold">승률</div>
                                     </div>
                                 </div>
                             </div>
                             <div class="text-center">
                                 <h4 class="text-lg font-bold mb-3 text-green-300">👥 정식 맞짱 데이터</h4>
                                 <div class="grid grid-cols-2 gap-4 mb-2">
-                                    <div class="bg-green-900 bg-opacity-30 p-3 rounded-lg">
-                                        <div class="text-xl font-bold text-green-400">${multiplayerStats.wins}</div>
-                                        <div class="text-xs">승리</div>
+                                    <div class="bg-teal-600 bg-opacity-40 p-3 rounded-lg border border-teal-400 border-opacity-30 shadow-lg">
+                                        <div class="text-xl font-bold text-teal-100">${multiplayerStats.wins}</div>
+                                        <div class="text-xs text-teal-50 font-semibold">승리</div>
                                     </div>
-                                    <div class="bg-red-900 bg-opacity-30 p-3 rounded-lg">
-                                        <div class="text-xl font-bold text-red-400">${multiplayerStats.losses}</div>
-                                        <div class="text-xs">패배</div>
+                                    <div class="bg-pink-600 bg-opacity-40 p-3 rounded-lg border border-pink-400 border-opacity-30 shadow-lg">
+                                        <div class="text-xl font-bold text-pink-100">${multiplayerStats.losses}</div>
+                                        <div class="text-xs text-pink-50 font-semibold">패배</div>
                                     </div>
                                 </div>
                                 <div class="grid grid-cols-2 gap-4">
-                                    <div class="bg-blue-900 bg-opacity-30 p-3 rounded-lg">
-                                        <div class="text-lg font-bold text-blue-400">${multiplayerTotalGames}전</div>
-                                        <div class="text-xs">총 게임</div>
+                                    <div class="bg-indigo-600 bg-opacity-40 p-3 rounded-lg border border-indigo-400 border-opacity-30 shadow-lg">
+                                        <div class="text-lg font-bold text-indigo-100">${multiplayerTotalGames}전</div>
+                                        <div class="text-xs text-indigo-50 font-semibold">총 게임</div>
                                     </div>
-                                    <div class="bg-purple-900 bg-opacity-30 p-3 rounded-lg">
-                                        <div class="text-lg font-bold text-purple-400">${multiplayerWinRate}%</div>
-                                        <div class="text-xs">승률</div>
+                                    <div class="bg-fuchsia-600 bg-opacity-40 p-3 rounded-lg border border-fuchsia-400 border-opacity-30 shadow-lg">
+                                        <div class="text-lg font-bold text-fuchsia-100">${multiplayerWinRate}%</div>
+                                        <div class="text-xs text-fuchsia-50 font-semibold">승률</div>
                                     </div>
                                 </div>
                             </div>
                             <div class="text-center">
                                 <h4 class="text-lg font-bold mb-3 text-orange-300">🔥 연승 ON</h4>
                                 <div class="grid grid-cols-2 gap-4">
-                                    <div class="bg-orange-900 bg-opacity-30 p-3 rounded-lg">
-                                        <div class="text-xl font-bold text-orange-400">${maxWinStreak}연승</div>
-                                        <div class="text-xs">최고 연승</div>
+                                    <div class="bg-amber-600 bg-opacity-40 p-3 rounded-lg border border-amber-400 border-opacity-30 shadow-lg">
+                                        <div class="text-xl font-bold text-amber-100">${maxWinStreak}연승</div>
+                                        <div class="text-xs text-amber-50 font-semibold">최고 연승</div>
                                     </div>
-                                    <div class="bg-yellow-900 bg-opacity-30 p-3 rounded-lg">
-                                        <div class="text-xl font-bold text-yellow-400">${currentWinStreak}연승</div>
-                                        <div class="text-xs">현재 연승</div>
+                                    <div class="bg-lime-600 bg-opacity-40 p-3 rounded-lg border border-lime-400 border-opacity-30 shadow-lg">
+                                        <div class="text-xl font-bold text-lime-100">${currentWinStreak}연승</div>
+                                        <div class="text-xs text-lime-50 font-semibold">현재 연승</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="text-center">
+                                <h4 class="text-lg font-bold mb-3 text-yellow-300">🏆 승리의 증표</h4>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div class="bg-yellow-600 bg-opacity-40 p-3 rounded-lg border border-yellow-400 border-opacity-30 shadow-lg">
+                                        <div class="text-xl font-bold text-yellow-100">🏅 ${trophies.ai}개</div>
+                                        <div class="text-xs text-yellow-50 font-semibold">모의 결투 점수</div>
+                                    </div>
+                                    <div class="bg-red-600 bg-opacity-40 p-3 rounded-lg border border-red-400 border-opacity-30 shadow-lg">
+                                        <div class="text-xl font-bold text-red-100">🏅 ${trophies.multiplayer}개</div>
+                                        <div class="text-xs text-red-50 font-semibold">정식 결투 점수</div>
                                     </div>
                                 </div>
                             </div>
@@ -2984,18 +3313,18 @@
 
         function updatePlayerName() {
             const playerName = localStorage.getItem('playerName') || 'Player';
-            const myTitle = document.getElementById('my-title');
+            const myTitle = DOM.get('my-title');
             if (myTitle) {
                 myTitle.textContent = `나 (${playerName})`;
             }
         }
         
         function updateOpponentName() {
-            const opponentArea = document.getElementById('opponent-area');
+            const opponentArea = DOM.get('opponent-area');
             const opponentTitle = opponentArea.querySelector('h2');
             if (opponentTitle) {
-                let displayName;
-                let titleClass = 'text-xl font-bold text-green-300';
+                let opponentDisplayName;
+                let opponentTitleClass = 'text-xl font-bold text-green-300';
                 
                 if (multiplayerMode) {
                     // 멀티플레이어 모드: 실제 유저
@@ -3013,11 +3342,11 @@
                             titleClass = 'text-xl font-bold text-yellow-300';
                             break;
                         case 'hard':
-                            displayName = '오작동 허수아비';
+                            displayName = '고수용 허수아비';
                             titleClass = 'text-xl font-bold text-red-300';
                             break;
                         default:
-                            displayName = '오작동 허수아비';
+                            displayName = '고수용 허수아비';
                             titleClass = 'text-xl font-bold text-red-300';
                     }
                 }
@@ -3126,7 +3455,7 @@
                 updateOpponentName();
                 
                 // 매칭 모달 숨기기
-                const matchingModal = document.getElementById('matching-modal');
+            const matchingModal = DOM.get('matching-modal');
                 matchingModal.classList.add('hidden');
                 
                 // WebRTC 연결 시작
@@ -3216,7 +3545,7 @@
             // Socket.IO 연결 초기화
             initializeSocketIO();
             
-            const matchingModal = document.getElementById('matching-modal');
+            const matchingModal = DOM.get('matching-modal');
             matchingModal.classList.remove('hidden');
             
             // 랜덤 매칭 메시지 표시
@@ -3228,7 +3557,7 @@
                 '오늘 운 없을 사람을 고르는 중...'
             ];
             const randomMessage = matchingMessages[Math.floor(Math.random() * matchingMessages.length)];
-            document.getElementById('matching-message').textContent = randomMessage;
+            DOM.get('matching-message').textContent = randomMessage;
             
             // 매칭 요청
             socket.emit('requestMatch', { playerName: playerName });
@@ -3236,7 +3565,7 @@
         
         function cancelMatching() {
             console.log('❌ 매칭 취소');
-            const matchingModal = document.getElementById('matching-modal');
+            const matchingModal = DOM.get('matching-modal');
             matchingModal.classList.add('hidden');
             
             // Socket.IO 연결 해제
@@ -3260,7 +3589,7 @@
             multiplayerMode = true;
             
             // 매칭 모달 숨기기
-            const matchingModal = document.getElementById('matching-modal');
+            const matchingModal = DOM.get('matching-modal');
             matchingModal.classList.add('hidden');
             
             // 게임 화면 표시 확실히 하기 (강제로 표시)
@@ -3286,14 +3615,14 @@
             console.log('🔄 멀티플레이어 게임 상태 초기화');
             state = {
                 players: [
-                    { id: 1, name: playerName, health: 3, hand: [], knownSecretStones: [] },
-                    { id: 2, name: opponentName || 'Player2', health: 3, hand: [], knownSecretStones: [] }
+                    { id: 1, name: playerName, health: GAME_CONFIG.maxHealth, hand: [], knownSecretStones: [] },
+                    { id: 2, name: opponentName || 'Player2', health: GAME_CONFIG.maxHealth, hand: [], knownSecretStones: [] }
                 ],
                 secretStones: [],
                 usedStones: [],
                 publiclyRevealedSecretStones: [],
-                currentPlayerId: isHost ? 1 : 2, // 호스트가 먼저 시작
-                isPlayerTurn: isHost, // 호스트가 먼저 시작
+                currentPlayerId: 1, // 호스트가 항상 1번 플레이어, 첫 턴은 resetGame에서 결정
+                isPlayerTurn: true, // 호스트가 첫 턴 시작 (resetGame에서 재설정됨)
                 lastSuccessfulSpell: 0,
                 turnInProgress: false,
                 isGameOver: false,
@@ -3312,6 +3641,15 @@
             if (isHost) {
                 console.log('🎯 호스트: 게임 초기화 시작');
                 resetGame();
+                
+                            // 호스트인 경우 게임 초기화 후 타이머 시작 (호스트가 첫 턴일 때만)
+            if (isHost && state.currentPlayerId === 1) {
+                console.log('⏰ 호스트: 첫 턴 타이머 시작');
+                startTurnTimer();
+            } else if (isHost && state.currentPlayerId === 2) {
+                console.log('⏰ 호스트: 상대 턴 시작 - 타이머 시작');
+                startTurnTimer();
+            }
                 
                 // 호스트인 경우 초기 게임 상태를 상대방에게 전송
                 setTimeout(() => {
@@ -3410,6 +3748,10 @@
         // Offer 생성 및 전송
         async function createOffer(opponentId) {
             try {
+                if (!peerConnection) {
+                    console.log('⚠️ peerConnection이 null입니다. Offer 생성을 건너뜁니다.');
+                    return;
+                }
                 const offer = await peerConnection.createOffer();
                 await peerConnection.setLocalDescription(offer);
                 
@@ -3426,6 +3768,10 @@
         // Offer 처리
         async function handleOffer(from, offer) {
             try {
+                if (!peerConnection) {
+                    console.log('⚠️ peerConnection이 null입니다. Offer 처리를 건너뜁니다.');
+                    return;
+                }
                 await peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
                 const answer = await peerConnection.createAnswer();
                 await peerConnection.setLocalDescription(answer);
@@ -3443,6 +3789,10 @@
         // Answer 처리
         async function handleAnswer(from, answer) {
             try {
+                if (!peerConnection) {
+                    console.log('⚠️ peerConnection이 null입니다. Answer 처리를 건너뜁니다.');
+                    return;
+                }
                 await peerConnection.setRemoteDescription(new RTCSessionDescription(answer));
                 console.log('📥 Answer 처리 완료');
             } catch (error) {
@@ -3453,6 +3803,10 @@
         // ICE Candidate 처리
         async function handleIceCandidate(from, candidate) {
             try {
+                if (!peerConnection) {
+                    console.log('⚠️ peerConnection이 null입니다. ICE Candidate 처리를 건너뜁니다.');
+                    return;
+                }
                 await peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
                 console.log('📥 ICE Candidate 처리 완료');
             } catch (error) {
@@ -3504,8 +3858,8 @@
                 const currentPlayerName = localStorage.getItem('playerName') || 'Player';
                 state = {
                     players: [
-                        { id: 1, name: currentPlayerName, health: 3, hand: [], knownSecretStones: [] },
-                        { id: 2, name: opponentName || 'Player2', health: 3, hand: [], knownSecretStones: [] }
+                                        { id: 1, name: currentPlayerName, health: GAME_CONFIG.maxHealth, hand: [], knownSecretStones: [] },
+                { id: 2, name: opponentName || 'Player2', health: GAME_CONFIG.maxHealth, hand: [], knownSecretStones: [] }
                     ],
                     secretStones: [],
                     usedStones: [],
@@ -3557,7 +3911,14 @@
                     console.log('📥 게임 상태 수신');
                     if (message.state) {
                         updateGameState(message.state);
-                        addLog('호스트의 게임 상태를 받았습니다.');
+                        
+                        // 게스트가 호스트의 게임 상태를 받았을 때 타이머 시작
+                        if (!isHost) {
+                            console.log(`⏰ 게스트: 호스트 게임 상태 수신 - 첫 턴 플레이어: ${message.state.currentPlayerId}`);
+                            setTimeout(() => {
+                                startTurnTimer();
+                            }, 100); // 약간의 지연 후 타이머 시작
+                        }
                     }
                     break;
                 case 'cardPlayed':
@@ -3604,6 +3965,14 @@
             
             render();
             updateButtons();
+            
+            // 게임 상태 업데이트 후 타이머 시작
+            if (isHost) {
+                console.log(`⏰ 호스트: 게임 상태 수신 후 타이머 시작 - 첫 턴 플레이어: ${state.currentPlayerId}`);
+                setTimeout(() => {
+                    startTurnTimer();
+                }, 100); // 약간의 지연 후 타이머 시작
+            }
             
             // 게임 상태 업데이트 후 로그
             console.log('✅ 게임 상태 업데이트 완료');
@@ -3653,7 +4022,7 @@
                 
                 // 턴 전환 후 현재 플레이어 턴 시작 로그
                 const currentPlayerName = state.currentPlayerId === 1 ? state.players[0].name : state.players[1].name;
-                addLog(`${currentPlayerName}${getJosa(currentPlayerName, '의')} 턴이 시작되었습니다.`);
+                addLog(Messages.turnStart(currentPlayerName));
                 
                 // 타이머 시작
                 setTimeout(() => {
@@ -3750,7 +4119,7 @@
                 
                 // 2연승 이상일 때 연승 메시지 추가
                 if (currentWinStreak >= 2) {
-                    message += `\n\n🔥 ${currentWinStreak}연승 중!`;
+                    message += `\n\n${Messages.streak(currentWinStreak)}`;
                 }
             } else {
                 // 패배 시 연승 초기화
@@ -3775,7 +4144,7 @@
             resetGame();
             
             // AI 정보 표시 (난이도별)
-            const aiName = aiDifficulty === 'easy' ? '입문용 허수아비' : aiDifficulty === 'normal' ? '훈련용 허수아비' : '오작동 허수아비';
+            const aiName = aiDifficulty === 'easy' ? '입문용 허수아비' : aiDifficulty === 'normal' ? '훈련용 허수아비' : '고수용 허수아비';
             
             // 게임 상태 초기화 시 AI 이름 설정
             if (state.players && state.players[1]) {
@@ -3791,7 +4160,7 @@
         
         // AI 난이도 선택 모달 표시
         function showAIDifficultyModal() {
-            const modal = document.getElementById('ai-difficulty-modal');
+            const modal = DOM.get('ai-difficulty-modal');
             modal.classList.remove('hidden');
             playCardSound();
         }
@@ -3801,7 +4170,7 @@
             aiDifficulty = difficulty;
             console.log(`🤖 AI 난이도 선택: ${difficulty}`);
             
-            const modal = document.getElementById('ai-difficulty-modal');
+            const modal = DOM.get('ai-difficulty-modal');
             modal.classList.add('hidden');
             
             startAIGame();
@@ -3809,8 +4178,8 @@
         
         // 토스트 메시지 표시 함수
         function showToast(message, duration = 3000) {
-            const toast = document.getElementById('toast');
-            const toastMessage = document.getElementById('toast-message');
+            const toast = DOM.get('toast');
+            const toastMessage = DOM.get('toast-message');
             
             toastMessage.textContent = message;
             toast.classList.remove('hidden');
@@ -3823,7 +4192,7 @@
         // 타이틀 화면 표시 함수
         function showTitleScreen() {
             // 게임 시작 중에는 타이틀 화면으로 돌아가지 않도록 보호
-            if (multiplayerMode && state.gameStarted && !state.isGameOver) {
+            if (GameConditions.isGameInProgress()) {
                 console.log('⚠️ 게임 진행 중 - 타이틀 화면으로 돌아가지 않음');
                 return;
             }
@@ -3836,8 +4205,28 @@
             stopTurnTimer();
             resetTurnGauge();
             
-            // 게임 상태 초기화
-            state = {};
+            // 게임 상태 완전 초기화
+            state = {
+                gameStarted: false,
+                isGameOver: true,
+                players: [],
+                secretStones: [],
+                usedStones: [],
+                publiclyRevealedSecretStones: [],
+                currentPlayerId: null,
+                isPlayerTurn: false,
+                lastSuccessfulSpell: 0,
+                turnInProgress: false,
+                gameLog: []
+            };
+            
+            // 멀티플레이어 모드 초기화
+            multiplayerMode = false;
+            peerConnection = null;
+            dataChannel = null;
+            isHost = false;
+            opponentName = '';
+            myPlayerId = null;
             
             // 기본 이름 초기화 (첫 방문 시 랜덤 이름 생성)
             initializePlayerName();
@@ -3878,6 +4267,13 @@
                 // 패배 처리
                 updateStats(false, multiplayerMode);
                 
+                // 승점 감소 처리
+                if (multiplayerMode) {
+                    TrophySystem.addDefeatTrophy('multiplayer');
+                } else {
+                    TrophySystem.addDefeatTrophy('ai');
+                }
+                
                 addLog('결투를 도망쳤습니다.');
                 addLog('패배가 기록되었습니다.');
                 
@@ -3889,8 +4285,25 @@
                     }));
                 }
                 
-                // 도망한 플레이어에게 메시지 표시
-                await showModal('게임 종료', '패배했습니다.. 도망치고 말았습니다.', true);
+                // 게임 상태 완전 초기화
+                state = {
+                    gameStarted: false,
+                    isGameOver: true,
+                    players: [],
+                    secretStones: [],
+                    usedStones: [],
+                    publiclyRevealedSecretStones: [],
+                    currentPlayerId: null,
+                    isPlayerTurn: false,
+                    lastSuccessfulSpell: 0,
+                    turnInProgress: false,
+                    gameLog: []
+                };
+                
+                // 도망한 플레이어에게 메시지 표시 (승점 감소 포함)
+                let message = '패배했습니다.. 도망치고 말았습니다.';
+                message += '\n\n🏅 승점 -1';
+                await showModal('게임 종료', message, true);
                 
                 // 바로 타이틀 화면으로 돌아가기
                 showTitleScreen();
@@ -3898,21 +4311,21 @@
         }
         
         // 이벤트 리스너들
-        document.getElementById('ai-battle-btn').addEventListener('click', (e) => {
+        DOM.get('ai-battle-btn').addEventListener('click', (e) => {
             if (e.target.disabled) {
                 showToast('잠시만 기다려주세요.');
                 return;
             }
             showAIDifficultyModal();
         });
-        document.getElementById('multiplayer-btn').addEventListener('click', (e) => {
+        DOM.get('multiplayer-btn').addEventListener('click', (e) => {
             if (e.target.disabled) {
                 showToast('잠시만 기다려주세요.');
                 return;
             }
             startMatching();
         });
-        document.getElementById('cancel-matching-btn').addEventListener('click', (e) => {
+        DOM.get('cancel-matching-btn').addEventListener('click', (e) => {
             if (e.target.disabled) {
                 showToast('잠시만 기다려주세요.');
                 return;
@@ -3921,51 +4334,49 @@
         });
         
         // AI 난이도 선택 버튼들
-        document.getElementById('easy-ai-btn').addEventListener('click', (e) => {
+        DOM.get('easy-ai-btn').addEventListener('click', (e) => {
             if (e.target.disabled) {
                 showToast('잠시만 기다려주세요.');
                 return;
             }
             selectAIDifficulty('easy');
         });
-        document.getElementById('normal-ai-btn').addEventListener('click', (e) => {
+        DOM.get('normal-ai-btn').addEventListener('click', (e) => {
             if (e.target.disabled) {
                 showToast('잠시만 기다려주세요.');
                 return;
             }
             selectAIDifficulty('normal');
         });
-        document.getElementById('hard-ai-btn').addEventListener('click', (e) => {
+        DOM.get('hard-ai-btn').addEventListener('click', (e) => {
             if (e.target.disabled) {
                 showToast('잠시만 기다려주세요.');
                 return;
             }
             selectAIDifficulty('hard');
         });
-        document.getElementById('cancel-difficulty-btn').addEventListener('click', (e) => {
+        DOM.get('cancel-difficulty-btn').addEventListener('click', (e) => {
             if (e.target.disabled) {
                 showToast('잠시만 기다려주세요.');
                 return;
             }
-            document.getElementById('ai-difficulty-modal').classList.add('hidden');
+            DOM.get('ai-difficulty-modal').classList.add('hidden');
         });
 
         endTurnBtn.addEventListener('click', () => {
             console.log('🔄 턴 종료 버튼 클릭');
-            // 멀티플레이어에서는 현재 플레이어의 턴일 때만 활성화
+            if (GameConditions.canPlaySpell()) {
             const myPlayerId = multiplayerMode ? (isHost ? 1 : 2) : 1;
-            const isMyTurn = multiplayerMode ? (state.currentPlayerId === myPlayerId) : state.isPlayerTurn;
-            if (isMyTurn && !state.turnInProgress && !state.isGameOver) {
                 addLog(`- ${state.players[myPlayerId - 1].name}${getJosa(state.players[myPlayerId - 1].name, '이/가')} 턴을 수동으로 종료했습니다.`);
                 endTurn();
             }
         });
         
         // 도망 버튼 이벤트 리스너
-        document.getElementById('surrender-btn').addEventListener('click', surrenderGame);
+        DOM.get('surrender-btn').addEventListener('click', surrenderGame);
         
         // 내 정보 버튼 이벤트 리스너
-        document.getElementById('profile-btn').addEventListener('click', (e) => {
+        DOM.get('profile-btn').addEventListener('click', (e) => {
             if (e.target.disabled) {
                 showToast('잠시만 기다려주세요.');
                 return;
@@ -3974,7 +4385,7 @@
         });
         
         // 랭킹 버튼 이벤트 리스너
-        document.getElementById('ranking-btn').addEventListener('click', (e) => {
+        DOM.get('ranking-btn').addEventListener('click', (e) => {
             if (e.target.disabled) {
                 showToast('잠시만 기다려주세요.');
                 return;
@@ -3983,9 +4394,9 @@
         });
         
         // 이름 입력 및 저장 기능
-        const playerNameInput = document.getElementById('player-name-input');
-        const saveNameBtn = document.getElementById('save-name-btn');
-        const nameSaveStatus = document.getElementById('name-save-status');
+        const playerNameInput = DOM.get('player-name-input');
+        const saveNameBtn = DOM.get('save-name-btn');
+        const nameSaveStatus = DOM.get('name-save-status');
         
         // 페이지 로드 시 현재 이름 설정
         const currentName = localStorage.getItem('playerName') || '';
@@ -4045,23 +4456,23 @@
         });
 
         // 디버그 버튼 이벤트 리스너
-        document.getElementById('debug-show-state').addEventListener('click', showDebugInfo);
-        document.getElementById('debug-show-player-hand').addEventListener('click', showPlayerHand);
-        document.getElementById('debug-show-ai-hand').addEventListener('click', showAIHand);
-        document.getElementById('debug-reset-game').addEventListener('click', resetGame);
-        document.getElementById('debug-player-win').addEventListener('click', () => {
+        DOM.get('debug-show-state').addEventListener('click', showDebugInfo);
+        DOM.get('debug-show-player-hand').addEventListener('click', showPlayerHand);
+        DOM.get('debug-show-ai-hand').addEventListener('click', showAIHand);
+        DOM.get('debug-reset-game').addEventListener('click', resetGame);
+        DOM.get('debug-player-win').addEventListener('click', () => {
             state.players[1].health = 0;
             checkGameOver();
         });
-        document.getElementById('debug-ai-win').addEventListener('click', () => {
+        DOM.get('debug-ai-win').addEventListener('click', () => {
             state.players[0].health = 0;
             checkGameOver();
         });
-        document.getElementById('debug-add-player-health').addEventListener('click', () => {
+        DOM.get('debug-add-player-health').addEventListener('click', () => {
             if (state.players[0].health < 5) state.players[0].health++;
             render();
         });
-        document.getElementById('debug-add-ai-health').addEventListener('click', () => {
+        DOM.get('debug-add-ai-health').addEventListener('click', () => {
             if (state.players[1].health < 5) state.players[1].health++;
             render();
         });
@@ -4069,6 +4480,8 @@
         // 페이지 로드 시 기본 이름 초기화
         document.addEventListener('DOMContentLoaded', () => {
             console.log('🚀 페이지 로드 - 기본 이름 초기화');
+            DOM.init(); // DOM 캐시 초기화
+            TrophySystem.init(); // 증표 시스템 초기화
             initializePlayerName();
         });
 

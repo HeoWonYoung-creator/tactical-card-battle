@@ -51,7 +51,7 @@ const rankings = {
     multiplayer: new Map() // 멀티플레이어 랭킹
 };
 
-// 랭킹 업데이트 함수
+// 랭킹 업데이트 함수 (증표 기반)
 function updateRanking(category, playerName, stats) {
     // 기존에 같은 이름의 기록이 있는지 확인
     let existingPlayer = null;
@@ -63,18 +63,20 @@ function updateRanking(category, playerName, stats) {
     }
     
     if (existingPlayer) {
-        // 기존 기록 업데이트
+        // 기존 기록 업데이트 (증표 기반)
+        existingPlayer.trophies = stats.trophies || 0;
         existingPlayer.wins = stats.wins;
         existingPlayer.losses = stats.losses;
         existingPlayer.winStreak = stats.currentWinStreak || 0;
         existingPlayer.maxWinStreak = stats.maxWinStreak || 0;
         existingPlayer.lastUpdated = Date.now();
         
-        console.log(`📊 랭킹 업데이트: ${category} - ${playerName} (기존 기록 업데이트, 승리: ${stats.wins}, 연승: ${stats.currentWinStreak})`);
+        console.log(`📊 랭킹 업데이트: ${category} - ${playerName} (기존 기록 업데이트, 증표: ${stats.trophies}, 승리: ${stats.wins})`);
     } else {
-        // 새로운 기록 생성
+        // 새로운 기록 생성 (증표 기반)
         rankings[category].set(playerName, {
             name: playerName,
+            trophies: stats.trophies || 0,
             wins: stats.wins,
             losses: stats.losses,
             winStreak: stats.currentWinStreak || 0,
@@ -82,16 +84,19 @@ function updateRanking(category, playerName, stats) {
             lastUpdated: Date.now()
         });
         
-        console.log(`📊 랭킹 업데이트: ${category} - ${playerName} (새 기록 생성, 승리: ${stats.wins}, 연승: ${stats.currentWinStreak})`);
+        console.log(`📊 랭킹 업데이트: ${category} - ${playerName} (새 기록 생성, 증표: ${stats.trophies}, 승리: ${stats.wins})`);
     }
 }
 
-// 랭킹 정렬 함수
+// 랭킹 정렬 함수 (증표 기반)
 function getSortedRanking(category) {
     const players = Array.from(rankings[category].values());
     
-    // 승리 횟수 우선, 그 다음 연승 횟수로 정렬
+    // 증표 수 우선, 그 다음 승리 횟수로 정렬
     return players.sort((a, b) => {
+        if (b.trophies !== a.trophies) {
+            return b.trophies - a.trophies;
+        }
         if (b.wins !== a.wins) {
             return b.wins - a.wins;
         }
@@ -117,18 +122,18 @@ function cleanupDuplicateNames(category) {
     // 중복된 이름들 제거 (가장 최근 업데이트된 것만 유지)
     for (const name of toRemove) {
         let latestEntry = null;
-        let latestTime = 0;
+        let latestUpdateTime = 0;
         
         for (const [entryName, data] of rankings[category]) {
-            if (entryName === name && data.lastUpdated > latestTime) {
-                latestTime = data.lastUpdated;
+            if (entryName === name && data.lastUpdated > latestUpdateTime) {
+                latestUpdateTime = data.lastUpdated;
                 latestEntry = { name: entryName, data: data };
             }
         }
         
         // 최신 기록을 제외한 모든 중복 제거
         for (const [entryName, data] of rankings[category]) {
-            if (entryName === name && data.lastUpdated !== latestTime) {
+            if (entryName === name && data.lastUpdated !== latestUpdateTime) {
                 rankings[category].delete(entryName);
                 console.log(`🧹 중복 이름 정리: ${category} - ${entryName} 제거`);
             }
@@ -280,20 +285,17 @@ io.on('connection', (socket) => {
     socket.on('offer', (data) => {
         try {
             const { target, offer } = data;
-            console.log(`📤 Offer 전송: ${socket.id} → ${target}`);
-            
-            if (isPlayerConnected(target)) {
-                io.to(target).emit('offer', {
-                    from: socket.id,
-                    offer: offer
-                });
-            } else {
-                console.log(`⚠️ 대상 플레이어 연결 없음: ${target}`);
-                socket.emit('error', {
-                    message: '상대방이 연결되지 않았습니다.',
-                    context: 'offer'
-                });
-            }
+                if (isPlayerConnected(target)) {
+        io.to(target).emit('offer', {
+            from: socket.id,
+            offer: offer
+        });
+    } else {
+        socket.emit('error', {
+            message: '상대방이 연결되지 않았습니다.',
+            context: 'offer'
+        });
+    }
         } catch (error) {
             handleError(socket, error, 'offer');
         }
@@ -302,15 +304,12 @@ io.on('connection', (socket) => {
     socket.on('answer', (data) => {
         try {
             const { target, answer } = data;
-            console.log(`📤 Answer 전송: ${socket.id} → ${target}`);
             
             if (isPlayerConnected(target)) {
                 io.to(target).emit('answer', {
                     from: socket.id,
                     answer: answer
                 });
-            } else {
-                console.log(`⚠️ 대상 플레이어 연결 없음: ${target}`);
             }
         } catch (error) {
             handleError(socket, error, 'answer');
@@ -424,7 +423,6 @@ io.on('connection', (socket) => {
         try {
             const { category, playerName, stats } = data;
             updateRanking(category, playerName, stats);
-            console.log(`📊 랭킹 업데이트 요청: ${category} - ${playerName}`);
         } catch (error) {
             handleError(socket, error, 'updateRanking');
         }
@@ -443,7 +441,6 @@ io.on('connection', (socket) => {
                 category: category,
                 ranking: ranking
             });
-            console.log(`📊 랭킹 조회: ${category} (${ranking.length}명)`);
         } catch (error) {
             handleError(socket, error, 'getRanking');
         }
@@ -527,7 +524,6 @@ io.on('connection', (socket) => {
                     socket.emit('gameStateRecovery', {
                         gameState: savedGameState
                     });
-                    console.log(`🔄 게임 상태 복구: ${playerInfo.gameId}`);
                 }
             }
         } catch (error) {
@@ -552,9 +548,9 @@ io.on('connection', (socket) => {
                 const gameSession = activeGames.get(playerInfo.gameId);
                 if (gameSession) {
                     // 상대방에게 연결 해제 알림
-                    const opponent = gameSession.players.find(p => p.id !== socket.id);
-                    if (opponent && isPlayerConnected(opponent.id)) {
-                        io.to(opponent.id).emit('opponentDisconnected', {
+                    const opponentPlayer = gameSession.players.find(p => p.id !== socket.id);
+                    if (opponentPlayer && isPlayerConnected(opponentPlayer.id)) {
+                        io.to(opponentPlayer.id).emit('opponentDisconnected', {
                             message: '상대방이 연결을 해제했습니다.',
                             gameId: playerInfo.gameId
                         });
@@ -587,22 +583,22 @@ io.on('connection', (socket) => {
 
 // 주기적인 연결 상태 확인
 setInterval(() => {
-    const now = Date.now();
+    const currentTime = Date.now();
     const timeout = 120000; // 2분
     
     for (const [socketId, playerInfo] of playerSessions) {
-        if (now - playerInfo.lastPing > timeout) {
+        if (currentTime - playerInfo.lastPing > timeout) {
             console.log(`⚠️ 연결 타임아웃: ${socketId}`);
-            const socket = io.sockets.sockets.get(socketId);
-            if (socket) {
-                socket.disconnect(true);
+            const targetSocket = io.sockets.sockets.get(socketId);
+            if (targetSocket) {
+                targetSocket.disconnect(true);
             }
         }
     }
     
     // 오래된 게임 세션 정리
     for (const [gameId, gameSession] of activeGames) {
-        if (now - gameSession.lastActivity > 300000) { // 5분
+        if (currentTime - gameSession.lastActivity > 300000) { // 5분
             console.log(`🧹 오래된 게임 세션 정리: ${gameId}`);
             activeGames.delete(gameId);
             gameStates.delete(gameId);
