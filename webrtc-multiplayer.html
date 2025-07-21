@@ -1130,18 +1130,7 @@
             // 승리의 증표 추가 (멀티플레이어 승리)
             TrophySystem.addVictoryTrophy('multiplayer');
             
-            // 연승 처리
-            currentWinStreak++;
-            if (currentWinStreak > maxWinStreak) {
-                maxWinStreak = currentWinStreak;
-                localStorage.setItem('maxWinStreak', maxWinStreak.toString());
-            }
-            localStorage.setItem('currentWinStreak', currentWinStreak.toString());
-            
             let message = '상대가 도망쳐서 승리하였습니다!';
-            if (currentWinStreak >= 2) {
-                message += `\n\n${Messages.streak(currentWinStreak)}`;
-            }
             message += '\n\n🏅 승점 +3';
             
             addLog('상대방이 도망쳤습니다.');
@@ -2408,22 +2397,7 @@
                 // 전적 업데이트
                 updateStats(isPlayerWin, multiplayerMode);
                 
-                // 승리의 증표 업데이트
-                if (isPlayerWin) {
-                    if (multiplayerMode) {
-                        TrophySystem.addVictoryTrophy('multiplayer');
-                    } else {
-                        TrophySystem.addVictoryTrophy('ai');
-                    }
-                } else {
-                    if (multiplayerMode) {
-                        TrophySystem.addDefeatTrophy('multiplayer');
-                    } else {
-                        TrophySystem.addDefeatTrophy('ai');
-                    }
-                }
-                
-                // 연승 처리
+                                // 연승 처리 (중복 방지를 위해 여기서만 처리)
                 if (isPlayerWin) {
                     currentWinStreak++;
                     if (currentWinStreak > maxWinStreak) {
@@ -2440,6 +2414,21 @@
                     // 패배 시 연승 초기화
                     currentWinStreak = 0;
                     localStorage.setItem('currentWinStreak', '0');
+                }
+                
+                // 승리의 증표 업데이트
+                if (isPlayerWin) {
+                    if (multiplayerMode) {
+                        TrophySystem.addVictoryTrophy('multiplayer');
+                    } else {
+                        TrophySystem.addVictoryTrophy('ai');
+                    }
+                } else {
+                    if (multiplayerMode) {
+                        TrophySystem.addDefeatTrophy('multiplayer');
+                    } else {
+                        TrophySystem.addDefeatTrophy('ai');
+                    }
                 }
                 
                 // 승점 변화 메시지 추가
@@ -4108,23 +4097,12 @@
                 }
             }
             
-            // 연승 처리
+            // 연승 처리 (중복 방지를 위해 checkGameOver에서만 처리)
             if (isPlayerWin) {
-                currentWinStreak++;
-                if (currentWinStreak > maxWinStreak) {
-                    maxWinStreak = currentWinStreak;
-                    localStorage.setItem('maxWinStreak', maxWinStreak.toString());
-                }
-                localStorage.setItem('currentWinStreak', currentWinStreak.toString());
-                
                 // 2연승 이상일 때 연승 메시지 추가
                 if (currentWinStreak >= 2) {
                     message += `\n\n${Messages.streak(currentWinStreak)}`;
                 }
-            } else {
-                // 패배 시 연승 초기화
-                currentWinStreak = 0;
-                localStorage.setItem('currentWinStreak', '0');
             }
             
             // 승리/패배 사운드
