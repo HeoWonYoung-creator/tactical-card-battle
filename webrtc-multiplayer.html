@@ -2497,7 +2497,7 @@
                     <h3 class="text-xl font-bold mb-4 text-center">${title}</h3>
                     ${cards.length > 0 ? `
                     <div class="grid grid-cols-4 gap-2 mb-4">
-                        ${cards.map((card, index) => `
+                        ${cards.sort((a, b) => a - b).map((card, index) => `
                             <div class="card card-front flex flex-col items-center justify-center text-sm">
                                 <div class="text-lg">${getSpellIcon(card)}</div>
                                 <div class="text-xs">${card}</div>
@@ -2811,7 +2811,7 @@
                     <h3 class="text-xl font-bold mb-4 text-center">${title}</h3>
                     ${cards.length > 0 ? `
                     <div class="grid grid-cols-4 gap-2 mb-4">
-                        ${cards.map((card, index) => `
+                        ${cards.sort((a, b) => a - b).map((card, index) => `
                             <div class="card card-front flex flex-col items-center justify-center text-sm">
                                 <div class="text-lg">${getSpellIcon(card)}</div>
                                 <div class="text-xs">${card}</div>
@@ -2846,10 +2846,10 @@
             modal.className = 'fixed inset-0 flex items-center justify-center z-50 modal-bg';
             modal.innerHTML = `
                 <div class="modal-content p-6 rounded-lg max-w-lg w-full mx-4">
-                    <h3 class="text-xl font-bold mb-4 text-center">공개된 전술 목록</h3>
+                    <h3 class="text-xl font-bold mb-4 text-center">공개된 비밀 주문 목록</h3>
                     ${revealedStones.length > 0 ? `
                         <div class="grid grid-cols-4 gap-2 mb-4">
-                            ${revealedStones.map(stone => `
+                            ${revealedStones.sort((a, b) => a - b).map(stone => `
                                 <div class="card card-front flex flex-col items-center justify-center text-sm">
                                     <div class="text-lg">${getSpellIcon(stone)}</div>
                                     <div class="text-xs">${stone}</div>
@@ -2857,7 +2857,7 @@
                             `).join('')}
                         </div>
                     ` : `
-                        <p class="text-center mb-4 text-gray-400">아직 공개된 전술이 없습니다.</p>
+                        <p class="text-center mb-4 text-gray-400">아직 공개된 비밀 주문이 없습니다.</p>
                     `}
                     <button class="w-full py-2 rounded-lg font-bold btn-primary">확인</button>
                 </div>
@@ -4244,10 +4244,10 @@
                 btn.style.cursor = 'not-allowed';
             });
             
-            // 3초 후 버튼 활성화
+            // 1초 후 버튼 활성화
             setTimeout(() => {
                 enableTitleButtons();
-            }, 3000);
+            }, 1000);
         }
         
         // 타이틀 화면 버튼 활성화
