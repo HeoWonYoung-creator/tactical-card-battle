@@ -201,6 +201,55 @@
                 transform: translateY(0) scale(1);
             }
         }
+        
+        /* 말풍선 스타일 */
+        #secret-stones-tooltip::before {
+            content: '';
+            position: absolute;
+            left: -8px;
+            top: 20px;
+            width: 0;
+            height: 0;
+            border-top: 8px solid transparent;
+            border-bottom: 8px solid transparent;
+            border-right: 8px solid white;
+        }
+        
+        #used-stones-tooltip::before {
+            content: '';
+            position: absolute;
+            right: -8px;
+            top: 20px;
+            width: 0;
+            height: 0;
+            border-top: 8px solid transparent;
+            border-bottom: 8px solid transparent;
+            border-left: 8px solid white;
+        }
+        
+        #secret-stones-tooltip::after {
+            content: '';
+            position: absolute;
+            left: -9px;
+            top: 20px;
+            width: 0;
+            height: 0;
+            border-top: 8px solid transparent;
+            border-bottom: 8px solid transparent;
+            border-right: 8px solid #d1d5db;
+        }
+        
+        #used-stones-tooltip::after {
+            content: '';
+            position: absolute;
+            right: -9px;
+            top: 20px;
+            width: 0;
+            height: 0;
+            border-top: 8px solid transparent;
+            border-bottom: 8px solid transparent;
+            border-left: 8px solid #d1d5db;
+        }
         .player-area-glow {
             box-shadow: 0 0 10px 4px rgba(0, 123, 255, 0.6);
             animation: glowPulse 1.5s ease-in-out infinite;
@@ -498,26 +547,42 @@
             <div id="opponent-turn-indicator" class="turn-indicator hidden">상대 턴!</div>
         </div>
 
-        <!-- 중앙 영역 -->
+                <!-- 중앙 영역 -->
         <div class="flex justify-between items-center p-4 h-48">
-            <div id="secret-stones-pile" class="flex flex-col items-center space-y-1 card-pile">
-                <div class="card card-back flex flex-col items-center justify-center">
+            <div id="secret-stones-pile" class="flex flex-col items-center space-y-1 card-pile relative z-20">
+                <div class="card card-back flex flex-col items-center justify-center" 
+                     ontouchstart="startLongPress('secret')" ontouchend="hideTooltips()" 
+                     onmousedown="startLongPress('secret')" onmouseup="hideTooltips()" onmouseleave="hideTooltips()">
                     <div class="text-2xl mb-1">❓</div>
                     <div class="text-sm font-bold">?</div>
                 </div>
                 <div class="font-bold">비밀 주문</div>
                 <div id="secret-stones-count" class="text-lg"></div>
+                
+                <!-- 비밀 주문 말풍선 팝업 -->
+                <div id="secret-stones-tooltip" class="absolute right-0 top-0 transform translate-x-full ml-12 bg-white border border-gray-200 rounded-lg p-3 shadow-lg hidden z-[60] min-w-[200px] max-w-[300px]">
+                    <div class="text-center font-bold mb-2 text-sm text-gray-800">비밀 주문 목록</div>
+                    <div id="secret-stones-list" class="text-xs text-gray-700 space-y-1"></div>
+                </div>
             </div>
             <div class="flex-grow mx-4">
-                <div id="game-log" class="game-log p-2 rounded-lg overflow-y-auto flex flex-col-reverse"></div>
+                <div id="game-log" class="game-log p-2 rounded-lg overflow-y-auto flex flex-col-reverse relative z-0"></div>
             </div>
-            <div id="used-stones-pile" class="flex flex-col items-center space-y-1 card-pile">
-                <div class="card card-back flex flex-col items-center justify-center">
+            <div id="used-stones-pile" class="flex flex-col items-center space-y-1 card-pile relative z-20">
+                <div class="card card-back flex flex-col items-center justify-center"
+                     ontouchstart="startLongPress('used')" ontouchend="hideTooltips()" 
+                     onmousedown="startLongPress('used')" onmouseup="hideTooltips()" onmouseleave="hideTooltips()">
                     <div class="text-2xl mb-1">🗑️</div>
                     <div class="text-sm font-bold">X</div>
                 </div>
                 <div class="font-bold">사용한 주문</div>
                 <div id="used-stones-count" class="text-lg"></div>
+                
+                <!-- 사용한 주문 말풍선 팝업 -->
+                <div id="used-stones-tooltip" class="absolute left-0 top-0 transform -translate-x-full mr-12 bg-white border border-gray-200 rounded-lg p-3 shadow-lg hidden z-[60] min-w-[200px] max-w-[300px]">
+                    <div class="text-center font-bold mb-2 text-sm text-gray-800">사용한 주문 목록</div>
+                    <div id="used-stones-list" class="text-xs text-gray-700 space-y-1"></div>
+                </div>
             </div>
         </div>
 
@@ -1400,8 +1465,8 @@
             }).join('');
             
             // 현재 턴에 따라 영역 하이라이트 및 색상 구분
-            const currentMyPlayerId = isHost ? 1 : 2;
-            const isMyTurn = (state.currentPlayerId === currentMyPlayerId);
+            // 허수아비 모드에서는 myPlayerId를 사용, 멀티플레이어에서는 호스트/게스트 구분
+            const isMyTurn = (state.currentPlayerId === myPlayerId);
             
             // 글로우 효과: 현재 턴인 플레이어에게만 표시
             myArea.classList.toggle('player-area-glow', isMyTurn && !state.isGameOver);
@@ -1898,6 +1963,9 @@
                 
                 const myPlayerId = multiplayerMode ? (isHost ? 1 : 2) : 1;
                 
+                // 영창 실패 팝업 표시
+                await showModal('영창 실패', `${spellNumber}번 주문 영창 실패<br>체력 -1 (현재: ${currentPlayer.health})`);
+                
                 // 멀티플레이어 모드에서 상대방에게 실패 전송
                 if (multiplayerMode && dataChannel && dataChannel.readyState === 'open') {
                     dataChannel.send(JSON.stringify({
@@ -1908,7 +1976,7 @@
                     }));
                 }
                 
-                                    addLog(Messages.spellFailure(state.players[myPlayerId - 1].name, spellNumber));
+                addLog(Messages.spellFailure(state.players[myPlayerId - 1].name, spellNumber));
                 render();
                 
                 // 체력 감소 후 바로 게임 종료 체크
@@ -2013,21 +2081,37 @@
                     }
         }
 
-        function executeHealPotion(player, opponent) {
+        async function executeHealPotion(player, opponent) {
                     console.log('🧪 생명 물약 효과 실행');
             if (player.health < GAME_CONFIG.maxHealth) player.health++;
                     console.log(`💚 생명 물약 회복: ${player.name} 체력 ${player.health}`);
                     playHealSound();
                     showHealEffect(player.id === 1 ? myArea : opponentArea, 1);
             addLog(Messages.heal(player.name, 1));
+            
+            // 생명 물약 결과 팝업 표시
+            const myPlayerId = multiplayerMode ? (isHost ? 1 : 2) : 1;
+            if (player.id === myPlayerId) {
+                await showModal('생명 물약', `체력이 1 회복되었습니다.<br>현재 체력: ${player.health}`);
+            } else {
+                await showModal('생명 물약', `${player.name}의 체력이 1 회복되었습니다.<br>현재 체력: ${player.health}`);
+            }
         }
 
-        function executeFireArrow(player, opponent) {
+        async function executeFireArrow(player, opponent) {
                     opponent.health--;
                     console.log(`🔥 화염 화살: 피해 1`);
                     playDamageSound();
                     showDamageEffect(opponent.id === 1 ? myArea : opponentArea, 1);
             addLog(Messages.damage(opponent.name, 1));
+            
+            // 화염 화살 결과 팝업 표시
+            const myPlayerId = multiplayerMode ? (isHost ? 1 : 2) : 1;
+            if (opponent.id === myPlayerId) {
+                await showModal('화염 화살', `체력이 1 감소했습니다.<br>현재 체력: ${opponent.health}`);
+            } else {
+                await showModal('화염 화살', `${opponent.name}의 체력이 1 감소했습니다.<br>현재 체력: ${opponent.health}`);
+            }
         }
 
         async function executeMindControl(player, opponent, playerId) {
@@ -2054,7 +2138,7 @@
                     }
         }
 
-        function executeManaDrain(player, opponent) {
+        async function executeManaDrain(player, opponent) {
                     opponent.health--;
             if (player.health < GAME_CONFIG.maxHealth) player.health++;
                     console.log(`💫 마력 착취: ${opponent.name} 체력 ${opponent.health}, ${player.name} 체력 ${player.health}`);
@@ -2063,6 +2147,16 @@
                     showDamageEffect(opponent.id === 1 ? myArea : opponentArea, 1);
                     showHealEffect(player.id === 1 ? myArea : opponentArea, 1);
             addLog(Messages.damage(opponent.name, 1) + ' + ' + Messages.heal(player.name, 1));
+            
+            // 마력 착취 결과 팝업 표시
+            const myPlayerId = multiplayerMode ? (isHost ? 1 : 2) : 1;
+            if (player.id === myPlayerId) {
+                await showModal('마력 착취', `상대의 체력을 흡수하여 회복했습니다.<br>상대 체력: ${opponent.health}<br>내 체력: ${player.health}`);
+            } else if (opponent.id === myPlayerId) {
+                await showModal('마력 착취', `체력이 흡수되어 감소했습니다.<br>현재 체력: ${opponent.health}`);
+            } else {
+                await showModal('마력 착취', `${opponent.name}의 체력이 1 감소하고, ${player.name}의 체력이 1 회복되었습니다.`);
+            }
         }
 
         async function executeDestinyChange(player, opponent) {
@@ -2180,7 +2274,11 @@
                     playFailureSound();
                     addFailureAnimation(opponentArea);
                     showDamageEffect(opponentArea, 1);
-            addLog(Messages.spellFailure(opponentName, chosenSpell));
+                    
+                    // AI 영창 실패 팝업 표시
+                    await showModal('영창 실패', `${opponentName} ${chosenSpell}번 주문 영창 실패<br>체력 -1 (현재: ${currentPlayer.health})`);
+                    
+                    addLog(Messages.spellFailure(opponentName, chosenSpell));
                     render();
                     
             if (GameConditions.isMultiplayerConnected()) {
@@ -2974,6 +3072,105 @@
             if (state.gameLog.length > GAME_CONFIG.maxLogEntries) state.gameLog.pop();
         }
 
+        // 길게 누르기 관련 변수들
+        let longPressType = null;
+        
+        // 길게 누르기 시작
+        function startLongPress(type) {
+            longPressType = type;
+            showLongPressTooltip(type);
+        }
+        
+        // 길게 누르기 종료
+        function endLongPress() {
+            longPressType = null;
+        }
+        
+        // 길게 누르기 툴팁 표시
+        function showLongPressTooltip(type) {
+            if (type === 'secret') {
+                showSecretStonesTooltip();
+            } else if (type === 'used') {
+                showUsedStonesTooltip();
+            }
+        }
+        
+        // 비밀 주문 툴팁 표시 (공개된 주문들만)
+        function showSecretStonesTooltip() {
+            const tooltip = DOM.get('secret-stones-tooltip');
+            const list = DOM.get('secret-stones-list');
+            
+            if (state.publiclyRevealedSecretStones.length === 0) {
+                list.innerHTML = '<div class="text-center text-gray-500">공개된 비밀 주문이 없습니다.</div>';
+            } else {
+                // 낮은 수부터 정렬
+                const sortedStones = [...state.publiclyRevealedSecretStones].sort((a, b) => a - b);
+                const stonesHtml = sortedStones.map(stone => 
+                    `<div class="flex items-center justify-between">
+                        <span class="text-sm">${SpellIcons[stone] || '❓'}${stone}</span>
+                        <span class="text-gray-500 text-sm">${getSpellName(stone)}</span>
+                    </div>`
+                ).join('');
+                list.innerHTML = stonesHtml;
+            }
+            
+            tooltip.classList.remove('hidden');
+        }
+        
+        // 사용한 주문 툴팁 표시
+        function showUsedStonesTooltip() {
+            const tooltip = DOM.get('used-stones-tooltip');
+            const list = DOM.get('used-stones-list');
+            
+            if (state.usedStones.length === 0) {
+                list.innerHTML = '<div class="text-center text-gray-500">사용한 주문이 없습니다.</div>';
+            } else {
+                // 낮은 수부터 정렬
+                const sortedStones = [...state.usedStones].sort((a, b) => a - b);
+                const stonesHtml = sortedStones.map(stone => 
+                    `<div class="flex items-center justify-between">
+                        <span class="text-sm">${SpellIcons[stone] || '❓'}${stone}</span>
+                        <span class="text-gray-500 text-sm">${getSpellName(stone)}</span>
+                    </div>`
+                ).join('');
+                list.innerHTML = stonesHtml;
+            }
+            
+            tooltip.classList.remove('hidden');
+        }
+        
+        // 주문 이름 가져오기
+        function getSpellName(spellNumber) {
+            const spellNames = {
+                1: '운명 변환',
+                2: '마력 착취',
+                3: '정신 교란',
+                4: '화염 화살',
+                5: '생명 물약',
+                6: '명상'
+            };
+            return spellNames[spellNumber] || `주문 ${spellNumber}`;
+        }
+        
+        // 툴팁 숨기기 (클릭 시)
+        function hideTooltips() {
+            const secretTooltip = DOM.get('secret-stones-tooltip');
+            const usedTooltip = DOM.get('used-stones-tooltip');
+            secretTooltip.classList.add('hidden');
+            usedTooltip.classList.add('hidden');
+        }
+        
+        // 툴팁 클릭 이벤트 리스너 추가
+        document.addEventListener('click', function(event) {
+            const secretTooltip = DOM.get('secret-stones-tooltip');
+            const usedTooltip = DOM.get('used-stones-tooltip');
+            
+            // 툴팁 외부 클릭 시 숨기기
+            if (!secretTooltip.contains(event.target) && !usedTooltip.contains(event.target)) {
+                hideTooltips();
+            }
+        });
+        
         // 도움말 툴팁 함수들
         function showHelpTooltip() {
             const tooltip = DOM.get('help-tooltip');
@@ -4423,15 +4620,16 @@
             }, 2000);
         }
 
-        usedStonesPile.addEventListener('click', () => {
-            playCardSound();
-                            showCardListModal('사용한 주문 목록', state.usedStones);
-        });
+        // 클릭 이벤트 제거 - 말풍선만 사용
+        // usedStonesPile.addEventListener('click', () => {
+        //     playCardSound();
+        //     showCardListModal('사용한 주문 목록', state.usedStones);
+        // });
         
-        secretStonesPile.addEventListener('click', () => {
-            playCardSound();
-            showCombinedSecretStonesModal();
-        });
+        // secretStonesPile.addEventListener('click', () => {
+        //     playCardSound();
+        //     showCombinedSecretStonesModal();
+        // });
 
         // 디버그 버튼 이벤트 리스너
         DOM.get('debug-show-state').addEventListener('click', showDebugInfo);
