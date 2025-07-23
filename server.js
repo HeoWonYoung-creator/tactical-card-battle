@@ -48,7 +48,8 @@ const gameStates = new Map(); // 게임 상태 저장
 // 랭킹 시스템
 const rankings = {
     ai: new Map(), // AI 대전 랭킹
-    multiplayer: new Map() // 멀티플레이어 랭킹
+    multiplayer: new Map(), // 멀티플레이어 랭킹
+    daily: new Map() // 오늘의 마법왕 랭킹
 };
 
 // 랭킹 업데이트 함수 (증표 기반)
@@ -88,20 +89,37 @@ function updateRanking(category, playerName, stats) {
     }
 }
 
-// 랭킹 정렬 함수 (증표 기반)
+// 랭킹 정렬 함수 (승리의 증표 기준)
 function getSortedRanking(category) {
-    const players = Array.from(rankings[category].values());
-    
-    // 증표 수 우선, 그 다음 승리 횟수로 정렬
-    return players.sort((a, b) => {
-        if (b.trophies !== a.trophies) {
-            return b.trophies - a.trophies;
+    try {
+        const players = Array.from(rankings[category].values());
+        console.log(`📊 랭킹 정렬 시작: ${category} - ${players.length}명`);
+        
+        if (players.length === 0) {
+            console.log(`📊 랭킹 데이터 없음: ${category}`);
+            return [];
         }
-        if (b.wins !== a.wins) {
-            return b.wins - a.wins;
-        }
-        return b.winStreak - a.winStreak;
-    });
+        
+        // 승리의 증표 기준으로 정렬 (승리 횟수 * 10 + 연승 횟수)
+        const sortedPlayers = players.sort((a, b) => {
+            const aVictoryTrophies = (a.wins * 10) + (a.maxWinStreak || 0);
+            const bVictoryTrophies = (b.wins * 10) + (b.maxWinStreak || 0);
+            
+            if (bVictoryTrophies !== aVictoryTrophies) {
+                return bVictoryTrophies - aVictoryTrophies;
+            }
+            if (b.wins !== a.wins) {
+                return b.wins - a.wins;
+            }
+            return (b.maxWinStreak || 0) - (a.maxWinStreak || 0);
+        });
+        
+        console.log(`📊 랭킹 정렬 완료: ${category} - 상위 3명: ${sortedPlayers.slice(0, 3).map(p => p.name).join(', ')}`);
+        return sortedPlayers;
+    } catch (error) {
+        console.error(`❌ 랭킹 정렬 오류 (${category}):`, error);
+        return [];
+    }
 }
 
 // 중복 이름 정리 함수
@@ -433,16 +451,39 @@ io.on('connection', (socket) => {
         try {
             const { category } = data;
             
+            console.log(`📊 랭킹 조회 요청: ${category} (${socket.id})`);
+            
+            // 카테고리 유효성 검사
+            if (!rankings[category]) {
+                console.log(`❌ 잘못된 랭킹 카테고리: ${category}`);
+                socket.emit('rankingData', {
+                    category: category,
+                    ranking: [],
+                    error: '잘못된 카테고리입니다.'
+                });
+                return;
+            }
+            
             // 중복 이름 정리
             cleanupDuplicateNames(category);
             
             const ranking = getSortedRanking(category);
+            console.log(`📊 랭킹 데이터 전송: ${category} - ${ranking.length}명`);
+            
             socket.emit('rankingData', {
                 category: category,
                 ranking: ranking
             });
         } catch (error) {
+            console.error(`❌ 랭킹 조회 오류 (${data.category}):`, error);
             handleError(socket, error, 'getRanking');
+            
+            // 에러 발생 시 빈 랭킹 반환
+            socket.emit('rankingData', {
+                category: data.category,
+                ranking: [],
+                error: '랭킹 데이터를 불러오는 중 오류가 발생했습니다.'
+            });
         }
     });
 
@@ -454,6 +495,7 @@ io.on('connection', (socket) => {
             // 모든 랭킹 데이터 초기화
             rankings.ai.clear();
             rankings.multiplayer.clear();
+            rankings.daily.clear();
             
             // 모든 게임 세션 초기화
             activeGames.clear();
@@ -499,6 +541,14 @@ io.on('connection', (socket) => {
                 if (name === playerName) {
                     rankings.multiplayer.delete(name);
                     console.log(`🗑️ 멀티플레이어 랭킹에서 제거: ${playerName}`);
+                }
+            }
+            
+            // 오늘의 마법왕 랭킹에서 해당 플레이어 제거
+            for (const [name, data] of rankings.daily) {
+                if (name === playerName) {
+                    rankings.daily.delete(name);
+                    console.log(`🗑️ 오늘의 마법왕 랭킹에서 제거: ${playerName}`);
                 }
             }
             
@@ -549,11 +599,26 @@ io.on('connection', (socket) => {
                 if (gameSession) {
                     // 상대방에게 연결 해제 알림
                     const opponentPlayer = gameSession.players.find(p => p.id !== socket.id);
+                    const disconnectedPlayer = gameSession.players.find(p => p.id === socket.id);
                     if (opponentPlayer && isPlayerConnected(opponentPlayer.id)) {
                         io.to(opponentPlayer.id).emit('opponentDisconnected', {
                             message: '상대방이 연결을 해제했습니다.',
-                            gameId: playerInfo.gameId
+                            gameId: playerInfo.gameId,
+                            disconnectedPlayerName: disconnectedPlayer ? disconnectedPlayer.name : 'Unknown',
+                            disconnectedPlayerId: socket.id,
+                            isDisconnectedAsLoser: true
                         });
+                        
+                        // 강제종료한 플레이어를 도망으로 인한 패배로 기록
+                        if (disconnectedPlayer) {
+                            console.log(`🏃 강제종료한 플레이어 ${disconnectedPlayer.name}을(를) 도망으로 인한 패배로 기록`);
+                            // 강제종료한 플레이어의 패배 기록 (나중에 랭킹 업데이트 시 사용)
+                            const disconnectedPlayerInfo = playerSessions.get(socket.id);
+                            if (disconnectedPlayerInfo) {
+                                disconnectedPlayerInfo.disconnectedAsLoser = true;
+                                disconnectedPlayerInfo.disconnectedGameId = playerInfo.gameId;
+                            }
+                        }
                     }
                     
                     activeGames.delete(playerInfo.gameId);
@@ -609,6 +674,7 @@ setInterval(() => {
     // 중복 이름 정리 (5분마다)
     cleanupDuplicateNames('ai');
     cleanupDuplicateNames('multiplayer');
+    cleanupDuplicateNames('daily');
 }, 30000);
 
 // 서버 상태 모니터링
