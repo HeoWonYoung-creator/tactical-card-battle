@@ -448,6 +448,31 @@
             100% { transform: translateY(-30px); opacity: 0; }
         }
         
+        /* 파티클 효과 스타일 */
+        .particle {
+            position: fixed;
+            pointer-events: none;
+            font-size: 1.5rem;
+            animation: particleExplode 2s ease-out forwards;
+            z-index: 9999;
+            will-change: transform, opacity;
+            transform-origin: center;
+        }
+        
+        @keyframes particleExplode {
+            0% {
+                transform: scale(1) translate(0, 0);
+                opacity: 1;
+            }
+            40% {
+                opacity: 1;
+            }
+            100% {
+                transform: scale(0.1) translate(var(--x), var(--y));
+                opacity: 0;
+            }
+        }
+        
         /* 새로고침 버튼 스타일 */
         #refresh-game-btn {
             transition: all 0.3s ease;
@@ -765,6 +790,17 @@
         // 사운드 효과 (Web Audio API 사용)
         const audioContext = new (window.AudioContext || window.webkitAudioContext)();
         
+        // AudioContext 활성화 함수
+        function activateAudioContext() {
+            if (audioContext.state === 'suspended') {
+                audioContext.resume().then(() => {
+                    console.log('🔊 AudioContext 활성화 완료');
+                }).catch(err => {
+                    console.error('❌ AudioContext 활성화 실패:', err);
+                });
+            }
+        }
+        
         // 사운드 설정 객체
         const SOUNDS = {
             card: { freq: 150, dur: 0.1, type: 'square', sequence: [[200, 0.1, 'square', 50]] },
@@ -780,8 +816,8 @@
             heal: { freq: 660, dur: 0.2, type: 'triangle', sequence: [
                 [880, 0.2, 'triangle', 100], [1108.73, 0.3, 'triangle', 200]
             ]},
-            gameStart: { freq: 440, dur: 0.3, type: 'sine', sequence: [
-                [554.37, 0.3, 'sine', 200], [659.25, 0.4, 'sine', 400]
+            gameStart: { freq: 523.25, dur: 0.15, type: 'sine', sequence: [
+                [659.25, 0.15, 'sine', 50], [783.99, 0.2, 'sine', 150], [1046.50, 0.3, 'sine', 300], [1318.51, 0.4, 'sine', 500]
             ]},
             gameWin: { freq: 523.25, dur: 0.3, type: 'sine', sequence: [
                 [659.25, 0.3, 'sine', 200], [783.99, 0.3, 'sine', 400], [1046.50, 0.4, 'sine', 600]
@@ -792,34 +828,56 @@
         };
         
         function playSound(frequency, duration, type = 'sine') {
+            // AudioContext가 일시 중단 상태면 활성화 시도
             if (audioContext.state === 'suspended') {
-                audioContext.resume();
+                audioContext.resume().then(() => {
+                    console.log('🔊 AudioContext 활성화됨 - 사운드 재생');
+                    playSoundInternal(frequency, duration, type);
+                }).catch(err => {
+                    console.error('❌ AudioContext 활성화 실패:', err);
+                });
+            } else {
+                playSoundInternal(frequency, duration, type);
             }
-            
-            const oscillator = audioContext.createOscillator();
-            const gainNode = audioContext.createGain();
-            
-            oscillator.connect(gainNode);
-            gainNode.connect(audioContext.destination);
-            
-            oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
-            oscillator.type = type;
-            
-            gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
-            
-            oscillator.start(audioContext.currentTime);
-            oscillator.stop(audioContext.currentTime + duration);
+        }
+        
+        function playSoundInternal(frequency, duration, type = 'sine') {
+            try {
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
+                oscillator.type = type;
+                
+                gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+                
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + duration);
+                
+                console.log(`🔊 사운드 재생: ${frequency}Hz, ${duration}s, ${type}`);
+            } catch (error) {
+                console.error('❌ 사운드 재생 실패:', error);
+            }
         }
         
         function playSoundEffect(type) {
+            console.log(`🎵 효과음 재생 시도: ${type}`);
             const sound = SOUNDS[type];
-            if (!sound) return;
+            if (!sound) {
+                console.error(`❌ 알 수 없는 효과음 타입: ${type}`);
+                return;
+            }
             
+            console.log(`🎵 효과음 정보:`, sound);
             playSound(sound.freq, sound.dur, sound.type);
             
             // 시퀀스 사운드 재생
-            sound.sequence?.forEach(([freq, dur, type, delay]) => {
+            sound.sequence?.forEach(([freq, dur, type, delay], index) => {
+                console.log(`🎵 시퀀스 ${index + 1}: ${freq}Hz, ${dur}s, ${type}, ${delay}ms 후`);
                 setTimeout(() => playSound(freq, dur, type), delay);
             });
         }
@@ -1109,6 +1167,101 @@
             }, 1000);
         }
         
+        // 파티클 효과 생성 함수
+        function createSpellParticles(spellNumber, element) {
+            const spellIcon = getSpellIcon(spellNumber);
+            const rect = element.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+            
+            // 파티클 개수 (8-12개)
+            const particleCount = Math.floor(Math.random() * 5) + 8;
+            
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.textContent = spellIcon;
+                particle.style.left = centerX + 'px';
+                particle.style.top = centerY + 'px';
+                
+                // 랜덤 방향과 거리
+                const angle = (Math.PI * 2 * i) / particleCount + (Math.random() - 0.5) * 0.5;
+                const distance = 80 + Math.random() * 40;
+                const x = Math.cos(angle) * distance;
+                const y = Math.sin(angle) * distance;
+                
+                particle.style.setProperty('--x', x + 'px');
+                particle.style.setProperty('--y', y + 'px');
+                
+                // 랜덤 색상 변화
+                const hue = Math.random() * 60 + 30; // 노란색-주황색 범위
+                particle.style.filter = `hue-rotate(${hue}deg) brightness(1.2)`;
+                
+                document.body.appendChild(particle);
+                
+                // 파티클 제거
+                setTimeout(() => {
+                    if (particle.parentNode) {
+                        particle.parentNode.removeChild(particle);
+                    }
+                }, 1000);
+            }
+            
+            console.log(`🎆 파티클 효과 생성: ${spellIcon} (${particleCount}개)`);
+        }
+        
+        // 화면 전체에 랜덤 파티클 효과 생성 함수
+        function createModalParticles(spellNumber) {
+            const spellIcon = getSpellIcon(spellNumber);
+            
+            // 화면 크기 가져오기 (스크롤바 고려)
+            const screenWidth = window.innerWidth || document.documentElement.clientWidth;
+            const screenHeight = window.innerHeight || document.documentElement.clientHeight;
+            
+            // 파티클 개수 (15-20개로 증가)
+            const particleCount = Math.floor(Math.random() * 6) + 15;
+            
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.textContent = spellIcon;
+                
+                // 화면 전체에서 랜덤한 시작 위치 (안전한 범위 내에서)
+                const safeMargin = 50; // 화면 가장자리에서 50px 여유 공간
+                const startX = safeMargin + Math.random() * (screenWidth - 2 * safeMargin);
+                const startY = safeMargin + Math.random() * (screenHeight - 2 * safeMargin);
+                
+                particle.style.left = startX + 'px';
+                particle.style.top = startY + 'px';
+                particle.style.zIndex = '9999'; // 최상위 레이어
+                
+                // 랜덤한 방향으로 터지도록 설정
+                const angle = Math.random() * Math.PI * 2;
+                const distance = 100 + Math.random() * 150; // 다양한 거리로 터짐
+                const x = Math.cos(angle) * distance;
+                const y = Math.sin(angle) * distance;
+                
+                particle.style.setProperty('--x', x + 'px');
+                particle.style.setProperty('--y', y + 'px');
+                
+                // 원래 아이콘 색상과 밝기 그대로 사용
+                // 랜덤한 크기 변화
+                const scale = 0.8 + Math.random() * 0.4;
+                particle.style.fontSize = (1.5 * scale) + 'rem';
+                
+                document.body.appendChild(particle);
+                
+                // 파티클 제거 (시간을 2초로 연장)
+                setTimeout(() => {
+                    if (particle.parentNode) {
+                        particle.parentNode.removeChild(particle);
+                    }
+                }, 2000);
+            }
+            
+            console.log(`🎆 화면 전체 파티클 효과 생성: ${spellIcon} (${particleCount}개)`);
+        }
+        
         function showHealEffect(element, amount) {
             const healEl = document.createElement('div');
             healEl.className = 'card-heal';
@@ -1267,6 +1420,7 @@
                 publiclyRevealedSecretStones: [],
                 currentPlayerId: firstPlayer,
                 lastSuccessfulSpell: 0,
+                spellFailed: false, // 영창 실패 플래그 초기화
                 isPlayerTurn: firstPlayer === 1,
                 turnInProgress: false,
                 gameLog: [`게임이 시작되었습니다. ${firstPlayer === 1 ? playerName : (multiplayerMode ? opponentName : aiName)}가 먼저 시작합니다.`],
@@ -1283,13 +1437,19 @@
             // 메모 패널 표시
             showMemoPanel();
             
-            // 게임 시작 사운드
-            playGameStartSound();
+            // 게임 시작 사운드 (AI 모드에서만 재생)
+            if (!multiplayerMode) {
+                playGameStartSound();
+            }
         }
 
         // 도망 처리
         async function handleSurrender(surrenderingPlayerId) {
             console.log('🏳️ 상대방 도망 처리');
+            
+            // 승리 효과음 재생
+            activateAudioContext();
+            playGameOverSound(true);
             
             // 승리 처리 (상대방이 도망쳤으므로 내가 승리)
             updateStats(true, true);
@@ -1330,6 +1490,7 @@
                 currentPlayerId: null,
                 isPlayerTurn: false,
                 lastSuccessfulSpell: 0,
+                spellFailed: false, // 영창 실패 플래그 초기화
                 turnInProgress: false,
                 gameLog: []
             };
@@ -1400,6 +1561,10 @@
         function resetGameWithFirstPlayer(firstPlayer) {
             console.log('🔄 호스트의 첫 번째 턴 결정으로 게임 초기화');
             
+            // 게임 시작 효과음 재생 (게스트가 호스트의 결정을 받았을 때)
+            activateAudioContext();
+            playGameStartSound();
+            
             // 로컬 메모 상태 초기화
             localMemoNotes = {};
             localMemoPanelActive = false;
@@ -1436,6 +1601,7 @@
                 currentPlayerId: firstPlayer,
                 isPlayerTurn: multiplayerMode ? (firstPlayer === myPlayerId) : (firstPlayer === 1),
                 lastSuccessfulSpell: 0,
+                spellFailed: false, // 영창 실패 플래그 초기화
                 turnInProgress: false,
                 isGameOver: false,
                 gameStarted: true,
@@ -1459,8 +1625,8 @@
             // 메모 패널 표시
             showMemoPanel();
             
-            // 게임 시작 사운드
-            playGameStartSound();
+            // 게임 시작 사운드 (이미 startMultiplayerGame에서 재생됨)
+            // playGameStartSound();
             
             // 디버그: UI 상태 확인
             console.log('🎮 게임 UI 렌더링 완료');
@@ -1886,7 +2052,8 @@
             }
             
             // 내 턴이고 턴 진행 중이 아닐 때 주문 버튼 비활성화 플래그 초기화
-            if (isMyTurn && !state.turnInProgress && !state.isGameOver) {
+            // 단, 영창 실패 후에는 강제로 비활성화 상태 유지
+            if (isMyTurn && !state.turnInProgress && !state.isGameOver && !state.spellFailed) {
                 if (spellButtonsDisabled) {
                     console.log('🔄 내 턴 시작 - 주문 버튼 비활성화 플래그 초기화');
                     spellButtonsDisabled = false;
@@ -2099,6 +2266,7 @@
                 
                 // 영창 실패 시 즉시 모든 버튼 비활성화
                 spellButtonsDisabled = true;
+                state.spellFailed = true; // 영창 실패 플래그 설정
                 disableSpellButtons();
                 
                 // 턴 종료 버튼도 즉시 비활성화
@@ -2154,6 +2322,7 @@
             const currentPlayerName = state.currentPlayerId === 1 ? state.players[0].name : (multiplayerMode ? state.players[1].name : 'AI');
             addLog(Messages.turnEnd(currentPlayerName));
             state.lastSuccessfulSpell = 0;
+            state.spellFailed = false; // 영창 실패 플래그 초기화
             state.currentPlayerId = state.currentPlayerId === 1 ? 2 : 1;
             
             if (multiplayerMode) {
@@ -2422,6 +2591,10 @@
                     
                     playSuccessSound();
                     addSuccessAnimation(opponentArea);
+                    
+                    // AI 영창 성공 파티클 효과
+                    createModalParticles(chosenSpell);
+                    
             addLog(Messages.spellSuccess(opponentName, chosenSpell));
                     render();
             
@@ -2451,6 +2624,7 @@
                     
                     // AI 영창 실패 시 즉시 모든 버튼 비활성화
                     spellButtonsDisabled = true;
+                    state.spellFailed = true; // 영창 실패 플래그 설정
                     disableSpellButtons();
                     
                     // 턴 종료 버튼도 즉시 비활성화
@@ -2737,6 +2911,7 @@
                 message += trophyMessage;
                 
                 // 승리/패배 사운드
+                activateAudioContext();
                 playGameOverSound(winner.id === myPlayerId);
                 
                 showModal('게임 종료', message, true);
@@ -2930,6 +3105,24 @@
                 
                 document.body.appendChild(modal);
                 playCardSound();
+                
+                // 영창 성공 관련 모달인지 확인하고 파티클 효과 추가
+                const isSpellSuccessModal = title.includes('영창 성공') || 
+                                          title.includes('💤 명상') || 
+                                          title.includes('🧪 생명 물약') || 
+                                          title.includes('🔥 화염 화살') || 
+                                          title.includes('🌀 정신 교란') || 
+                                          title.includes('💫 마력 착취') || 
+                                          title.includes('🔮 운명 변환');
+                
+                if (isSpellSuccessModal) {
+                    // 현재 성공한 주문 번호를 찾기 위해 state에서 확인
+                    const lastSpell = state.lastSuccessfulSpell;
+                    if (lastSpell > 0) {
+                        // 팝업이 뜨는 즉시 파티클 효과 생성
+                        createModalParticles(lastSpell);
+                    }
+                }
                 
                 modal.querySelector('button').addEventListener('click', () => {
                     if (document.body.contains(modal)) {
@@ -4242,6 +4435,10 @@
             titleScreen.classList.add('hidden');
             gameScreen.classList.remove('hidden');
             
+            // 게임 시작 효과음 재생
+            activateAudioContext();
+            playGameStartSound();
+            
             // 추가 확인: 게임 화면이 실제로 표시되었는지 확인
             setTimeout(() => {
                 if (gameScreen.classList.contains('hidden')) {
@@ -4720,6 +4917,9 @@
                 
                 // 주문 효과 실행 (상대방이 플레이한 주문)
                 executeSpellEffect(playerId, card);
+                
+                // 상대방 영창 성공 파티클 효과
+                createModalParticles(card);
             } else {
                 // 주문 효과 적용
                 const player = state.players.find(p => p.id === playerId);
@@ -4912,6 +5112,7 @@
             }
             
             // 승리/패배 사운드
+            activateAudioContext();
             playGameOverSound(isPlayerWin);
             
             // 게임 종료 모달 표시
@@ -4925,6 +5126,11 @@
             multiplayerMode = false;
             titleScreen.classList.add('hidden');
             gameScreen.classList.remove('hidden');
+            
+            // 게임 시작 효과음 재생
+            activateAudioContext();
+            playGameStartSound();
+            
             resetGame();
             
             // AI 정보 표시 (난이도별)
@@ -5081,6 +5287,10 @@
         async function surrenderGame() {
             const confirmed = await showSurrenderConfirmModal();
             if (confirmed) {
+                // 패배 효과음 재생
+                activateAudioContext();
+                playGameOverSound(false);
+                
                 // 패배 처리
                 updateStats(false, multiplayerMode);
                 
@@ -5136,6 +5346,7 @@
                 showToast('잠시만 기다려주세요.', 'info', 3000);
                 return;
             }
+            activateAudioContext(); // AudioContext 활성화
             showAIDifficultyModal();
         });
         DOM.get('multiplayer-btn').addEventListener('click', (e) => {
@@ -5143,6 +5354,7 @@
                 showToast('잠시만 기다려주세요.', 'info', 3000);
                 return;
             }
+            activateAudioContext(); // AudioContext 활성화
             startMatching();
         });
         DOM.get('cancel-matching-btn').addEventListener('click', (e) => {
@@ -5159,6 +5371,7 @@
                 showToast('잠시만 기다려주세요.', 'info', 3000);
                 return;
             }
+            activateAudioContext(); // AudioContext 활성화
             selectAIDifficulty('easy');
         });
         DOM.get('normal-ai-btn').addEventListener('click', (e) => {
@@ -5166,6 +5379,7 @@
                 showToast('잠시만 기다려주세요.', 'info', 3000);
                 return;
             }
+            activateAudioContext(); // AudioContext 활성화
             selectAIDifficulty('normal');
         });
         DOM.get('hard-ai-btn').addEventListener('click', (e) => {
@@ -5173,6 +5387,7 @@
                 showToast('잠시만 기다려주세요.', 'info', 3000);
                 return;
             }
+            activateAudioContext(); // AudioContext 활성화
             selectAIDifficulty('hard');
         });
         DOM.get('cancel-difficulty-btn').addEventListener('click', (e) => {
@@ -5347,6 +5562,12 @@
             DOM.init(); // DOM 캐시 초기화
             TrophySystem.init(); // 증표 시스템 초기화
             initializePlayerName();
+            
+            // AudioContext 초기화 시도
+            console.log('🔊 AudioContext 상태:', audioContext.state);
+            if (audioContext.state === 'suspended') {
+                console.log('🔊 AudioContext 일시 중단 상태 - 사용자 상호작용 대기 중');
+            }
         });
 
     </script>
