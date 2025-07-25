@@ -560,9 +560,18 @@
                                          <h3 class="text-xl font-bold mb-4">난이도 선택</h3>
                      <p class="text-gray-300 mb-6">어떤 허수아비를 혼쭐내시겠습니까?<br>난이도를 선택하세요.</p>
                     <div class="space-y-3">
-                        <button id="easy-ai-btn" class="w-full py-3 rounded-lg font-bold btn-primary text-green-400 hover:text-green-300">입문용</button>
-                        <button id="normal-ai-btn" class="w-full py-3 rounded-lg font-bold btn-primary text-yellow-400 hover:text-yellow-300">연습용</button>
-                        <button id="hard-ai-btn" class="w-full py-3 rounded-lg font-bold btn-primary text-red-400 hover:text-red-300">고수용</button>
+                        <button id="easy-ai-btn" class="w-full py-3 rounded-lg font-bold btn-primary text-green-400 hover:text-green-300">
+                            쉬움
+                            <div class="text-xs text-green-300 mt-1">(멍청함, 시간 제한 없음)</div>
+                        </button>
+                        <button id="normal-ai-btn" class="w-full py-3 rounded-lg font-bold btn-primary text-yellow-400 hover:text-yellow-300">
+                            보통
+                            <div class="text-xs text-yellow-300 mt-1">(평범함, 시간 제한 30초)</div>
+                        </button>
+                        <button id="hard-ai-btn" class="w-full py-3 rounded-lg font-bold btn-primary text-red-400 hover:text-red-300">
+                            어려움
+                            <div class="text-xs text-red-300 mt-1">(똑똑함, 시간 제한 20초)</div>
+                        </button>
                         <button id="cancel-difficulty-btn" class="w-full py-2 rounded-lg font-bold btn-secondary">취소</button>
                     </div>
                 </div>
@@ -1441,7 +1450,7 @@
                 console.log(`🎯 AI 모드 첫 번째 턴 결정: 플레이어 ${firstPlayer}`);
             }
             
-            const aiName = aiDifficulty === 'easy' ? '🤖 입문용 허수아비' : aiDifficulty === 'normal' ? '🤖 훈련용 허수아비' : '🤖 고수용 허수아비';
+            const aiName = aiDifficulty === 'easy' ? '🤖 쉬움 허수아비' : aiDifficulty === 'normal' ? '🤖 보통 허수아비' : '🤖 어려움 허수아비';
             state = {
                 players: [
                                     { id: 1, name: 'Player', health: GAME_CONFIG.maxHealth, hand: deck.slice(0, 6).sort((a, b) => a - b), knownSecretStones: [] },
@@ -1572,8 +1581,8 @@
             
             // 승리 시 증표 추가
             addVictoryTrophy(type) {
-                const newCount = this.updateTrophy(type, 2);
-                showToast(`🎉 승리의 증표 +2 획득! (${type === 'ai' ? '모의 결투' : '정식 결투'} 점수: ${newCount})`, 'success', 3000);
+                const newCount = this.updateTrophy(type, 3);
+                showToast(`🎉 승리의 증표 +3 획득! (${type === 'ai' ? '모의 결투' : '정식 결투'} 점수: ${newCount})`, 'success', 3000);
             },
             
             // 패배 시 증표 감소
@@ -2597,8 +2606,8 @@
         // AI 턴 관리 함수들
         function getAIName() {
             return multiplayerMode ? state.players[1].name : 
-                   (aiDifficulty === 'easy' ? '🤖 입문용 허수아비' : 
-                    aiDifficulty === 'normal' ? '🤖 훈련용 허수아비' : '🤖 고수용 허수아비');
+                   (aiDifficulty === 'easy' ? '🤖 쉬움 허수아비' : 
+                    aiDifficulty === 'normal' ? '🤖 보통 허수아비' : '🤖 어려움 허수아비');
         }
 
         function getCastableSpells(ai) {
@@ -2606,13 +2615,38 @@
         }
 
         async function executeAISpell(ai, player, chosenSpell, opponentName) {
-                const handIndex = ai.hand.indexOf(chosenSpell);
-                const successRate = getAISuccessRate();
+            // 새로운 AI 영창 시스템
+            const successRate = getAISuccessRate();
+            const randomValue = Math.random();
+            const isSuccess = randomValue < successRate;
             
-                if (Math.random() < successRate && handIndex > -1) {
-                return await handleAISpellSuccess(ai, chosenSpell, opponentName);
+            console.log(`🤖 AI 영창 시스템: 선택주문=${chosenSpell}, 손패=${ai.hand}, 성공률=${(successRate * 100).toFixed(1)}%, 랜덤값=${randomValue.toFixed(3)}, 성공여부=${isSuccess}`);
+            
+            if (isSuccess) {
+                // 성공 시: 손패에서 해당 주문을 실제로 영창
+                const handIndex = ai.hand.indexOf(chosenSpell);
+                if (handIndex > -1) {
+                    return await handleAISpellSuccess(ai, chosenSpell, opponentName);
+                } else {
+                    // 손패에 해당 주문이 없는 경우 (이론적으로는 발생하지 않아야 함)
+                    console.log(`⚠️ AI 성공했지만 손패에 ${chosenSpell}번이 없음 - 실패 처리`);
+                    return await handleAISpellFailure(ai, chosenSpell, opponentName);
+                }
             } else {
-                return await handleAISpellFailure(ai, chosenSpell, opponentName);
+                // 실패 시: 손패에 없는 주문을 영창하려고 시도
+                const availableSpells = [1, 2, 3, 4, 5, 6];
+                const missingSpells = availableSpells.filter(spell => !ai.hand.includes(spell));
+                
+                if (missingSpells.length > 0) {
+                    // 손패에 없는 주문 중 하나를 선택
+                    const failedSpell = missingSpells[Math.floor(Math.random() * missingSpells.length)];
+                    console.log(`❌ AI 실패: ${chosenSpell}번 대신 ${failedSpell}번을 영창하려고 시도 (손패에 없음)`);
+                    return await handleAISpellFailure(ai, failedSpell, opponentName);
+                } else {
+                    // 모든 주문이 손패에 있는 경우 (이론적으로는 100% 성공해야 함)
+                    console.log(`⚠️ AI 손패에 모든 주문이 있음 - 성공 처리`);
+                    return await handleAISpellSuccess(ai, chosenSpell, opponentName);
+                }
             }
         }
 
@@ -2715,8 +2749,10 @@
                 return;
             }
             
+            const ai = state.players[1];
+            const player = state.players[0];
             const opponentName = getAIName();
-            console.log(`🤖 ${opponentName} 턴 시작 (난이도: ${aiDifficulty})`);
+            console.log(`🤖 ${opponentName} 턴 시작 (난이도: ${aiDifficulty}, 손패: ${ai.hand})`);
             addLog(Messages.turnStart(opponentName));
             state.turnInProgress = true;
             updateButtons();
@@ -2725,8 +2761,6 @@
             while(continueTurn && !state.isGameOver) {
                 await sleep(1500);
                 
-                const ai = state.players[1];
-                const player = state.players[0];
                 const castableSpells = getCastableSpells(ai);
                 
                 console.log(`🤖 AI 가능한 영창: [${castableSpells.join(', ')}] (마지막 성공: ${state.lastSuccessfulSpell})`);
@@ -4115,19 +4149,19 @@
                     // 싱글플레이어 모드: AI (로봇 아이콘)
                     switch(aiDifficulty) {
                         case 'easy':
-                            opponentDisplayName = '🤖 입문용 허수아비';
+                            opponentDisplayName = '🤖 쉬움 허수아비';
                             titleClass = 'text-xl font-bold text-green-300';
                             break;
                         case 'normal':
-                            opponentDisplayName = '🤖 훈련용 허수아비';
+                            opponentDisplayName = '🤖 보통 허수아비';
                             titleClass = 'text-xl font-bold text-yellow-300';
                             break;
                         case 'hard':
-                            opponentDisplayName = '🤖 고수용 허수아비';
+                            opponentDisplayName = '🤖 어려움 허수아비';
                             titleClass = 'text-xl font-bold text-red-300';
                             break;
                         default:
-                            opponentDisplayName = '🤖 고수용 허수아비';
+                            opponentDisplayName = '🤖 어려움 허수아비';
                             titleClass = 'text-xl font-bold text-red-300';
                     }
                 }
@@ -5211,7 +5245,7 @@
             resetGame();
             
             // AI 정보 표시 (난이도별)
-            const aiName = aiDifficulty === 'easy' ? '🤖 입문용 허수아비' : aiDifficulty === 'normal' ? '🤖 훈련용 허수아비' : '🤖 고수용 허수아비';
+            const aiName = aiDifficulty === 'easy' ? '🤖 쉬움 허수아비' : aiDifficulty === 'normal' ? '🤖 보통 허수아비' : '🤖 어려움 허수아비';
             
             // 게임 상태 초기화 시 AI 이름 설정
             if (state.players && state.players[1]) {
