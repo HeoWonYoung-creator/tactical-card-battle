@@ -5887,6 +5887,38 @@
         // 리사이즈 이벤트 리스너 추가
         window.addEventListener('resize', handleResize);
         
+        // localStorage의 승리의 증표 데이터를 서버로 전송
+        const syncLocalDataToServer = () => {
+            if (socket && socket.connected) {
+                const playerName = localStorage.getItem('playerName') || 'Player';
+                const playerIcon = localStorage.getItem('playerIcon') || '👤';
+                const aiTrophies = parseInt(localStorage.getItem('aiTrophies')) || 0;
+                const multiplayerTrophies = parseInt(localStorage.getItem('multiplayerTrophies')) || 0;
+                
+                console.log(`📊 localStorage 데이터 서버 동기화: ${playerName} (AI: ${aiTrophies}점, 멀티: ${multiplayerTrophies}점)`);
+                
+                // AI 랭킹 업데이트
+                if (aiTrophies > 0) {
+                    socket.emit('updateRanking', {
+                        category: 'mock',
+                        playerName: playerName,
+                        score: aiTrophies,
+                        icon: playerIcon
+                    });
+                }
+                
+                // 멀티플레이어 랭킹 업데이트
+                if (multiplayerTrophies > 0) {
+                    socket.emit('updateRanking', {
+                        category: 'formal',
+                        playerName: playerName,
+                        score: multiplayerTrophies,
+                        icon: playerIcon
+                    });
+                }
+            }
+        };
+        
         // 페이지 로드 시 기본 이름 초기화
         document.addEventListener('DOMContentLoaded', () => {
             console.log('🚀 페이지 로드 - 기본 이름 초기화');
@@ -5904,6 +5936,18 @@
             // 소켓 연결 초기화 (랭킹 기능을 위해)
             console.log('🔌 페이지 로드 시 소켓 연결 초기화');
             initializeSocketIO();
+            
+            // 소켓 연결 후 localStorage 데이터 동기화
+            setTimeout(() => {
+                if (socket && socket.connected) {
+                    syncLocalDataToServer();
+                } else {
+                    // 소켓 연결 대기 후 다시 시도
+                    socket.on('connect', () => {
+                        syncLocalDataToServer();
+                    });
+                }
+            }, 1000);
         });
 
     </script>

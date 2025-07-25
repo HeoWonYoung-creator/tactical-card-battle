@@ -609,6 +609,14 @@ io.on('connection', (socket) => {
             
             const ranking = getRanking(category);
             console.log(`📊 랭킹 조회 완료: ${category} - ${ranking.length}명의 데이터 반환`);
+            
+            // 응답 데이터 로그
+            console.log(`📊 응답 데이터:`, {
+                category: category,
+                rankingLength: ranking.length,
+                ranking: ranking.slice(0, 3) // 상위 3개만 로그
+            });
+            
             socket.emit('rankingData', {
                 category: category,
                 ranking: ranking
