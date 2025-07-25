@@ -4058,38 +4058,9 @@
                 socket.off('rankingData', handleRankingData);
                 socket.on('rankingData', handleRankingData);
                 
-                // 즉시 데이터 요청 (최신 랭킹 데이터)
-                console.log('📊 랭킹 모달 열림 - 최신 데이터 요청');
+                // 즉시 모든 사용자 랭킹 데이터 요청
+                console.log('📊 랭킹 모달 열림 - 모든 사용자 데이터 요청');
                 requestRankingData();
-                
-                // 현재 사용자 점수 동기화 (서버에 업데이트)
-                const playerName = localStorage.getItem('playerName') || 'Player';
-                const playerIcon = localStorage.getItem('playerIcon') || '👤';
-                const trophies = TrophySystem.loadTrophies();
-                
-                // 모의 결투 점수 업데이트
-                socket.emit('updateRanking', {
-                    category: 'mock',
-                    playerName: playerName,
-                    score: trophies.ai,
-                    icon: playerIcon
-                });
-                
-                // 정식 결투 점수 업데이트
-                socket.emit('updateRanking', {
-                    category: 'formal',
-                    playerName: playerName,
-                    score: trophies.multiplayer,
-                    icon: playerIcon
-                });
-                
-                console.log(`🔄 랭킹 모달 열림 시 점수 동기화: ${playerName} (모의: ${trophies.ai}점, 정식: ${trophies.multiplayer}점)`);
-                
-                // 서버에서 모든 사용자의 랭킹 데이터 요청
-                setTimeout(() => {
-                    console.log('📊 서버에서 모든 사용자의 랭킹 데이터 요청');
-                    requestRankingData();
-                }, 300);
             } else {
                 console.log('❌ 소켓 객체 없음');
                 showRankingError();
@@ -4101,7 +4072,7 @@
                 
                 // 새로고침 버튼 이벤트 리스너
                 refreshBtn.addEventListener('click', () => {
-                    console.log('🔄 랭킹 새로고침 요청 - 모든 사용자 데이터 동기화');
+                    console.log('🔄 랭킹 새로고침 요청 - 모든 사용자 데이터 재요청');
                     
                     // 로딩 상태로 되돌리기
                     const containers = ['mock-ranking', 'formal-ranking'];
@@ -4117,35 +4088,9 @@
                         }
                     });
                     
-                    // 현재 사용자 점수 동기화 후 모든 사용자 데이터 요청
+                    // 서버에서 모든 사용자의 랭킹 데이터 재요청
                     if (socket) {
-                        const playerName = localStorage.getItem('playerName') || 'Player';
-                        const playerIcon = localStorage.getItem('playerIcon') || '👤';
-                        const trophies = TrophySystem.loadTrophies();
-                        
-                        // 모의 결투 점수 업데이트
-                        socket.emit('updateRanking', {
-                            category: 'mock',
-                            playerName: playerName,
-                            score: trophies.ai,
-                            icon: playerIcon
-                        });
-                        
-                        // 정식 결투 점수 업데이트
-                        socket.emit('updateRanking', {
-                            category: 'formal',
-                            playerName: playerName,
-                            score: trophies.multiplayer,
-                            icon: playerIcon
-                        });
-                        
-                        console.log(`🔄 현재 점수 동기화: ${playerName} (모의: ${trophies.ai}점, 정식: ${trophies.multiplayer}점)`);
-                        
-                        // 서버에서 모든 사용자의 랭킹 데이터 요청
-                        setTimeout(() => {
-                            console.log('📊 서버에서 모든 사용자의 랭킹 데이터 요청');
-                            requestRankingData();
-                        }, 200);
+                        requestRankingData();
                     } else {
                         requestRankingData();
                     }

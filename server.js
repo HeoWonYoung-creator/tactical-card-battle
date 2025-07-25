@@ -233,17 +233,23 @@ function updateRanking(category, playerName, score, icon = '👤') {
 
 // 랭킹 조회 함수
 function getRanking(category) {
+    console.log(`📊 랭킹 조회 시작: ${category} - 등록된 총 사용자: ${userIds.size}명`);
+    
     // 모든 등록된 사용자 가져오기
     const allUsers = new Set();
     
-    // rankings에서 사용자 추가
-    for (const [playerName, score] of rankings[category].entries()) {
-        allUsers.add(playerName);
-    }
-    
-    // userIds에서 모든 사용자 추가 (랭킹에 없는 사용자도 포함)
+    // userIds에서 모든 사용자 추가 (우선순위)
     for (const [playerName, userId] of userIds.entries()) {
         allUsers.add(playerName);
+        console.log(`👤 등록된 사용자 추가: ${playerName} (ID: ${userId})`);
+    }
+    
+    // rankings에서 추가 사용자 확인
+    for (const [playerName, score] of rankings[category].entries()) {
+        if (!allUsers.has(playerName)) {
+            allUsers.add(playerName);
+            console.log(`📊 랭킹에만 있는 사용자 추가: ${playerName} (${score}점)`);
+        }
     }
     
     // 모든 사용자의 랭킹 데이터 생성
@@ -257,8 +263,8 @@ function getRanking(category) {
     // 점수 높은 순으로 정렬
     const sortedPlayers = allPlayers.sort((a, b) => b[1] - a[1]);
     
-    console.log(`📊 랭킹 조회: ${category} - 총 ${sortedPlayers.length}명 (등록된 사용자: ${userIds.size}명)`);
-    console.log(`📊 랭킹 상세: ${category} - ${sortedPlayers.slice(0, 5).map(p => `${p[0]}(${p[1]}점)`).join(', ')}`);
+    console.log(`📊 랭킹 조회 완료: ${category} - 총 ${sortedPlayers.length}명 표시`);
+    console.log(`📊 랭킹 상위 5명: ${sortedPlayers.slice(0, 5).map(p => `${p[0]}(${p[1]}점)`).join(', ')}`);
     
     return sortedPlayers;
 }
