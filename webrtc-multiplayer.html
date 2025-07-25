@@ -486,6 +486,133 @@
         #refresh-game-btn:active {
             transform: scale(0.98);
         }
+
+        /* 모바일 최적화 스타일 */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+                font-size: 14px;
+            }
+            
+            /* 모바일에서 버튼 크기 최적화 */
+            .btn-primary, .btn-secondary {
+                min-height: 44px;
+                font-size: 16px;
+                padding: 12px 16px;
+            }
+            
+            /* 모바일에서 카드 크기 조정 */
+            .spell-card {
+                width: 50px;
+                height: 70px;
+                font-size: 20px;
+                margin: 0 2px;
+            }
+            
+            /* 모바일에서 게임 로그 숨김 */
+            #game-log {
+                display: none !important;
+            }
+            
+            /* 모바일에서 모달 크기 조정 */
+            .modal-content {
+                max-width: 95vw;
+                margin: 10px;
+                padding: 15px;
+            }
+            
+            /* 모바일에서 주문 버튼 컴팩트화 */
+            .spell-button {
+                width: 60px;
+                height: 60px;
+                font-size: 24px;
+                margin: 4px;
+                border-radius: 8px;
+            }
+            
+            /* 모바일에서 플레이어 영역 조정 */
+            #player-area, #opponent-area {
+                padding: 10px;
+                margin: 5px 0;
+            }
+            
+            /* 모바일에서 타이틀 화면 조정 */
+            .title-content {
+                padding: 20px;
+            }
+            
+            .title-content h1 {
+                font-size: 24px;
+            }
+            
+            /* 모바일에서 버튼 그룹 조정 */
+            .button-group {
+                gap: 8px;
+            }
+            
+            /* 모바일에서 메모 패널 숨김 */
+            #memo-panel {
+                display: none !important;
+            }
+            
+            /* 모바일에서 디버그 정보 숨김 */
+            #debug-info {
+                display: none !important;
+            }
+        }
+
+        /* 터치 최적화 */
+        @media (hover: none) and (pointer: coarse) {
+            /* 터치 디바이스에서 호버 효과 제거 */
+            .spell-button:hover,
+            .btn-primary:hover,
+            .btn-secondary:hover {
+                transform: none;
+            }
+            
+            /* 터치 피드백 */
+            .spell-button:active,
+            .btn-primary:active,
+            .btn-secondary:active {
+                transform: scale(0.95);
+                transition: transform 0.1s;
+            }
+        }
+
+        /* 컴팩트 모드 (모바일 전용) */
+        .compact-mode {
+            --card-size: 40px;
+            --button-size: 50px;
+            --spacing: 4px;
+        }
+        
+        .compact-mode .spell-card {
+            width: var(--card-size);
+            height: calc(var(--card-size) * 1.4);
+            font-size: 16px;
+            margin: 0 var(--spacing);
+        }
+        
+        .compact-mode .spell-button {
+            width: var(--button-size);
+            height: var(--button-size);
+            font-size: 20px;
+            margin: var(--spacing);
+        }
+        
+        .compact-mode #game-log,
+        .compact-mode #memo-panel,
+        .compact-mode #debug-info {
+            display: none !important;
+        }
+        
+        .compact-mode .player-info {
+            font-size: 12px;
+        }
+        
+        .compact-mode .health-display {
+            font-size: 18px;
+        }
     </style>
 </head>
 <body class="flex items-center justify-center min-h-screen p-4">
@@ -566,11 +693,11 @@
                         </button>
                         <button id="normal-ai-btn" class="w-full py-3 rounded-lg font-bold btn-primary text-yellow-400 hover:text-yellow-300">
                             보통
-                            <div class="text-xs text-yellow-300 mt-1">(평범함, 시간 제한 30초)</div>
+                            <div class="text-xs text-yellow-300 mt-1">(똑똑함, 시간 제한 30초)</div>
                         </button>
                         <button id="hard-ai-btn" class="w-full py-3 rounded-lg font-bold btn-primary text-red-400 hover:text-red-300">
                             어려움
-                            <div class="text-xs text-red-300 mt-1">(똑똑함, 시간 제한 20초)</div>
+                            <div class="text-xs text-red-300 mt-1">(대단함, 시간 제한 20초)</div>
                         </button>
                         <button id="cancel-difficulty-btn" class="w-full py-2 rounded-lg font-bold btn-secondary">취소</button>
                     </div>
@@ -1581,6 +1708,7 @@
             
             // 승리 시 증표 추가
             addVictoryTrophy(type) {
+                console.log(`🏆 addVictoryTrophy 호출: 타입=${type}`);
                 const newCount = this.updateTrophy(type, 3);
                 showToast(`🎉 승리의 증표 +3 획득! (${type === 'ai' ? '모의 결투' : '정식 결투'} 점수: ${newCount})`, 'success', 3000);
             },
@@ -1870,11 +1998,15 @@
             
             spellDescriptions.forEach(spell => {
                 const button = document.createElement('button');
-                button.innerHTML = `
-                    <div class="text-lg">${spell.icon}</div>
-                    <div class="text-xs font-bold">${spell.number}: ${spell.name}</div>
-                    <div class="text-xs opacity-75">${spell.desc}</div>
-                `;
+                
+                // 모바일에서는 아이콘만, 데스크톱에서는 전체 정보
+                const isMobile = window.innerWidth <= 768;
+                button.innerHTML = isMobile ? 
+                    `<div class="text-2xl">${spell.icon}</div>` :
+                    `<div class="text-lg">${spell.icon}</div>
+                     <div class="text-xs font-bold">${spell.number}: ${spell.name}</div>
+                     <div class="text-xs opacity-75">${spell.desc}</div>`;
+                
                 button.classList.add('py-3', 'rounded-lg', 'font-bold', 'btn-primary', 'spell-button', 'flex', 'flex-col', 'items-center', 'justify-center', 'h-24');
                 button.dataset.spell = spell.number;
                 button.addEventListener('click', () => handleSpellCast(spell.number));
@@ -2101,6 +2233,12 @@
                 }
             }
             
+            // 영창 실패 후에는 무조건 버튼 비활성화 유지
+            if (state.spellFailed) {
+                spellButtonsDisabled = true;
+                console.log('🔒 영창 실패 상태 - 버튼 비활성화 유지');
+            }
+            
             const myPlayerId = multiplayerMode ? (isHost ? 1 : 2) : 1;
             console.log(`🎮 버튼 업데이트 - 내 플레이어ID: ${myPlayerId}, 현재 플레이어ID: ${state.currentPlayerId}, 내 턴: ${isMyTurn}, 턴 진행중: ${state.turnInProgress}, 게임종료: ${state.isGameOver}`);
             
@@ -2171,7 +2309,7 @@
                 console.log(`🔘 영창 ${spellNumber} 버튼 - 내 플레이어ID: ${myPlayerId}, 현재 플레이어ID: ${state.currentPlayerId}, 내 턴: ${isMyTurn}, 턴 진행중: ${state.turnInProgress}, 마지막 성공: ${state.lastSuccessfulSpell}, 게임종료: ${state.isGameOver}, 버튼비활성화: ${spellButtonsDisabled}, 비활성화: ${isDisabled}`);
             });
             
-            endTurnBtn.disabled = !isMyTurn || state.turnInProgress || state.isGameOver;
+            endTurnBtn.disabled = !isMyTurn || state.turnInProgress || state.isGameOver || state.spellFailed;
             
             // 턴 종료 버튼도 시각적으로 보이도록 조정
             if (endTurnBtn.disabled) {
@@ -2363,7 +2501,8 @@
             const currentPlayerName = state.currentPlayerId === 1 ? state.players[0].name : (multiplayerMode ? state.players[1].name : 'AI');
             addLog(Messages.turnEnd(currentPlayerName));
             state.lastSuccessfulSpell = 0;
-            state.spellFailed = false; // 영창 실패 플래그 초기화
+            // 영창 실패 플래그는 턴이 완전히 끝난 후에만 초기화
+            // state.spellFailed = false; // 영창 실패 플래그 초기화
             state.currentPlayerId = state.currentPlayerId === 1 ? 2 : 1;
             
             if (multiplayerMode) {
@@ -2402,6 +2541,9 @@
                 const myName = state.players[myPlayerId - 1].name;
                 addLog(Messages.turnStart(myName));
                 startTurnTimer();
+                
+                // 새로운 턴 시작 시 영창 실패 플래그 초기화
+                state.spellFailed = false;
                 
                 // 플레이어 턴 시작 시 모든 버튼 활성화
                 spellButtonsDisabled = false;
@@ -2983,6 +3125,9 @@
                 const trophyMessage = `\n\n🏅 승점 ${trophyChange}`;
                 message += trophyMessage;
                 
+                // 새로고침 안내 메시지 추가
+                message += `\n\n🔄 3초 후 자동으로 새로고침됩니다.`;
+                
                 // 승리/패배 사운드
                 activateAudioContext();
                 playGameOverSound(winner.id === myPlayerId);
@@ -2990,6 +3135,13 @@
                 showModal('게임 종료', message, true);
                 addLog(`- 게임 종료: ${winner.name} 승리! -`);
                 render();
+                
+                // 게임 종료 후 3초 뒤 자동 새로고침
+                setTimeout(() => {
+                    console.log('🔄 게임 종료 후 자동 새로고침 실행');
+                    window.location.reload();
+                }, 3000);
+                
                 return true;
             }
             return false;
@@ -3707,6 +3859,8 @@
         function updateStats(isWin, isMultiplayer = false) {
             const stats = loadStats();
             const category = isMultiplayer ? 'formal' : 'mock';
+            
+            console.log(`📊 updateStats 호출: 승리=${isWin}, 멀티플레이어=${isMultiplayer}, 카테고리=${category}`);
             
             // 카테고리가 없으면 초기화
             if (!stats[category]) {
@@ -5692,6 +5846,28 @@
             render();
         });
 
+        // 모바일 최적화 함수들
+        function isMobile() {
+            return window.innerWidth <= 768;
+        }
+        
+        // 화면 크기 변경 감지 및 주문 버튼 재생성
+        function handleResize() {
+            if (state && state.gameStarted) {
+                createSpellButtons();
+            }
+        }
+        
+        // 모바일에서 컴팩트 모드 토글
+        function toggleCompactMode() {
+            const gameScreen = DOM.get('game-screen');
+            gameScreen.classList.toggle('compact-mode');
+            console.log('📱 컴팩트 모드 토글');
+        }
+        
+        // 리사이즈 이벤트 리스너 추가
+        window.addEventListener('resize', handleResize);
+        
         // 페이지 로드 시 기본 이름 초기화
         document.addEventListener('DOMContentLoaded', () => {
             console.log('🚀 페이지 로드 - 기본 이름 초기화');
