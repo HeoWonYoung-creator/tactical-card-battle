@@ -89,12 +89,19 @@ if (!fs.existsSync(DATA_DIR)) {
 // 데이터 로드 함수
 function loadData() {
     try {
+        console.log('📁 데이터 파일 확인 중...');
+        console.log(`📁 RANKINGS_FILE 존재: ${fs.existsSync(RANKINGS_FILE)}`);
+        console.log(`📁 USER_IDS_FILE 존재: ${fs.existsSync(USER_IDS_FILE)}`);
+        console.log(`📁 PLAYER_ICONS_FILE 존재: ${fs.existsSync(PLAYER_ICONS_FILE)}`);
+        
         // 랭킹 데이터 로드
         if (fs.existsSync(RANKINGS_FILE)) {
             const rankingsData = JSON.parse(fs.readFileSync(RANKINGS_FILE, 'utf8'));
             rankings.mock = new Map(rankingsData.mock || []);
             rankings.formal = new Map(rankingsData.formal || []);
             console.log(`📊 랭킹 데이터 로드됨: 모의 ${rankings.mock.size}명, 정식 ${rankings.formal.size}명`);
+        } else {
+            console.log(`📁 RANKINGS_FILE이 존재하지 않습니다.`);
         }
         
         // 유저 ID 데이터 로드
@@ -109,6 +116,8 @@ function loadData() {
             }
             nextUserId = userIdsData.nextUserId || 1;
             console.log(`🆔 유저 ID 데이터 로드됨: ${userIds.size}명, 다음 ID: ${nextUserId}`);
+        } else {
+            console.log(`📁 USER_IDS_FILE이 존재하지 않습니다.`);
         }
         
         // 플레이어 아이콘 데이터 로드
@@ -119,6 +128,8 @@ function loadData() {
                 playerIcons.set(name, icon);
             }
             console.log(`🎭 플레이어 아이콘 데이터 로드됨: ${playerIcons.size}명`);
+        } else {
+            console.log(`📁 PLAYER_ICONS_FILE이 존재하지 않습니다.`);
         }
     } catch (error) {
         console.error('❌ 데이터 로드 중 오류:', error);
@@ -153,12 +164,15 @@ function saveData() {
 }
 
 // 서버 시작 시 데이터 로드
+console.log('🚀 서버 시작 - 데이터 로드 시작');
 loadData();
 
 // 서버 시작 시 모든 등록된 사용자 정보 출력
 console.log(`🚀 서버 시작 완료 - 등록된 총 사용자: ${userIds.size}명`);
 if (userIds.size > 0) {
     console.log(`📊 등록된 사용자 목록: ${Array.from(userIds.keys()).join(', ')}`);
+} else {
+    console.log(`⚠️ 등록된 사용자가 없습니다. - 게임을 플레이하면 사용자가 등록됩니다.`);
 }
 
 
@@ -245,7 +259,7 @@ function getRanking(category) {
         console.log(`👤 등록된 사용자 추가: ${playerName} (ID: ${userId})`);
     }
     
-    // rankings에서 추가 사용자 확인
+    // rankings에서 추가 사용자 확인 (userIds에 없는 경우만)
     for (const [playerName, score] of rankings[category].entries()) {
         if (!allUsers.has(playerName)) {
             allUsers.add(playerName);
@@ -259,13 +273,18 @@ function getRanking(category) {
         const score = rankings[category].get(playerName) || 0; // 랭킹에 없으면 0점
         const icon = playerIcons.get(playerName) || '👤';
         allPlayers.push([playerName, score, icon]);
+        console.log(`📊 최종 사용자: ${playerName} (${score}점, 아이콘: ${icon})`);
     }
     
     // 점수 높은 순으로 정렬
     const sortedPlayers = allPlayers.sort((a, b) => b[1] - a[1]);
     
     console.log(`📊 랭킹 조회 완료: ${category} - 총 ${sortedPlayers.length}명 표시`);
-    console.log(`📊 랭킹 상위 5명: ${sortedPlayers.slice(0, 5).map(p => `${p[0]}(${p[1]}점)`).join(', ')}`);
+    if (sortedPlayers.length > 0) {
+        console.log(`📊 랭킹 상위 5명: ${sortedPlayers.slice(0, 5).map(p => `${p[0]}(${p[1]}점)`).join(', ')}`);
+    } else {
+        console.log(`⚠️ 표시할 사용자가 없습니다.`);
+    }
     
     return sortedPlayers;
 }
@@ -575,7 +594,8 @@ io.on('connection', (socket) => {
     socket.on('getRanking', (data) => {
         try {
             const { category } = data;
-            console.log(`📊 랭킹 조회 요청: ${category} - 등록된 총 사용자: ${userIds.size}명`);
+            console.log(`📊 랭킹 조회 요청 수신: ${category} (소켓 ID: ${socket.id})`);
+            console.log(`📊 등록된 총 사용자: ${userIds.size}명`);
             
             // 등록된 사용자 목록 출력
             if (userIds.size > 0) {
@@ -594,6 +614,7 @@ io.on('connection', (socket) => {
                 ranking: ranking
             });
         } catch (error) {
+            console.error(`❌ 랭킹 조회 중 오류:`, error);
             handleError(socket, error, 'getRanking');
         }
     });
