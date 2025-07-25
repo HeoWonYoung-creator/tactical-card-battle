@@ -57,25 +57,93 @@ const activeGames = new Map(); // 활성 게임들
 const playerSessions = new Map(); // 플레이어 세션 관리
 const gameStates = new Map(); // 게임 상태 저장
 
-// 단순한 랭킹 시스템
+// 랭킹 시스템 (점수와 아이콘 정보 저장)
 const rankings = {
     mock: new Map(), // 모의 결투 점수
     formal: new Map() // 정식 결투 점수
 };
 
+// 플레이어 아이콘 정보 저장
+const playerIcons = new Map(); // 플레이어 이름 -> 아이콘 매핑
 
+// 유저 ID 시스템
+const userIds = new Map(); // 플레이어 이름 -> 유저 ID 매핑
+const userNames = new Map(); // 유저 ID -> 플레이어 이름 매핑
+let nextUserId = 1; // 다음 유저 ID
+
+
+
+// 유저 ID 관리 함수
+function getOrCreateUserId(playerName) {
+    // 이미 존재하는 유저인지 확인
+    if (userIds.has(playerName)) {
+        return userIds.get(playerName);
+    }
+    
+    // 새로운 유저 ID 발급
+    const userId = nextUserId++;
+    userIds.set(playerName, userId);
+    userNames.set(userId, playerName);
+    
+    console.log(`🆔 새로운 유저 ID 발급: ${playerName} -> ID ${userId}`);
+    return userId;
+}
+
+// 유저 이름 업데이트 함수
+function updateUserName(oldName, newName, icon) {
+    if (userIds.has(oldName)) {
+        const userId = userIds.get(oldName);
+        
+        // 기존 이름 제거
+        userIds.delete(oldName);
+        
+        // 새 이름으로 업데이트
+        userIds.set(newName, userId);
+        userNames.set(userId, newName);
+        
+        // 랭킹 데이터도 새 이름으로 업데이트
+        const mockScore = rankings.mock.get(oldName) || 0;
+        const formalScore = rankings.formal.get(oldName) || 0;
+        
+        if (mockScore > 0 || formalScore > 0) {
+            rankings.mock.delete(oldName);
+            rankings.formal.delete(oldName);
+            rankings.mock.set(newName, mockScore);
+            rankings.formal.set(newName, formalScore);
+        }
+        
+        // 아이콘 정보 업데이트
+        playerIcons.delete(oldName);
+        playerIcons.set(newName, icon);
+        
+        console.log(`🔄 유저 이름 업데이트: ${oldName} -> ${newName} (ID: ${userId})`);
+    }
+}
 
 // 랭킹 업데이트 함수
-function updateRanking(category, playerName, score) {
+function updateRanking(category, playerName, score, icon = '👤') {
+    // 유저 ID 확인/생성
+    const userId = getOrCreateUserId(playerName);
+    
     // 0점이어도 플레이어를 랭킹에 포함시킴
     rankings[category].set(playerName, score);
-    console.log(`📊 랭킹 업데이트: ${category} - ${playerName} (${score}점)`);
+    
+    // 아이콘 정보 저장
+    playerIcons.set(playerName, icon);
+    
+    console.log(`📊 랭킹 업데이트: ${category} - ${playerName} (ID: ${userId}, ${score}점, 아이콘: ${icon})`);
 }
 
 // 랭킹 조회 함수
 function getRanking(category) {
     const players = Array.from(rankings[category].entries());
-    return players.sort((a, b) => b[1] - a[1]); // 점수 높은 순으로 정렬
+    const sortedPlayers = players.sort((a, b) => b[1] - a[1]); // 점수 높은 순으로 정렬
+    
+    // 아이콘 정보 추가
+    return sortedPlayers.map(([playerName, score]) => {
+        const icon = playerIcons.get(playerName) || '👤';
+        return [playerName, score, icon];
+    });
 }
 
 // 랭킹 정렬 함수 제거됨
@@ -362,10 +430,20 @@ io.on('connection', (socket) => {
     // 랭킹 업데이트
     socket.on('updateRanking', (data) => {
         try {
-            const { category, playerName, score } = data;
-            updateRanking(category, playerName, score);
+            const { category, playerName, score, icon } = data;
+            updateRanking(category, playerName, score, icon);
         } catch (error) {
             handleError(socket, error, 'updateRanking');
+        }
+    });
+    
+    // 유저 이름 업데이트
+    socket.on('updateUserName', (data) => {
+        try {
+            const { oldName, newName, icon } = data;
+            updateUserName(oldName, newName, icon);
+        } catch (error) {
+            handleError(socket, error, 'updateUserName');
         }
     });
     

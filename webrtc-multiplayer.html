@@ -1381,6 +1381,7 @@
             
             // 랭킹 초기화 (게임 시작 시 플레이어를 랭킹에 등록)
             const playerName = localStorage.getItem('playerName') || 'Player';
+            const playerIcon = localStorage.getItem('playerIcon') || '👤';
             const trophies = TrophySystem.loadTrophies();
             
             if (socket) {
@@ -1388,17 +1389,19 @@
                 socket.emit('updateRanking', {
                     category: 'mock',
                     playerName: playerName,
-                    score: trophies.ai
+                    score: trophies.ai,
+                    icon: playerIcon
                 });
                 
                 // 정식 결투 점수 등록
                 socket.emit('updateRanking', {
                     category: 'formal',
                     playerName: playerName,
-                    score: trophies.multiplayer
+                    score: trophies.multiplayer,
+                    icon: playerIcon
                 });
                 
-                console.log(`📊 랭킹 초기화: ${playerName} (모의: ${trophies.ai}점, 정식: ${trophies.multiplayer}점)`);
+                console.log(`📊 랭킹 초기화: ${playerName} (모의: ${trophies.ai}점, 정식: ${trophies.multiplayer}점, 아이콘: ${playerIcon})`);
             }
             
             let deck = [];
@@ -1569,8 +1572,8 @@
             
             // 승리 시 증표 추가
             addVictoryTrophy(type) {
-                const newCount = this.updateTrophy(type, 3);
-                showToast(`🎉 승리의 증표 +3 획득! (${type === 'ai' ? '모의 결투' : '정식 결투'} 점수: ${newCount})`, 'success', 3000);
+                const newCount = this.updateTrophy(type, 2);
+                showToast(`🎉 승리의 증표 +2 획득! (${type === 'ai' ? '모의 결투' : '정식 결투'} 점수: ${newCount})`, 'success', 3000);
             },
             
             // 패배 시 증표 감소
@@ -3698,17 +3701,34 @@
             const trophies = TrophySystem.loadTrophies();
             const trophyCount = isMultiplayer ? trophies.multiplayer : trophies.ai;
             
-            // 랭킹 업데이트
+            // 랭킹 업데이트 (승리/패배 모두 업데이트)
             const playerName = localStorage.getItem('playerName') || 'Player';
+            const playerIcon = localStorage.getItem('playerIcon') || '👤';
+            
             if (socket) {
+                // 현재 점수로 랭킹 업데이트
                 socket.emit('updateRanking', {
                     category: category,
                     playerName: playerName,
-                    score: trophyCount
+                    score: trophyCount,
+                    icon: playerIcon
+                });
+                
+                // 다른 카테고리도 함께 업데이트 (전체 랭킹 동기화)
+                const allTrophies = TrophySystem.loadTrophies();
+                const otherCategory = isMultiplayer ? 'mock' : 'formal';
+                const otherScore = isMultiplayer ? allTrophies.ai : allTrophies.multiplayer;
+                
+                socket.emit('updateRanking', {
+                    category: otherCategory,
+                    playerName: playerName,
+                    score: otherScore,
+                    icon: playerIcon
                 });
             }
             
             console.log(`📊 전적 업데이트: ${category} - ${playerName} (증표: ${trophyCount}, 승리: ${stats[category].wins}, 패배: ${stats[category].losses})`);
+            console.log(`📊 랭킹 동기화: ${otherCategory} - ${playerName} (증표: ${otherScore})`);
         }
         
         // 개선된 랭킹 모달 함수
@@ -3799,10 +3819,14 @@
                             const currentPlayerName = localStorage.getItem('playerName') || '';
                             const isCurrentPlayer = player[0] === currentPlayerName;
                             
+                            // 아이콘 정보 (player[2]에 아이콘이 있음)
+                            const playerIcon = player[2] || '👤';
+                            
                             return `
                                 <div class="flex items-center justify-between p-2 ${isCurrentPlayer ? 'bg-blue-800 bg-opacity-70 border-2 border-blue-400' : 'bg-gray-800 bg-opacity-50'} rounded-lg">
                                     <div class="flex items-center space-x-2">
                                         <span class="text-sm">${rankIcon}</span>
+                                        <span class="text-lg">${playerIcon}</span>
                                         <span class="font-medium ${isCurrentPlayer ? 'text-blue-300' : ''}">${player[0]}</span>
                                         ${isCurrentPlayer ? '<span class="text-xs text-blue-300">(나)</span>' : ''}
                                     </div>
@@ -3853,8 +3877,37 @@
                         }
                     });
                     
-                    // 랭킹 데이터 재요청
-                    requestRankingData();
+                    // 현재 점수로 서버 랭킹 업데이트 후 데이터 재요청
+                    if (socket) {
+                        const playerName = localStorage.getItem('playerName') || 'Player';
+                        const playerIcon = localStorage.getItem('playerIcon') || '👤';
+                        const trophies = TrophySystem.loadTrophies();
+                        
+                        // 모의 결투 점수 업데이트
+                        socket.emit('updateRanking', {
+                            category: 'mock',
+                            playerName: playerName,
+                            score: trophies.ai,
+                            icon: playerIcon
+                        });
+                        
+                        // 정식 결투 점수 업데이트
+                        socket.emit('updateRanking', {
+                            category: 'formal',
+                            playerName: playerName,
+                            score: trophies.multiplayer,
+                            icon: playerIcon
+                        });
+                        
+                        console.log(`🔄 현재 점수로 랭킹 업데이트: ${playerName} (모의: ${trophies.ai}점, 정식: ${trophies.multiplayer}점, 아이콘: ${playerIcon})`);
+                        
+                        // 잠시 후 랭킹 데이터 재요청
+                        setTimeout(() => {
+                            requestRankingData();
+                        }, 100);
+                    } else {
+                        requestRankingData();
+                    }
                 });
                 
                 closeBtn.addEventListener('click', () => {
@@ -5502,8 +5555,22 @@
         saveNameBtn.addEventListener('click', () => {
             const newName = playerNameInput.value.trim();
             if (newName) {
+                const oldName = localStorage.getItem('playerName') || 'Player';
+                const playerIcon = localStorage.getItem('playerIcon') || '👤';
+                
                 localStorage.setItem('playerName', newName);
-                console.log(`👤 플레이어 이름 저장: ${newName}`);
+                console.log(`👤 플레이어 이름 저장: ${oldName} -> ${newName}`);
+                
+                // 서버에 이름 변경 알림
+                if (socket && oldName !== newName) {
+                    socket.emit('updateUserName', {
+                        oldName: oldName,
+                        newName: newName,
+                        icon: playerIcon
+                    });
+                    console.log(`🔄 서버에 이름 변경 알림: ${oldName} -> ${newName}`);
+                }
+                
                 updatePlayerName();
                 showNameSaveSuccess();
                 showToast('이름이 저장되었습니다.', 'success', 2000);
@@ -5531,6 +5598,17 @@
         }
         
         // 아이콘 관련 변수들
+        // 유저 ID 관리 함수
+        function getOrCreateUserId() {
+            let userId = localStorage.getItem('userId');
+            if (!userId) {
+                userId = Date.now().toString() + Math.random().toString(36).substr(2, 9);
+                localStorage.setItem('userId', userId);
+                console.log(`🆔 새로운 유저 ID 생성: ${userId}`);
+            }
+            return userId;
+        }
+        
         // 이름과 아이콘을 함께 가져오기
         function getPlayerDisplayName() {
             const playerName = localStorage.getItem('playerName') || 'Player';
@@ -5584,6 +5662,7 @@
             console.log('🚀 페이지 로드 - 기본 이름 초기화');
             DOM.init(); // DOM 캐시 초기화
             TrophySystem.init(); // 증표 시스템 초기화
+            getOrCreateUserId(); // 유저 ID 초기화
             initializePlayerName();
             
             // AudioContext 초기화 시도
