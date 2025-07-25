@@ -155,6 +155,12 @@ function saveData() {
 // 서버 시작 시 데이터 로드
 loadData();
 
+// 서버 시작 시 모든 등록된 사용자 정보 출력
+console.log(`🚀 서버 시작 완료 - 등록된 총 사용자: ${userIds.size}명`);
+if (userIds.size > 0) {
+    console.log(`📊 등록된 사용자 목록: ${Array.from(userIds.keys()).join(', ')}`);
+}
+
 
 
 // 유저 ID 관리 함수
@@ -252,6 +258,7 @@ function getRanking(category) {
     const sortedPlayers = allPlayers.sort((a, b) => b[1] - a[1]);
     
     console.log(`📊 랭킹 조회: ${category} - 총 ${sortedPlayers.length}명 (등록된 사용자: ${userIds.size}명)`);
+    console.log(`📊 랭킹 상세: ${category} - ${sortedPlayers.slice(0, 5).map(p => `${p[0]}(${p[1]}점)`).join(', ')}`);
     
     return sortedPlayers;
 }
