@@ -1379,6 +1379,28 @@
             maxWinStreak = parseInt(localStorage.getItem('maxWinStreak')) || 0;
             console.log(`📊 연승 초기화: 현재 ${currentWinStreak}연승, 최고 ${maxWinStreak}연승`);
             
+            // 랭킹 초기화 (게임 시작 시 플레이어를 랭킹에 등록)
+            const playerName = localStorage.getItem('playerName') || 'Player';
+            const trophies = TrophySystem.loadTrophies();
+            
+            if (socket) {
+                // 모의 결투 점수 등록
+                socket.emit('updateRanking', {
+                    category: 'mock',
+                    playerName: playerName,
+                    score: trophies.ai
+                });
+                
+                // 정식 결투 점수 등록
+                socket.emit('updateRanking', {
+                    category: 'formal',
+                    playerName: playerName,
+                    score: trophies.multiplayer
+                });
+                
+                console.log(`📊 랭킹 초기화: ${playerName} (모의: ${trophies.ai}점, 정식: ${trophies.multiplayer}점)`);
+            }
+            
             let deck = [];
             for (let spellNumber = 1; spellNumber <= GAME_CONFIG.deckStructure.maxSpell; spellNumber++) {
                 for (let cardCount = 0; cardCount < GAME_CONFIG.deckStructure.cardsPerSpell(spellNumber); cardCount++) {
