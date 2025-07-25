@@ -229,6 +229,7 @@ function updateRanking(category, playerName, score, icon = '👤') {
     
     console.log(`📊 랭킹 업데이트: ${category} - ${playerName} (ID: ${userId}, ${score}점, 아이콘: ${icon})`);
     console.log(`📊 현재 등록된 총 사용자: ${userIds.size}명`);
+    console.log(`📊 등록된 사용자 목록: ${Array.from(userIds.keys()).join(', ')}`);
 }
 
 // 랭킹 조회 함수
@@ -575,6 +576,17 @@ io.on('connection', (socket) => {
         try {
             const { category } = data;
             console.log(`📊 랭킹 조회 요청: ${category} - 등록된 총 사용자: ${userIds.size}명`);
+            
+            // 등록된 사용자 목록 출력
+            if (userIds.size > 0) {
+                console.log(`📊 등록된 사용자 목록: ${Array.from(userIds.keys()).join(', ')}`);
+            } else {
+                console.log(`⚠️ 등록된 사용자가 없습니다.`);
+            }
+            
+            // rankings 상태 확인
+            console.log(`📊 rankings 상태: mock=${rankings.mock.size}명, formal=${rankings.formal.size}명`);
+            
             const ranking = getRanking(category);
             console.log(`📊 랭킹 조회 완료: ${category} - ${ranking.length}명의 데이터 반환`);
             socket.emit('rankingData', {
