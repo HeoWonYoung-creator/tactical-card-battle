@@ -3616,11 +3616,11 @@
                 if (parsedStats.wins !== undefined || parsedStats.losses !== undefined) {
                     console.log('기존 형식 데이터를 새로운 형식으로 변환합니다.');
                     const newStats = {
-                        ai: { 
+                        mock: { 
                             wins: parsedStats.wins || 0, 
                             losses: parsedStats.losses || 0 
                         },
-                        multiplayer: { wins: 0, losses: 0 }
+                        formal: { wins: 0, losses: 0 }
                     };
                     // 새로운 형식으로 저장
                     saveStats(newStats);
@@ -3630,8 +3630,8 @@
                 return parsedStats;
             }
             return { 
-                ai: { wins: 0, losses: 0 },
-                multiplayer: { wins: 0, losses: 0 }
+                mock: { wins: 0, losses: 0 },
+                formal: { wins: 0, losses: 0 }
             };
         }
         
@@ -3642,6 +3642,11 @@
         function updateStats(isWin, isMultiplayer = false) {
             const stats = loadStats();
             const category = isMultiplayer ? 'formal' : 'mock';
+            
+            // 카테고리가 없으면 초기화
+            if (!stats[category]) {
+                stats[category] = { wins: 0, losses: 0 };
+            }
             
             if (isWin) {
                 stats[category].wins++;
@@ -4100,7 +4105,7 @@
             // 로컬 개발 환경에서는 localhost, 배포 환경에서는 원격 서버 사용
             const serverUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
                 ? 'http://localhost:3000' 
-                : 'https://tactical-card-battle.onrender.com';
+                : `https://${window.location.hostname}`;
             
             console.log(`🔌 서버 연결 시도: ${serverUrl}`);
             socket = io(serverUrl, {
