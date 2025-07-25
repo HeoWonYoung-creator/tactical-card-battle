@@ -1373,6 +1373,12 @@
 
         function initGame() {
             console.log('🎮 게임 초기화 시작');
+            
+            // 연승 변수 초기화 (새 게임 시작 시)
+            currentWinStreak = parseInt(localStorage.getItem('currentWinStreak')) || 0;
+            maxWinStreak = parseInt(localStorage.getItem('maxWinStreak')) || 0;
+            console.log(`📊 연승 초기화: 현재 ${currentWinStreak}연승, 최고 ${maxWinStreak}연승`);
+            
             let deck = [];
             for (let spellNumber = 1; spellNumber <= GAME_CONFIG.deckStructure.maxSpell; spellNumber++) {
                 for (let cardCount = 0; cardCount < GAME_CONFIG.deckStructure.cardsPerSpell(spellNumber); cardCount++) {
@@ -3654,9 +3660,11 @@
                 if (currentWinStreak > maxWinStreak) {
                     maxWinStreak = currentWinStreak;
                 }
+                console.log(`🏆 승리! 연승 증가: ${currentWinStreak}연승 (최고: ${maxWinStreak}연승)`);
             } else {
                 stats[category].losses++;
                 currentWinStreak = 0;
+                console.log(`💔 패배! 연승 리셋: 0연승`);
             }
             
             // 로컬 스토리지에 저장
@@ -3736,7 +3744,7 @@
             const showRankingError = () => {
                 const containers = ['mock-ranking', 'formal-ranking'];
                 containers.forEach(containerId => {
-                    const container = DOM.get(containerId);
+                    const container = document.getElementById(containerId);
                     if (container) {
                         container.innerHTML = `
                             <div class="text-center text-red-400">
@@ -3753,10 +3761,13 @@
             const handleRankingData = (data) => {
                 console.log(`📊 랭킹 데이터 수신: ${data.category}`, data.ranking.length);
                 
-                const rankingContainer = DOM.get(`${data.category}-ranking`);
+                const rankingContainer = document.getElementById(`${data.category}-ranking`);
+                console.log(`🔍 랭킹 컨테이너 찾기: ${data.category}-ranking`, rankingContainer);
+                
                 if (rankingContainer) {
                     if (data.ranking.length === 0) {
                         rankingContainer.innerHTML = '<div class="text-center text-gray-400">아직 기록이 없습니다.</div>';
+                        console.log(`📊 ${data.category} 랭킹: 기록 없음`);
                     } else {
                         const rankingHtml = data.ranking.map((player, index) => {
                             const rank = index + 1;
@@ -3779,7 +3790,10 @@
                         }).join('');
                         
                         rankingContainer.innerHTML = rankingHtml;
+                        console.log(`📊 ${data.category} 랭킹 업데이트 완료: ${data.ranking.length}명`);
                     }
+                } else {
+                    console.log(`❌ 랭킹 컨테이너를 찾을 수 없음: ${data.category}-ranking`);
                 }
             };
             
@@ -3806,7 +3820,7 @@
                     // 로딩 상태로 되돌리기
                     const containers = ['mock-ranking', 'formal-ranking'];
                     containers.forEach(containerId => {
-                        const container = DOM.get(containerId);
+                        const container = document.getElementById(containerId);
                         if (container) {
                             container.innerHTML = `
                                 <div class="text-center text-gray-400">
@@ -3844,6 +3858,10 @@
             
             const playerName = localStorage.getItem('playerName') || '';
             const playerIcon = localStorage.getItem('playerIcon') || '👤';
+            
+            // 연승 정보 가져오기
+            const currentWinStreak = parseInt(localStorage.getItem('currentWinStreak')) || 0;
+            const maxWinStreak = parseInt(localStorage.getItem('maxWinStreak')) || 0;
             
             // 증표 정보 가져오기
             const trophies = TrophySystem.loadTrophies();
