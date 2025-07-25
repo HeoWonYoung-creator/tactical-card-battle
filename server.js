@@ -33,6 +33,18 @@ app.get('/webrtc-multiplayer.html', (req, res) => {
     res.sendFile(path.join(__dirname, 'webrtc-multiplayer.html'));
 });
 
+// favicon.ico 라우트 추가
+app.get('/favicon.ico', (req, res) => {
+    // SVG 형태의 favicon 반환
+    const svgIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+        <rect width="100" height="100" fill="#f8f9fa"/>
+        <text x="50" y="70" font-size="60" text-anchor="middle" fill="#333">🏆</text>
+    </svg>`;
+    
+    res.setHeader('Content-Type', 'image/svg+xml');
+    res.send(svgIcon);
+});
+
 // 404 에러 처리
 app.use((req, res) => {
     console.log(`404 에러: ${req.method} ${req.url}`);
@@ -440,7 +452,15 @@ io.on('connection', (socket) => {
     socket.on('updateRanking', (data) => {
         try {
             const { category, playerName, stats } = data;
+            console.log(`📊 랭킹 업데이트 요청: ${category} - ${playerName}`, stats);
             updateRanking(category, playerName, stats);
+            
+            // 업데이트 후 랭킹 상태 로깅
+            const ranking = getSortedRanking(category);
+            console.log(`📊 업데이트 후 랭킹 상태: ${category} - ${ranking.length}명`);
+            if (ranking.length > 0) {
+                console.log(`📊 상위 3명: ${ranking.slice(0, 3).map(p => `${p.name}(${p.trophies}증표)`).join(', ')}`);
+            }
         } catch (error) {
             handleError(socket, error, 'updateRanking');
         }
@@ -470,9 +490,15 @@ io.on('connection', (socket) => {
             const ranking = getSortedRanking(category);
             console.log(`📊 랭킹 데이터 전송: ${category} - ${ranking.length}명`);
             
+            // 랭킹 데이터에 증표 정보 포함
+            const rankingWithTrophies = ranking.map(player => ({
+                ...player,
+                trophies: player.trophies || 0
+            }));
+            
             socket.emit('rankingData', {
                 category: category,
-                ranking: ranking
+                ranking: rankingWithTrophies
             });
         } catch (error) {
             console.error(`❌ 랭킹 조회 오류 (${data.category}):`, error);

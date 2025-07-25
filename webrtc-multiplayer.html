@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cast Me If You Can</title>
+    <link rel="icon" type="image/x-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏆</text></svg>">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Pretendard:wght@300;400;500;600;700&family=MedievalSharp:wght@400&family=Uncial+Antiqua&family=UnifrakturMaguntia&display=swap" rel="stylesheet">
     <style>
@@ -528,7 +529,7 @@
         </div>
         
         <div class="space-y-4">
-            <button id="ai-battle-btn" class="w-full py-4 rounded-lg font-bold text-xl btn-primary border-2 border-white">모의 결투 <span class="text-sm font-normal">(vs 허수아비)</span></button>
+            <button id="ai-battle-btn" class="w-full py-4 rounded-lg font-bold text-xl btn-primary border-2 border-white">모의 결투 <span class="text-sm font-normal">(vs AI 허수아비)</span></button>
             <button id="multiplayer-btn" class="w-full py-4 rounded-lg font-bold text-xl bg-red-600 hover:bg-red-700 text-white transition-all duration-300 hover:transform hover:-translate-y-0.5 hover:shadow-lg" style="box-shadow: 0 2px 4px rgba(220, 53, 69, 0.3);">정식 결투 <span class="text-sm font-normal">(vs 다른 마법사)</span></button>
             
             <!-- 승리의 증표 표시 영역 -->
@@ -3006,7 +3007,7 @@
                             `).join('')}
                         </div>
                     ` : `
-                        <p class="text-center mb-4 text-gray-400">아직 공개된 비밀 주문문이 없습니다.</p>
+                        <p class="text-center mb-4 text-gray-400">아직 공개된 비밀 주문이 없습니다.</p>
                     `}
                     <button class="w-full py-2 rounded-lg font-bold btn-primary">확인</button>
                 </div>
@@ -3711,7 +3712,8 @@
                         </div>
                     </div>
                     
-                    <div class="flex justify-center mt-4">
+                    <div class="flex justify-center mt-4 space-x-4">
+                        <button id="refresh-ranking-btn" class="px-4 py-2 rounded-lg font-bold btn-primary text-sm">🔄 새로고침</button>
                         <button id="close-ranking-btn" class="px-6 py-2 rounded-lg font-bold btn-secondary">닫기</button>
                     </div>
                 </div>
@@ -3729,7 +3731,22 @@
                     socket.emit('getRanking', { category: 'daily' });
                 } else {
                     console.log('❌ 소켓 연결 없음 - 랭킹 데이터 요청 실패');
-                    showRankingError();
+                    // 소켓 연결 시도
+                    if (socket) {
+                        socket.connect();
+                        setTimeout(() => {
+                            if (socket.connected) {
+                                console.log('✅ 소켓 연결 성공 - 랭킹 데이터 재요청');
+                                socket.emit('getRanking', { category: 'ai' });
+                                socket.emit('getRanking', { category: 'multiplayer' });
+                                socket.emit('getRanking', { category: 'daily' });
+                            } else {
+                                showRankingError();
+                            }
+                        }, 1000);
+                    } else {
+                        showRankingError();
+                    }
                 }
             };
             
@@ -3743,6 +3760,7 @@
                             <div class="text-center text-red-400">
                                 <div class="text-lg mb-2">⚠️</div>
                                 <div class="text-sm">서버 연결 오류</div>
+                                <div class="text-xs text-gray-400 mt-1">서버를 확인해주세요</div>
                             </div>
                         `;
                     }
@@ -3771,6 +3789,7 @@
             // 랭킹 데이터 수신 이벤트 리스너
             const handleRankingData = (data) => {
                 console.log(`📊 랭킹 데이터 수신: ${data.category}`, data.ranking.length);
+                console.log(`📊 랭킹 데이터 상세:`, data.ranking);
                 
                 // 타임아웃 클리어
                 if (rankingTimeouts[data.category]) {
@@ -3793,8 +3812,8 @@
                             const isCurrentPlayer = player.name === currentPlayerName;
                             const displayName = isCurrentPlayer ? getPlayerDisplayName() : player.name;
                             
-                            // 승리의 증표 계산 (승리 횟수 * 10 + 연승 횟수)
-                            const victoryTrophies = (player.wins * 10) + (player.maxWinStreak || 0);
+                            // 승리의 증표 계산 (서버에서 받은 증표 값 사용)
+                            const victoryTrophies = player.trophies || (player.wins * 10) + (player.maxWinStreak || 0);
                             
                             // 현재 플레이어인 경우 배경색 변경
                             const bgClass = isCurrentPlayer ? 'bg-blue-800 bg-opacity-70 border-2 border-blue-400' : 'bg-gray-800 bg-opacity-50';
@@ -3823,10 +3842,22 @@
             if (socket) {
                 socket.on('rankingData', handleRankingData);
                 
-                // 소켓 연결 상태 확인
+                // 소켓 연결 상태 확인 및 디버깅
+                console.log(`🔍 소켓 상태 확인: connected=${socket.connected}, id=${socket.id}`);
+                
                 if (!socket.connected) {
                     console.log('⚠️ 소켓 연결 상태 확인 - 연결되지 않음');
-                    showRankingError();
+                    // 연결 시도
+                    socket.connect();
+                    setTimeout(() => {
+                        if (socket.connected) {
+                            console.log('✅ 소켓 연결 성공 - 랭킹 데이터 요청');
+                            requestRankingData();
+                        } else {
+                            console.log('❌ 소켓 연결 실패');
+                            showRankingError();
+                        }
+                    }, 2000);
                 } else {
                     // 초기 데이터 요청
                     requestRankingData();
@@ -3838,6 +3869,29 @@
             
             return new Promise(resolve => {
                 const closeBtn = modal.querySelector('#close-ranking-btn');
+                const refreshBtn = modal.querySelector('#refresh-ranking-btn');
+                
+                // 새로고침 버튼 이벤트 리스너
+                refreshBtn.addEventListener('click', () => {
+                    console.log('🔄 랭킹 새로고침 요청');
+                    
+                    // 로딩 상태로 되돌리기
+                    const containers = ['ai-ranking', 'multiplayer-ranking', 'daily-king-ranking'];
+                    containers.forEach(containerId => {
+                        const container = DOM.get(containerId);
+                        if (container) {
+                            container.innerHTML = `
+                                <div class="text-center text-gray-400">
+                                    <div class="animate-spin inline-block w-4 h-4 border-2 border-blue-400 border-t-transparent rounded-full"></div>
+                                    <span class="ml-2">로딩 중...</span>
+                                </div>
+                            `;
+                        }
+                    });
+                    
+                    // 랭킹 데이터 재요청
+                    requestRankingData();
+                });
                 
                 closeBtn.addEventListener('click', () => {
                     // 타임아웃 클리어
