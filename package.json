@@ -8,14 +8,25 @@
     "dev": "nodemon server.js"
   },
   "dependencies": {
+    "cors": "^2.8.5",
     "express": "^4.18.2",
     "socket.io": "^4.7.2",
-    "cors": "^2.8.5"
+    "socket.io-client": "^4.8.1"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"
   },
-  "keywords": ["webrtc", "signaling", "multiplayer", "game", "real-time", "socket.io", "express", "card-game", "tactical"],
+  "keywords": [
+    "webrtc",
+    "signaling",
+    "multiplayer",
+    "game",
+    "real-time",
+    "socket.io",
+    "express",
+    "card-game",
+    "tactical"
+  ],
   "author": "",
   "license": "MIT"
-} 
+}

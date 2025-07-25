@@ -59,13 +59,40 @@ const gameStates = new Map(); // 게임 상태 저장
 
 // 랭킹 시스템
 const rankings = {
-    ai: new Map(), // AI 대전 랭킹
-    multiplayer: new Map(), // 멀티플레이어 랭킹
-    daily: new Map() // 오늘의 마법왕 랭킹
+    mock: new Map(), // 모의 결투장 랭킹
+    formal: new Map(), // 정식 마법사 랭킹
+    daily: new Map() // 오늘의 마법왕 랭킹 (12시 기준 리셋)
 };
+
+// 오늘의 마법왕 리셋 시간 (매일 12시)
+let lastDailyReset = new Date();
+lastDailyReset.setHours(12, 0, 0, 0);
+if (lastDailyReset > new Date()) {
+    lastDailyReset.setDate(lastDailyReset.getDate() - 1);
+}
+
+// 오늘의 마법왕 리셋 체크 함수
+function checkDailyReset() {
+    const now = new Date();
+    const today12PM = new Date();
+    today12PM.setHours(12, 0, 0, 0);
+    
+    // 오늘 12시가 지났고, 마지막 리셋이 오늘 12시 이전이면 리셋
+    if (now >= today12PM && lastDailyReset < today12PM) {
+        console.log('🔄 오늘의 마법왕 랭킹 리셋 실행');
+        rankings.daily.clear();
+        lastDailyReset = now;
+        console.log('✅ 오늘의 마법왕 랭킹이 리셋되었습니다.');
+    }
+}
 
 // 랭킹 업데이트 함수 (증표 기반)
 function updateRanking(category, playerName, stats) {
+    // 오늘의 마법왕 리셋 체크
+    if (category === 'daily') {
+        checkDailyReset();
+    }
+    
     // 기존에 같은 이름의 기록이 있는지 확인
     let existingPlayer = null;
     for (const [existingName, playerData] of rankings[category]) {
@@ -99,6 +126,18 @@ function updateRanking(category, playerName, stats) {
         
         console.log(`📊 랭킹 업데이트: ${category} - ${playerName} (새 기록 생성, 증표: ${stats.trophies}, 승리: ${stats.wins})`);
     }
+    
+    // 랭킹 정렬 및 로깅
+    const sortedRanking = getSortedRanking(category);
+    console.log(`📊 랭킹 정렬 시작: ${category} - ${rankings[category].size}명`);
+    
+    const top3 = sortedRanking.slice(0, 3);
+    const top3Names = top3.map(player => player.name).join(', ');
+    console.log(`📊 랭킹 정렬 완료: ${category} - 상위 3명: ${top3Names}`);
+    
+    console.log(`📊 업데이트 후 랭킹 상태: ${category} - ${rankings[category].size}명`);
+    const top3Trophies = top3.map(player => `${player.name}(${player.trophies}증표)`).join(', ');
+    console.log(`📊 상위 3명: ${top3Trophies}`);
 }
 
 // 랭킹 정렬 함수 (승리의 증표 기준)
@@ -112,13 +151,13 @@ function getSortedRanking(category) {
             return [];
         }
         
-        // 승리의 증표 기준으로 정렬 (승리 횟수 * 10 + 연승 횟수)
+        // 승리의 증표 기준으로 정렬 (서버에 저장된 trophies 값 사용)
         const sortedPlayers = players.sort((a, b) => {
-            const aVictoryTrophies = (a.wins * 10) + (a.maxWinStreak || 0);
-            const bVictoryTrophies = (b.wins * 10) + (b.maxWinStreak || 0);
+            const aTrophies = a.trophies || 0;
+            const bTrophies = b.trophies || 0;
             
-            if (bVictoryTrophies !== aVictoryTrophies) {
-                return bVictoryTrophies - aVictoryTrophies;
+            if (bTrophies !== aTrophies) {
+                return bTrophies - aTrophies;
             }
             if (b.wins !== a.wins) {
                 return b.wins - a.wins;
@@ -496,6 +535,14 @@ io.on('connection', (socket) => {
                 trophies: player.trophies || 0
             }));
             
+            // 상위 5명의 증표 정보 로깅
+            if (rankingWithTrophies.length > 0) {
+                console.log(`📊 ${category} 상위 5명 증표 정보:`);
+                rankingWithTrophies.slice(0, 5).forEach((player, index) => {
+                    console.log(`  ${index + 1}. ${player.name}: ${player.trophies}증표 (${player.wins}승 ${player.losses}패, 최고${player.maxWinStreak}연승)`);
+                });
+            }
+            
             socket.emit('rankingData', {
                 category: category,
                 ranking: rankingWithTrophies
@@ -519,8 +566,8 @@ io.on('connection', (socket) => {
             console.log(`🧹 치트: 모든 서버 데이터 초기화 요청 (${socket.id})`);
             
             // 모든 랭킹 데이터 초기화
-            rankings.ai.clear();
-            rankings.multiplayer.clear();
+            rankings.mock.clear();
+            rankings.formal.clear();
             rankings.daily.clear();
             
             // 모든 게임 세션 초기화

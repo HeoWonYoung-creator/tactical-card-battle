@@ -2811,19 +2811,26 @@
                 myHealth: myPlayer.health,
                 opponentHealth: opponentPlayer.health,
                 myHandLength: myPlayer.hand.length,
-                opponentHandLength: opponentPlayer.hand.length
+                opponentHandLength: opponentPlayer.hand.length,
+                myHand: myPlayer.hand,
+                opponentHand: opponentPlayer.hand,
+                isGameOver: state.isGameOver
             });
             
             // 체력이 0 이하인 경우가 우선 (패배 조건)
             if (myPlayer.health <= 0) {
+                console.log('🏁 게임 종료 조건: 내 체력이 0 이하');
                 winner = opponentPlayer;
             } else if (opponentPlayer.health <= 0) {
+                console.log('🏁 게임 종료 조건: 상대 체력이 0 이하');
                 winner = myPlayer;
             } else if (myPlayer.hand.length === 0) {
                 // 패가 비었지만 체력이 남아있으면 승리
+                console.log('🏁 게임 종료 조건: 내 패가 비어있음');
                 winner = myPlayer;
             } else if (opponentPlayer.hand.length === 0) {
                 // 상대 패가 비었지만 체력이 남아있으면 승리
+                console.log('🏁 게임 종료 조건: 상대 패가 비어있음');
                 winner = opponentPlayer;
             }
             
@@ -3634,7 +3641,7 @@
         
         function updateStats(isWin, isMultiplayer = false) {
             const stats = loadStats();
-            const category = isMultiplayer ? 'multiplayer' : 'ai';
+            const category = isMultiplayer ? 'formal' : 'mock';
             
             if (isWin) {
                 stats[category].wins++;
@@ -3670,6 +3677,21 @@
                         maxWinStreak: maxWinStreak
                     }
                 });
+                
+                // 정식 결투인 경우 오늘의 마법왕에도 업데이트
+                if (isMultiplayer) {
+                    socket.emit('updateRanking', {
+                        category: 'daily',
+                        playerName: playerName,
+                        stats: {
+                            trophies: trophyCount,
+                            wins: stats[category].wins,
+                            losses: stats[category].losses,
+                            currentWinStreak: currentWinStreak,
+                            maxWinStreak: maxWinStreak
+                        }
+                    });
+                }
             }
             
             console.log(`📊 전적 업데이트: ${category} - ${playerName} (증표: ${trophyCount}, 승리: ${stats[category].wins}, 패배: ${stats[category].losses})`);
@@ -3685,16 +3707,16 @@
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div>
                             <h4 class="text-lg font-bold mb-3 text-yellow-300 text-center">🤖 모의 결투장 순위</h4>
-                            <div id="ai-ranking" class="space-y-2">
+                            <div id="mock-ranking" class="space-y-2">
                                 <div class="text-center text-gray-400">
-                                    <div class="animate-spin inline-block w-4 h-4 border-2 border-blue-400 border-t-transparent rounded-full"></div>
+                                    <div class="animate-spin inline-block w-4 h-4 border-2 border-yellow-400 border-t-transparent rounded-full"></div>
                                     <span class="ml-2">로딩 중...</span>
                                 </div>
                             </div>
                         </div>
                         <div>
-                            <h4 class="text-lg font-bold mb-3 text-green-300 text-center">👥 전체 마법사 순위</h4>
-                            <div id="multiplayer-ranking" class="space-y-2">
+                            <h4 class="text-lg font-bold mb-3 text-green-300 text-center">⚔️ 정식 마법사 순위</h4>
+                            <div id="formal-ranking" class="space-y-2">
                                 <div class="text-center text-gray-400">
                                     <div class="animate-spin inline-block w-4 h-4 border-2 border-green-400 border-t-transparent rounded-full"></div>
                                     <span class="ml-2">로딩 중...</span>
@@ -3703,7 +3725,7 @@
                         </div>
                         <div>
                             <h4 class="text-lg font-bold mb-3 text-purple-300 text-center">👑 오늘의 마법왕</h4>
-                            <div id="daily-king-ranking" class="space-y-2">
+                            <div id="daily-ranking" class="space-y-2">
                                 <div class="text-center text-gray-400">
                                     <div class="animate-spin inline-block w-4 h-4 border-2 border-purple-400 border-t-transparent rounded-full"></div>
                                     <span class="ml-2">로딩 중...</span>
@@ -3726,33 +3748,18 @@
             const requestRankingData = () => {
                 if (socket && socket.connected) {
                     console.log('📊 랭킹 데이터 요청 시작');
-                    socket.emit('getRanking', { category: 'ai' });
-                    socket.emit('getRanking', { category: 'multiplayer' });
+                    socket.emit('getRanking', { category: 'mock' });
+                    socket.emit('getRanking', { category: 'formal' });
                     socket.emit('getRanking', { category: 'daily' });
                 } else {
                     console.log('❌ 소켓 연결 없음 - 랭킹 데이터 요청 실패');
-                    // 소켓 연결 시도
-                    if (socket) {
-                        socket.connect();
-                        setTimeout(() => {
-                            if (socket.connected) {
-                                console.log('✅ 소켓 연결 성공 - 랭킹 데이터 재요청');
-                                socket.emit('getRanking', { category: 'ai' });
-                                socket.emit('getRanking', { category: 'multiplayer' });
-                                socket.emit('getRanking', { category: 'daily' });
-                            } else {
-                                showRankingError();
-                            }
-                        }, 1000);
-                    } else {
-                        showRankingError();
-                    }
+                    showRankingError();
                 }
             };
             
             // 에러 표시 함수
             const showRankingError = () => {
-                const containers = ['ai-ranking', 'multiplayer-ranking', 'daily-king-ranking'];
+                const containers = ['mock-ranking', 'formal-ranking', 'daily-ranking'];
                 containers.forEach(containerId => {
                     const container = DOM.get(containerId);
                     if (container) {
@@ -3769,7 +3776,7 @@
             
             // 타임아웃 설정 (10초)
             const rankingTimeouts = {};
-            const categories = ['ai', 'multiplayer', 'daily'];
+            const categories = ['mock', 'formal', 'daily'];
             
             categories.forEach(category => {
                 rankingTimeouts[category] = setTimeout(() => {
@@ -3789,7 +3796,6 @@
             // 랭킹 데이터 수신 이벤트 리스너
             const handleRankingData = (data) => {
                 console.log(`📊 랭킹 데이터 수신: ${data.category}`, data.ranking.length);
-                console.log(`📊 랭킹 데이터 상세:`, data.ranking);
                 
                 // 타임아웃 클리어
                 if (rankingTimeouts[data.category]) {
@@ -3802,18 +3808,21 @@
                     if (data.ranking.length === 0) {
                         rankingContainer.innerHTML = '<div class="text-center text-gray-400">아직 기록이 없습니다.</div>';
                     } else {
-                        const rankingHtml = data.ranking.map((player, index) => {
+                        const currentPlayerName = localStorage.getItem('playerName') || '';
+                        
+                        // 상위 5위까지 표시
+                        const top5Players = data.ranking.slice(0, 5);
+                        const rankingHtml = top5Players.map((player, index) => {
                             const rank = index + 1;
                             const rankIcon = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : `${rank}.`;
                             const trophyIcon = '🏆';
                             
-                            // 현재 플레이어인지 확인하고 아이콘 추가
-                            const currentPlayerName = localStorage.getItem('playerName') || '';
+                            // 현재 플레이어인지 확인
                             const isCurrentPlayer = player.name === currentPlayerName;
                             const displayName = isCurrentPlayer ? getPlayerDisplayName() : player.name;
                             
-                            // 승리의 증표 계산 (서버에서 받은 증표 값 사용)
-                            const victoryTrophies = player.trophies || (player.wins * 10) + (player.maxWinStreak || 0);
+                            // 승리의 증표
+                            const victoryTrophies = player.trophies || 0;
                             
                             // 현재 플레이어인 경우 배경색 변경
                             const bgClass = isCurrentPlayer ? 'bg-blue-800 bg-opacity-70 border-2 border-blue-400' : 'bg-gray-800 bg-opacity-50';
@@ -3833,33 +3842,72 @@
                                 </div>
                             `;
                         }).join('');
-                        rankingContainer.innerHTML = rankingHtml;
+                        
+                        // 나의 순위 찾기
+                        const myRankIndex = data.ranking.findIndex(player => player.name === currentPlayerName);
+                        let myRankHtml = '';
+                        
+                        if (myRankIndex !== -1) {
+                            const myPlayer = data.ranking[myRankIndex];
+                            const myRank = myRankIndex + 1;
+                            const myRankIcon = myRank === 1 ? '🥇' : myRank === 2 ? '🥈' : myRank === 3 ? '🥉' : `${myRank}.`;
+                            const myVictoryTrophies = myPlayer.trophies || 0;
+                            
+                            // 상위 5위에 포함되지 않은 경우에만 별도 표시
+                            if (myRankIndex >= 5) {
+                                myRankHtml = `
+                                    <div class="mt-4 pt-4 border-t border-gray-600">
+                                        <div class="text-center text-sm text-gray-400 mb-2">나의 순위</div>
+                                        <div class="flex items-center justify-between p-3 bg-blue-800 bg-opacity-70 border-2 border-blue-400 rounded-lg">
+                                            <div class="flex items-center space-x-3">
+                                                <span class="text-lg">${myRankIcon}</span>
+                                                <span class="font-bold text-blue-300">${getPlayerDisplayName()}</span>
+                                                <span class="text-xs text-blue-300">(나)</span>
+                                            </div>
+                                            <div class="text-right">
+                                                <div class="text-sm text-yellow-400">🏆 ${myVictoryTrophies}증표</div>
+                                                <div class="text-sm text-green-400">${myPlayer.wins}승 ${myPlayer.losses}패</div>
+                                                <div class="text-xs text-blue-400">최고 ${myPlayer.maxWinStreak || 0}연승</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                `;
+                            }
+                        }
+                        
+                        rankingContainer.innerHTML = rankingHtml + myRankHtml;
                     }
                 }
             };
             
             // 소켓 이벤트 리스너 추가
             if (socket) {
+                socket.off('rankingData', handleRankingData);
                 socket.on('rankingData', handleRankingData);
                 
-                // 소켓 연결 상태 확인 및 디버깅
                 console.log(`🔍 소켓 상태 확인: connected=${socket.connected}, id=${socket.id}`);
                 
                 if (!socket.connected) {
                     console.log('⚠️ 소켓 연결 상태 확인 - 연결되지 않음');
-                    // 연결 시도
                     socket.connect();
+                    
+                    const onConnect = () => {
+                        console.log('✅ 소켓 연결 성공 - 랭킹 데이터 요청');
+                        requestRankingData();
+                        socket.off('connect', onConnect);
+                    };
+                    
+                    socket.on('connect', onConnect);
+                    
                     setTimeout(() => {
-                        if (socket.connected) {
-                            console.log('✅ 소켓 연결 성공 - 랭킹 데이터 요청');
-                            requestRankingData();
-                        } else {
+                        if (!socket.connected) {
                             console.log('❌ 소켓 연결 실패');
                             showRankingError();
+                            socket.off('connect', onConnect);
                         }
-                    }, 2000);
+                    }, 3000);
                 } else {
-                    // 초기 데이터 요청
+                    console.log('✅ 소켓 이미 연결됨 - 랭킹 데이터 요청');
                     requestRankingData();
                 }
             } else {
@@ -3876,7 +3924,7 @@
                     console.log('🔄 랭킹 새로고침 요청');
                     
                     // 로딩 상태로 되돌리기
-                    const containers = ['ai-ranking', 'multiplayer-ranking', 'daily-king-ranking'];
+                    const containers = ['mock-ranking', 'formal-ranking', 'daily-ranking'];
                     containers.forEach(containerId => {
                         const container = DOM.get(containerId);
                         if (container) {
@@ -3887,6 +3935,25 @@
                                 </div>
                             `;
                         }
+                    });
+                    
+                    // 타임아웃 재설정
+                    categories.forEach(category => {
+                        if (rankingTimeouts[category]) {
+                            clearTimeout(rankingTimeouts[category]);
+                        }
+                        rankingTimeouts[category] = setTimeout(() => {
+                            const container = DOM.get(`${category}-ranking`);
+                            if (container && container.innerHTML.includes('로딩 중')) {
+                                console.log(`⏰ 랭킹 타임아웃: ${category}`);
+                                container.innerHTML = `
+                                    <div class="text-center text-yellow-400">
+                                        <div class="text-lg mb-2">⏰</div>
+                                        <div class="text-sm">응답 시간 초과</div>
+                                    </div>
+                                `;
+                            }
+                        }, 10000);
                     });
                     
                     // 랭킹 데이터 재요청
@@ -4239,7 +4306,13 @@
             }
             
             // Socket.IO 연결 (개선된 설정)
-            socket = io('https://tactical-card-battle.onrender.com', {
+            // 로컬 개발 환경에서는 localhost, 배포 환경에서는 원격 서버 사용
+            const serverUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+                ? 'http://localhost:3000' 
+                : 'https://tactical-card-battle.onrender.com';
+            
+            console.log(`🔌 서버 연결 시도: ${serverUrl}`);
+            socket = io(serverUrl, {
                 transports: ['websocket', 'polling'],
                 timeout: 60000,
                 reconnection: true,
@@ -5622,6 +5695,10 @@
             if (audioContext.state === 'suspended') {
                 console.log('🔊 AudioContext 일시 중단 상태 - 사용자 상호작용 대기 중');
             }
+            
+            // 소켓 연결 초기화 (랭킹 기능을 위해)
+            console.log('🔌 페이지 로드 시 소켓 연결 초기화');
+            initializeSocketIO();
         });
 
     </script>
