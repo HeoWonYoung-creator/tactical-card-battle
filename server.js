@@ -73,7 +73,6 @@ let nextUserId = 1; // 다음 유저 ID
 
 // 파일 시스템을 사용한 영구 저장소
 const fs = require('fs');
-const path = require('path');
 
 // 데이터 파일 경로
 const DATA_DIR = path.join(__dirname, 'data');
