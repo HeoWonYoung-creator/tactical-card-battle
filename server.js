@@ -78,13 +78,13 @@ function getOrCreateUserId(playerName) {
     // 이미 존재하는 유저인지 확인
     if (userIds.has(playerName)) {
         return userIds.get(playerName);
-    }
+        }
     
     // 새로운 유저 ID 발급
     const userId = nextUserId++;
     userIds.set(playerName, userId);
     userNames.set(userId, playerName);
-    
+        
     console.log(`🆔 새로운 유저 ID 발급: ${playerName} -> ID ${userId}`);
     return userId;
 }
@@ -118,8 +118,8 @@ function updateUserName(oldName, newName, icon) {
         
         console.log(`🔄 유저 이름 업데이트: ${oldName} -> ${newName} (ID: ${userId})`);
     }
-}
-
+        }
+        
 // 랭킹 업데이트 함수
 function updateRanking(category, playerName, score, icon = '👤') {
     // 유저 ID 확인/생성
@@ -130,7 +130,7 @@ function updateRanking(category, playerName, score, icon = '👤') {
     
     // 아이콘 정보 저장
     playerIcons.set(playerName, icon);
-    
+        
     console.log(`📊 랭킹 업데이트: ${category} - ${playerName} (ID: ${userId}, ${score}점, 아이콘: ${icon})`);
 }
 
@@ -144,8 +144,8 @@ function getRanking(category) {
         const icon = playerIcons.get(playerName) || '👤';
         return [playerName, score, icon];
     });
-}
-
+        }
+        
 // 랭킹 정렬 함수 제거됨
 
 // 중복 이름 정리 함수 제거됨

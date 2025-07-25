@@ -844,20 +844,20 @@
         
         function playSoundInternal(frequency, duration, type = 'sine') {
             try {
-                const oscillator = audioContext.createOscillator();
-                const gainNode = audioContext.createGain();
-                
-                oscillator.connect(gainNode);
-                gainNode.connect(audioContext.destination);
-                
-                oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
-                oscillator.type = type;
-                
-                gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
-                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
-                
-                oscillator.start(audioContext.currentTime);
-                oscillator.stop(audioContext.currentTime + duration);
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
+            oscillator.type = type;
+            
+            gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + duration);
                 
                 console.log(`🔊 사운드 재생: ${frequency}Hz, ${duration}s, ${type}`);
             } catch (error) {
@@ -1471,7 +1471,7 @@
             
             // 게임 시작 사운드 (AI 모드에서만 재생)
             if (!multiplayerMode) {
-                playGameStartSound();
+            playGameStartSound();
             }
         }
 
@@ -3705,6 +3705,11 @@
             const playerName = localStorage.getItem('playerName') || 'Player';
             const playerIcon = localStorage.getItem('playerIcon') || '👤';
             
+            // 다른 카테고리 정보 계산
+            const allTrophies = TrophySystem.loadTrophies();
+            const otherCategory = isMultiplayer ? 'mock' : 'formal';
+            const otherScore = isMultiplayer ? allTrophies.ai : allTrophies.multiplayer;
+            
             if (socket) {
                 // 현재 점수로 랭킹 업데이트
                 socket.emit('updateRanking', {
@@ -3715,10 +3720,6 @@
                 });
                 
                 // 다른 카테고리도 함께 업데이트 (전체 랭킹 동기화)
-                const allTrophies = TrophySystem.loadTrophies();
-                const otherCategory = isMultiplayer ? 'mock' : 'formal';
-                const otherScore = isMultiplayer ? allTrophies.ai : allTrophies.multiplayer;
-                
                 socket.emit('updateRanking', {
                     category: otherCategory,
                     playerName: playerName,
@@ -3849,7 +3850,7 @@
                 socket.on('rankingData', handleRankingData);
                 
                 // 즉시 데이터 요청
-                requestRankingData();
+                    requestRankingData();
             } else {
                 console.log('❌ 소켓 객체 없음');
                 showRankingError();
