@@ -71,6 +71,91 @@ const userIds = new Map(); // 플레이어 이름 -> 유저 ID 매핑
 const userNames = new Map(); // 유저 ID -> 플레이어 이름 매핑
 let nextUserId = 1; // 다음 유저 ID
 
+// 파일 시스템을 사용한 영구 저장소
+const fs = require('fs');
+const path = require('path');
+
+// 데이터 파일 경로
+const DATA_DIR = path.join(__dirname, 'data');
+const RANKINGS_FILE = path.join(DATA_DIR, 'rankings.json');
+const USER_IDS_FILE = path.join(DATA_DIR, 'userIds.json');
+const PLAYER_ICONS_FILE = path.join(DATA_DIR, 'playerIcons.json');
+
+// 데이터 디렉토리 생성
+if (!fs.existsSync(DATA_DIR)) {
+    fs.mkdirSync(DATA_DIR, { recursive: true });
+    console.log('📁 데이터 디렉토리 생성됨');
+}
+
+// 데이터 로드 함수
+function loadData() {
+    try {
+        // 랭킹 데이터 로드
+        if (fs.existsSync(RANKINGS_FILE)) {
+            const rankingsData = JSON.parse(fs.readFileSync(RANKINGS_FILE, 'utf8'));
+            rankings.mock = new Map(rankingsData.mock || []);
+            rankings.formal = new Map(rankingsData.formal || []);
+            console.log(`📊 랭킹 데이터 로드됨: 모의 ${rankings.mock.size}명, 정식 ${rankings.formal.size}명`);
+        }
+        
+        // 유저 ID 데이터 로드
+        if (fs.existsSync(USER_IDS_FILE)) {
+            const userIdsData = JSON.parse(fs.readFileSync(USER_IDS_FILE, 'utf8'));
+            userIds.clear();
+            userNames.clear();
+            
+            for (const [name, id] of userIdsData.userIds || []) {
+                userIds.set(name, id);
+                userNames.set(id, name);
+            }
+            nextUserId = userIdsData.nextUserId || 1;
+            console.log(`🆔 유저 ID 데이터 로드됨: ${userIds.size}명, 다음 ID: ${nextUserId}`);
+        }
+        
+        // 플레이어 아이콘 데이터 로드
+        if (fs.existsSync(PLAYER_ICONS_FILE)) {
+            const iconsData = JSON.parse(fs.readFileSync(PLAYER_ICONS_FILE, 'utf8'));
+            playerIcons.clear();
+            for (const [name, icon] of iconsData || []) {
+                playerIcons.set(name, icon);
+            }
+            console.log(`🎭 플레이어 아이콘 데이터 로드됨: ${playerIcons.size}명`);
+        }
+    } catch (error) {
+        console.error('❌ 데이터 로드 중 오류:', error);
+    }
+}
+
+// 데이터 저장 함수
+function saveData() {
+    try {
+        // 랭킹 데이터 저장
+        const rankingsData = {
+            mock: Array.from(rankings.mock.entries()),
+            formal: Array.from(rankings.formal.entries())
+        };
+        fs.writeFileSync(RANKINGS_FILE, JSON.stringify(rankingsData, null, 2));
+        
+        // 유저 ID 데이터 저장
+        const userIdsData = {
+            userIds: Array.from(userIds.entries()),
+            nextUserId: nextUserId
+        };
+        fs.writeFileSync(USER_IDS_FILE, JSON.stringify(userIdsData, null, 2));
+        
+        // 플레이어 아이콘 데이터 저장
+        const iconsData = Array.from(playerIcons.entries());
+        fs.writeFileSync(PLAYER_ICONS_FILE, JSON.stringify(iconsData, null, 2));
+        
+        console.log('💾 데이터 저장 완료');
+    } catch (error) {
+        console.error('❌ 데이터 저장 중 오류:', error);
+    }
+}
+
+// 서버 시작 시 데이터 로드
+loadData();
+
 
 
 // 유저 ID 관리 함수
@@ -116,9 +201,12 @@ function updateUserName(oldName, newName, icon) {
         playerIcons.delete(oldName);
         playerIcons.set(newName, icon);
         
+        // 데이터를 파일에 저장
+        saveData();
+        
         console.log(`🔄 유저 이름 업데이트: ${oldName} -> ${newName} (ID: ${userId})`);
     }
-        }
+}
         
 // 랭킹 업데이트 함수
 function updateRanking(category, playerName, score, icon = '👤') {
@@ -130,6 +218,9 @@ function updateRanking(category, playerName, score, icon = '👤') {
     
     // 아이콘 정보 저장
     playerIcons.set(playerName, icon);
+    
+    // 데이터를 파일에 저장
+    saveData();
         
     console.log(`📊 랭킹 업데이트: ${category} - ${playerName} (ID: ${userId}, ${score}점, 아이콘: ${icon})`);
 }
@@ -452,6 +543,7 @@ io.on('connection', (socket) => {
         try {
             const { category } = data;
             const ranking = getRanking(category);
+            console.log(`📊 랭킹 조회 요청: ${category} - ${ranking.length}명의 데이터 반환`);
             socket.emit('rankingData', {
                 category: category,
                 ranking: ranking
@@ -631,4 +723,18 @@ server.listen(PORT, () => {
     console.log(`🌐 http://localhost:${PORT}`);
     console.log(`📡 WebSocket: ws://localhost:${PORT}`);
     console.log(`🔧 개선된 에러 핸들링 및 연결 안정성 적용됨`);
+    console.log(`💾 영구 저장소 시스템 활성화됨`);
+});
+
+// 서버 종료 시 데이터 저장
+process.on('SIGINT', () => {
+    console.log('\n🔄 서버 종료 중...');
+    saveData();
+    process.exit(0);
+});
+
+process.on('SIGTERM', () => {
+    console.log('\n🔄 서버 종료 중...');
+    saveData();
+    process.exit(0);
 }); 
