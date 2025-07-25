@@ -220,21 +220,41 @@ function updateRanking(category, playerName, score, icon = '👤') {
     
     // 데이터를 파일에 저장
     saveData();
-        
+    
     console.log(`📊 랭킹 업데이트: ${category} - ${playerName} (ID: ${userId}, ${score}점, 아이콘: ${icon})`);
+    console.log(`📊 현재 등록된 총 사용자: ${userIds.size}명`);
 }
 
 // 랭킹 조회 함수
 function getRanking(category) {
-    const players = Array.from(rankings[category].entries());
-    const sortedPlayers = players.sort((a, b) => b[1] - a[1]); // 점수 높은 순으로 정렬
+    // 모든 등록된 사용자 가져오기
+    const allUsers = new Set();
     
-    // 아이콘 정보 추가
-    return sortedPlayers.map(([playerName, score]) => {
+    // rankings에서 사용자 추가
+    for (const [playerName, score] of rankings[category].entries()) {
+        allUsers.add(playerName);
+    }
+    
+    // userIds에서 모든 사용자 추가 (랭킹에 없는 사용자도 포함)
+    for (const [playerName, userId] of userIds.entries()) {
+        allUsers.add(playerName);
+    }
+    
+    // 모든 사용자의 랭킹 데이터 생성
+    const allPlayers = [];
+    for (const playerName of allUsers) {
+        const score = rankings[category].get(playerName) || 0; // 랭킹에 없으면 0점
         const icon = playerIcons.get(playerName) || '👤';
-        return [playerName, score, icon];
-    });
-        }
+        allPlayers.push([playerName, score, icon]);
+    }
+    
+    // 점수 높은 순으로 정렬
+    const sortedPlayers = allPlayers.sort((a, b) => b[1] - a[1]);
+    
+    console.log(`📊 랭킹 조회: ${category} - 총 ${sortedPlayers.length}명 (등록된 사용자: ${userIds.size}명)`);
+    
+    return sortedPlayers;
+}
         
 // 랭킹 정렬 함수 제거됨
 
@@ -541,8 +561,9 @@ io.on('connection', (socket) => {
     socket.on('getRanking', (data) => {
         try {
             const { category } = data;
+            console.log(`📊 랭킹 조회 요청: ${category} - 등록된 총 사용자: ${userIds.size}명`);
             const ranking = getRanking(category);
-            console.log(`📊 랭킹 조회 요청: ${category} - ${ranking.length}명의 데이터 반환`);
+            console.log(`📊 랭킹 조회 완료: ${category} - ${ranking.length}명의 데이터 반환`);
             socket.emit('rankingData', {
                 category: category,
                 ranking: ranking

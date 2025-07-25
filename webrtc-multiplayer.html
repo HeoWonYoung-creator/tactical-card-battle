@@ -1628,6 +1628,22 @@
             // 전적 업데이트 (연승 처리 포함)
             updateStats(true, true); // 승리, 멀티플레이어
             
+            // 랭킹 즉시 업데이트
+            if (socket && socket.connected) {
+                const playerName = localStorage.getItem('playerName') || 'Player';
+                const playerIcon = localStorage.getItem('playerIcon') || '👤';
+                const trophies = TrophySystem.loadTrophies();
+                
+                socket.emit('updateRanking', {
+                    category: 'formal',
+                    playerName: playerName,
+                    score: trophies.multiplayer,
+                    icon: playerIcon
+                });
+                
+                console.log(`🔄 상대방 도망 후 랭킹 즉시 업데이트: ${playerName}`);
+            }
+            
             let message = '상대가 도망쳐서 승리하였습니다!';
             
             // 2연승 이상일 때 연승 메시지 추가
@@ -3078,6 +3094,23 @@
                 // 전적 업데이트 (연승 처리 포함)
                 updateStats(isPlayerWin, multiplayerMode);
                 
+                // 랭킹 즉시 업데이트
+                if (socket && socket.connected) {
+                    const playerName = localStorage.getItem('playerName') || 'Player';
+                    const playerIcon = localStorage.getItem('playerIcon') || '👤';
+                    const trophies = TrophySystem.loadTrophies();
+                    
+                    // 현재 점수로 랭킹 업데이트
+                    socket.emit('updateRanking', {
+                        category: multiplayerMode ? 'formal' : 'mock',
+                        playerName: playerName,
+                        score: multiplayerMode ? trophies.multiplayer : trophies.ai,
+                        icon: playerIcon
+                    });
+                    
+                    console.log(`🔄 게임 종료 후 랭킹 즉시 업데이트: ${playerName} (${multiplayerMode ? '정식' : '모의'} 결투)`);
+                }
+                
                 // 연승 메시지 추가 (updateStats에서 처리된 연승 사용)
                 if (isPlayerWin && currentWinStreak >= 2) {
                     message += `\n\n${Messages.streak(currentWinStreak)}`;
@@ -3975,6 +4008,9 @@
                 console.log(`📊 랭킹 데이터 수신: ${data.category} - ${data.ranking.length}명의 데이터`);
                 if (data.ranking.length > 0) {
                     console.log(`📊 ${data.category} 랭킹 상위 5명:`, data.ranking.slice(0, 5).map(p => `${p[0]}(${p[1]}점)`));
+                    console.log(`📊 ${data.category} 랭킹 전체:`, data.ranking.map(p => `${p[0]}(${p[1]}점)`));
+                } else {
+                    console.log(`📊 ${data.category} 랭킹: 데이터 없음`);
                 }
                 
                 const rankingContainer = document.getElementById(`${data.category}-ranking`);
@@ -4022,8 +4058,9 @@
                 socket.off('rankingData', handleRankingData);
                 socket.on('rankingData', handleRankingData);
                 
-                // 즉시 데이터 요청
-                    requestRankingData();
+                // 즉시 데이터 요청 (최신 랭킹 데이터)
+                console.log('📊 랭킹 모달 열림 - 최신 데이터 요청');
+                requestRankingData();
             } else {
                 console.log('❌ 소켓 객체 없음');
                 showRankingError();
@@ -4035,7 +4072,7 @@
                 
                 // 새로고침 버튼 이벤트 리스너
                 refreshBtn.addEventListener('click', () => {
-                    console.log('🔄 랭킹 새로고침 요청');
+                    console.log('🔄 랭킹 새로고침 요청 - 최신 데이터 동기화');
                     
                     // 로딩 상태로 되돌리기
                     const containers = ['mock-ranking', 'formal-ranking'];
@@ -5261,6 +5298,22 @@
             // 전적 업데이트 (연승 처리 포함)
             updateStats(true, true); // 승리, 멀티플레이어
             
+            // 랭킹 즉시 업데이트
+            if (socket && socket.connected) {
+                const playerName = localStorage.getItem('playerName') || 'Player';
+                const playerIcon = localStorage.getItem('playerIcon') || '👤';
+                const trophies = TrophySystem.loadTrophies();
+                
+                socket.emit('updateRanking', {
+                    category: 'formal',
+                    playerName: playerName,
+                    score: trophies.multiplayer,
+                    icon: playerIcon
+                });
+                
+                console.log(`🔄 상대방 강제종료 후 랭킹 즉시 업데이트: ${playerName}`);
+            }
+            
             let message = `상대 ${opponentName}이(가) 강제종료하여 승리하였습니다!`;
             
             // 2연승 이상일 때 연승 메시지 추가
@@ -5305,6 +5358,22 @@
             
             // 전적 업데이트
             updateStats(isPlayerWin, true);
+            
+            // 랭킹 즉시 업데이트
+            if (socket && socket.connected) {
+                const playerName = localStorage.getItem('playerName') || 'Player';
+                const playerIcon = localStorage.getItem('playerIcon') || '👤';
+                const trophies = TrophySystem.loadTrophies();
+                
+                socket.emit('updateRanking', {
+                    category: 'formal',
+                    playerName: playerName,
+                    score: trophies.multiplayer,
+                    icon: playerIcon
+                });
+                
+                console.log(`🔄 멀티플레이어 게임 종료 후 랭킹 즉시 업데이트: ${playerName} (${isPlayerWin ? '승리' : '패배'})`);
+            }
             
             // 승리/패배 메시지 생성
             const winnerPlayer = state.players.find(p => p.id === winner);
