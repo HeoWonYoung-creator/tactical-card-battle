@@ -63,6 +63,30 @@ const rankings = {
     formal: new Map() // 정식 결투 점수
 };
 
+// 테스트용 더미 데이터 추가
+function addDummyData() {
+    const dummyPlayers = [
+        { name: '마법사킹', mockScore: 150, formalScore: 200 },
+        { name: '주문마스터', mockScore: 120, formalScore: 180 },
+        { name: '마법전사', mockScore: 100, formalScore: 160 },
+        { name: '스펠캐스터', mockScore: 80, formalScore: 140 },
+        { name: '마법수련생', mockScore: 60, formalScore: 120 },
+        { name: '초보마법사', mockScore: 40, formalScore: 100 },
+        { name: '마법학도', mockScore: 30, formalScore: 80 },
+        { name: '마법입문자', mockScore: 20, formalScore: 60 }
+    ];
+    
+    dummyPlayers.forEach(player => {
+        rankings.mock.set(player.name, player.mockScore);
+        rankings.formal.set(player.name, player.formalScore);
+    });
+    
+    console.log('📊 더미 데이터 추가 완료');
+}
+
+// 서버 시작 시 더미 데이터 추가
+addDummyData();
+
 // 랭킹 업데이트 함수
 function updateRanking(category, playerName, score) {
     rankings[category].set(playerName, score);

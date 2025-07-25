@@ -3681,7 +3681,7 @@
             console.log(`📊 전적 업데이트: ${category} - ${playerName} (증표: ${trophyCount}, 승리: ${stats[category].wins}, 패배: ${stats[category].losses})`);
         }
         
-        // 단순한 랭킹 모달 함수
+        // 개선된 랭킹 모달 함수
         function showRankingModal() {
             const modal = document.createElement('div');
             modal.className = 'fixed inset-0 flex items-center justify-center z-50 modal-bg';
@@ -3695,7 +3695,7 @@
                             <div id="mock-ranking" class="space-y-2 max-h-60 overflow-y-auto">
                                 <div class="text-center text-gray-400">
                                     <div class="animate-spin inline-block w-4 h-4 border-2 border-yellow-400 border-t-transparent rounded-full"></div>
-                                    <span class="ml-2">로딩 중...</span>
+                                    <span class="ml-2">서버에서 데이터를 가져오는 중...</span>
                                 </div>
                             </div>
                         </div>
@@ -3704,13 +3704,14 @@
                             <div id="formal-ranking" class="space-y-2 max-h-60 overflow-y-auto">
                                 <div class="text-center text-gray-400">
                                     <div class="animate-spin inline-block w-4 h-4 border-2 border-green-400 border-t-transparent rounded-full"></div>
-                                    <span class="ml-2">로딩 중...</span>
+                                    <span class="ml-2">서버에서 데이터를 가져오는 중...</span>
                                 </div>
                             </div>
                         </div>
                     </div>
                     
-                    <div class="flex justify-center mt-4">
+                    <div class="flex justify-center mt-4 space-x-4">
+                        <button id="refresh-ranking-btn" class="px-4 py-2 rounded-lg font-bold btn-primary text-sm">🔄 새로고침</button>
                         <button id="close-ranking-btn" class="px-6 py-2 rounded-lg font-bold btn-secondary">닫기</button>
                     </div>
                 </div>
@@ -3719,14 +3720,39 @@
             document.body.appendChild(modal);
             playCardSound();
             
-            // 랭킹 데이터 요청
-            if (socket && socket.connected) {
-                socket.emit('getRanking', { category: 'mock' });
-                socket.emit('getRanking', { category: 'formal' });
-            }
+            // 랭킹 데이터 요청 함수
+            const requestRankingData = () => {
+                if (socket && socket.connected) {
+                    console.log('📊 랭킹 데이터 요청 시작');
+                    socket.emit('getRanking', { category: 'mock' });
+                    socket.emit('getRanking', { category: 'formal' });
+                } else {
+                    console.log('❌ 소켓 연결 없음 - 랭킹 데이터 요청 실패');
+                    showRankingError();
+                }
+            };
+            
+            // 에러 표시 함수
+            const showRankingError = () => {
+                const containers = ['mock-ranking', 'formal-ranking'];
+                containers.forEach(containerId => {
+                    const container = DOM.get(containerId);
+                    if (container) {
+                        container.innerHTML = `
+                            <div class="text-center text-red-400">
+                                <div class="text-lg mb-2">⚠️</div>
+                                <div class="text-sm">서버 연결 오류</div>
+                                <div class="text-xs text-gray-400 mt-1">서버를 확인해주세요</div>
+                            </div>
+                        `;
+                    }
+                });
+            };
             
             // 랭킹 데이터 수신 이벤트 리스너
             const handleRankingData = (data) => {
+                console.log(`📊 랭킹 데이터 수신: ${data.category}`, data.ranking.length);
+                
                 const rankingContainer = DOM.get(`${data.category}-ranking`);
                 if (rankingContainer) {
                     if (data.ranking.length === 0) {
@@ -3736,11 +3762,16 @@
                             const rank = index + 1;
                             const rankIcon = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : `${rank}.`;
                             
+                            // 현재 플레이어인지 확인
+                            const currentPlayerName = localStorage.getItem('playerName') || '';
+                            const isCurrentPlayer = player[0] === currentPlayerName;
+                            
                             return `
-                                <div class="flex items-center justify-between p-2 bg-gray-800 bg-opacity-50 rounded-lg">
+                                <div class="flex items-center justify-between p-2 ${isCurrentPlayer ? 'bg-blue-800 bg-opacity-70 border-2 border-blue-400' : 'bg-gray-800 bg-opacity-50'} rounded-lg">
                                     <div class="flex items-center space-x-2">
                                         <span class="text-sm">${rankIcon}</span>
-                                        <span class="font-medium">${player[0]}</span>
+                                        <span class="font-medium ${isCurrentPlayer ? 'text-blue-300' : ''}">${player[0]}</span>
+                                        ${isCurrentPlayer ? '<span class="text-xs text-blue-300">(나)</span>' : ''}
                                     </div>
                                     <span class="text-yellow-400 font-bold">${player[1]}점</span>
                                 </div>
@@ -3756,10 +3787,39 @@
             if (socket) {
                 socket.off('rankingData', handleRankingData);
                 socket.on('rankingData', handleRankingData);
+                
+                // 즉시 데이터 요청
+                requestRankingData();
+            } else {
+                console.log('❌ 소켓 객체 없음');
+                showRankingError();
             }
             
             return new Promise(resolve => {
                 const closeBtn = modal.querySelector('#close-ranking-btn');
+                const refreshBtn = modal.querySelector('#refresh-ranking-btn');
+                
+                // 새로고침 버튼 이벤트 리스너
+                refreshBtn.addEventListener('click', () => {
+                    console.log('🔄 랭킹 새로고침 요청');
+                    
+                    // 로딩 상태로 되돌리기
+                    const containers = ['mock-ranking', 'formal-ranking'];
+                    containers.forEach(containerId => {
+                        const container = DOM.get(containerId);
+                        if (container) {
+                            container.innerHTML = `
+                                <div class="text-center text-gray-400">
+                                    <div class="animate-spin inline-block w-4 h-4 border-2 border-blue-400 border-t-transparent rounded-full"></div>
+                                    <span class="ml-2">새로고침 중...</span>
+                                </div>
+                            `;
+                        }
+                    });
+                    
+                    // 랭킹 데이터 재요청
+                    requestRankingData();
+                });
                 
                 closeBtn.addEventListener('click', () => {
                     if (socket) {
@@ -3773,14 +3833,14 @@
         
         function showProfileModal() {
             const stats = loadStats();
-            const aiStats = stats.ai;
-            const multiplayerStats = stats.multiplayer;
+            const mockStats = stats.mock || { wins: 0, losses: 0 };
+            const formalStats = stats.formal || { wins: 0, losses: 0 };
             
-            const aiTotalGames = aiStats.wins + aiStats.losses;
-            const multiplayerTotalGames = multiplayerStats.wins + multiplayerStats.losses;
+            const mockTotalGames = mockStats.wins + mockStats.losses;
+            const formalTotalGames = formalStats.wins + formalStats.losses;
             
-            const aiWinRate = aiTotalGames > 0 ? ((aiStats.wins / aiTotalGames) * 100).toFixed(1) : 0;
-            const multiplayerWinRate = multiplayerTotalGames > 0 ? ((multiplayerStats.wins / multiplayerTotalGames) * 100).toFixed(1) : 0;
+            const mockWinRate = mockTotalGames > 0 ? ((mockStats.wins / mockTotalGames) * 100).toFixed(1) : 0;
+            const formalWinRate = formalTotalGames > 0 ? ((formalStats.wins / formalTotalGames) * 100).toFixed(1) : 0;
             
             const playerName = localStorage.getItem('playerName') || '';
             const playerIcon = localStorage.getItem('playerIcon') || '👤';
@@ -3814,21 +3874,21 @@
                                 <h4 class="text-lg font-bold mb-3 text-yellow-300">🤖 모의 결투 대전 기록</h4>
                                 <div class="grid grid-cols-2 gap-4 mb-2">
                                     <div class="bg-emerald-600 bg-opacity-40 p-3 rounded-lg border border-emerald-400 border-opacity-30 shadow-lg">
-                                        <div class="text-xl font-bold text-emerald-100">${aiStats.wins}</div>
+                                        <div class="text-xl font-bold text-emerald-100">${mockStats.wins}</div>
                                         <div class="text-xs text-emerald-50 font-semibold">승리</div>
                                     </div>
                                     <div class="bg-rose-600 bg-opacity-40 p-3 rounded-lg border border-rose-400 border-opacity-30 shadow-lg">
-                                        <div class="text-xl font-bold text-rose-100">${aiStats.losses}</div>
+                                        <div class="text-xl font-bold text-rose-100">${mockStats.losses}</div>
                                         <div class="text-xs text-rose-50 font-semibold">패배</div>
                                     </div>
                                 </div>
                                 <div class="grid grid-cols-2 gap-4">
                                     <div class="bg-cyan-600 bg-opacity-40 p-3 rounded-lg border border-cyan-400 border-opacity-30 shadow-lg">
-                                        <div class="text-lg font-bold text-cyan-100">${aiTotalGames}전</div>
+                                        <div class="text-lg font-bold text-cyan-100">${mockTotalGames}전</div>
                                         <div class="text-xs text-cyan-50 font-semibold">총 게임</div>
                                     </div>
                                     <div class="bg-violet-600 bg-opacity-40 p-3 rounded-lg border border-violet-400 border-opacity-30 shadow-lg">
-                                        <div class="text-lg font-bold text-violet-100">${aiWinRate}%</div>
+                                        <div class="text-lg font-bold text-violet-100">${mockWinRate}%</div>
                                         <div class="text-xs text-violet-50 font-semibold">승률</div>
                                     </div>
                                 </div>
@@ -3837,21 +3897,21 @@
                                 <h4 class="text-lg font-bold mb-3 text-green-300">👥 정식 결투 대전 기록</h4>
                                 <div class="grid grid-cols-2 gap-4 mb-2">
                                     <div class="bg-teal-600 bg-opacity-40 p-3 rounded-lg border border-teal-400 border-opacity-30 shadow-lg">
-                                        <div class="text-xl font-bold text-teal-100">${multiplayerStats.wins}</div>
+                                        <div class="text-xl font-bold text-teal-100">${formalStats.wins}</div>
                                         <div class="text-xs text-teal-50 font-semibold">승리</div>
                                     </div>
                                     <div class="bg-pink-600 bg-opacity-40 p-3 rounded-lg border border-pink-400 border-opacity-30 shadow-lg">
-                                        <div class="text-xl font-bold text-pink-100">${multiplayerStats.losses}</div>
+                                        <div class="text-xl font-bold text-pink-100">${formalStats.losses}</div>
                                         <div class="text-xs text-pink-50 font-semibold">패배</div>
                                     </div>
                                 </div>
                                 <div class="grid grid-cols-2 gap-4">
                                     <div class="bg-indigo-600 bg-opacity-40 p-3 rounded-lg border border-indigo-400 border-opacity-30 shadow-lg">
-                                        <div class="text-lg font-bold text-indigo-100">${multiplayerTotalGames}전</div>
+                                        <div class="text-lg font-bold text-indigo-100">${formalTotalGames}전</div>
                                         <div class="text-xs text-indigo-50 font-semibold">총 게임</div>
                                     </div>
                                     <div class="bg-fuchsia-600 bg-opacity-40 p-3 rounded-lg border border-fuchsia-400 border-opacity-30 shadow-lg">
-                                        <div class="text-lg font-bold text-fuchsia-100">${multiplayerWinRate}%</div>
+                                        <div class="text-lg font-bold text-fuchsia-100">${formalWinRate}%</div>
                                         <div class="text-xs text-fuchsia-50 font-semibold">승률</div>
                                     </div>
                                 </div>
