@@ -259,12 +259,10 @@ function getRanking(category) {
         console.log(`👤 등록된 사용자 추가: ${playerName} (ID: ${userId})`);
     }
     
-    // rankings에서 추가 사용자 확인 (userIds에 없는 경우만)
+    // rankings에서 모든 사용자 추가 (userIds에 없는 경우도 포함)
     for (const [playerName, score] of rankings[category].entries()) {
-        if (!allUsers.has(playerName)) {
-            allUsers.add(playerName);
-            console.log(`📊 랭킹에만 있는 사용자 추가: ${playerName} (${score}점)`);
-        }
+        allUsers.add(playerName);
+        console.log(`📊 랭킹에 있는 사용자 추가: ${playerName} (${score}점)`);
     }
     
     // 모든 사용자의 랭킹 데이터 생성
@@ -596,6 +594,7 @@ io.on('connection', (socket) => {
             const { category } = data;
             console.log(`📊 랭킹 조회 요청 수신: ${category} (소켓 ID: ${socket.id})`);
             console.log(`📊 등록된 총 사용자: ${userIds.size}명`);
+            console.log(`📊 rankings 상태: mock=${rankings.mock.size}명, formal=${rankings.formal.size}명`);
             
             // 등록된 사용자 목록 출력
             if (userIds.size > 0) {
@@ -604,18 +603,20 @@ io.on('connection', (socket) => {
                 console.log(`⚠️ 등록된 사용자가 없습니다.`);
             }
             
-            // rankings 상태 확인
-            console.log(`📊 rankings 상태: mock=${rankings.mock.size}명, formal=${rankings.formal.size}명`);
+            // rankings에 있는 모든 사용자 목록 출력
+            if (rankings[category].size > 0) {
+                console.log(`📊 ${category} 랭킹에 있는 사용자 목록: ${Array.from(rankings[category].keys()).join(', ')}`);
+            } else {
+                console.log(`⚠️ ${category} 랭킹에 사용자가 없습니다.`);
+            }
             
             const ranking = getRanking(category);
             console.log(`📊 랭킹 조회 완료: ${category} - ${ranking.length}명의 데이터 반환`);
             
-            // 응답 데이터 로그
-            console.log(`📊 응답 데이터:`, {
-                category: category,
-                rankingLength: ranking.length,
-                ranking: ranking.slice(0, 3) // 상위 3개만 로그
-            });
+            // 응답 데이터 로그 (상위 5개만)
+            if (ranking.length > 0) {
+                console.log(`📊 ${category} 랭킹 상위 5명:`, ranking.slice(0, 5).map(p => `${p[0]}(${p[1]}점)`));
+            }
             
             socket.emit('rankingData', {
                 category: category,
