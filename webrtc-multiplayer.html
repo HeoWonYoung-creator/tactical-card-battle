@@ -1197,8 +1197,8 @@
         const debugInfo = DOM.get('debug-info');
 
         let state = {};
-        let previousMyHealth = 3;
-        let previousOpponentHealth = 3;
+        let previousMyHealth = 4;
+        let previousOpponentHealth = 4;
         
         // 턴 타이머 관련 변수
         let turnTimer = null;
@@ -1251,8 +1251,10 @@
 
         // 턴 타이머 관련 함수들
         function startTurnTimer() {
+            // 기존 타이머 정리
             if (turnTimer) {
                 clearInterval(turnTimer);
+                turnTimer = null;
             }
             
             // 게임 상태가 유효하지 않으면 타이머 시작 중단
@@ -1446,9 +1448,9 @@
                 
                 document.body.appendChild(particle);
                 
-                // 파티클 제거
+                // 파티클 제거 (메모리 누수 방지)
                 setTimeout(() => {
-                    if (particle.parentNode) {
+                    if (particle && particle.parentNode) {
                         particle.parentNode.removeChild(particle);
                     }
                 }, 1000);
@@ -2395,8 +2397,10 @@
                     }
                 }
                 
-                // 디버그용: 버튼 상태 로그
-                console.log(`🔘 영창 ${spellNumber} 버튼 - 내 플레이어ID: ${myPlayerId}, 현재 플레이어ID: ${state.currentPlayerId}, 내 턴: ${isMyTurn}, 턴 진행중: ${state.turnInProgress}, 마지막 성공: ${state.lastSuccessfulSpell}, 게임종료: ${state.isGameOver}, 버튼비활성화: ${spellButtonsDisabled}, 비활성화: ${isDisabled}`);
+                // 디버그용: 버튼 상태 로그 (개발 모드에서만)
+                if (debugPanel && !debugPanel.classList.contains('hidden')) {
+                    console.log(`🔘 영창 ${spellNumber} 버튼 - 내 플레이어ID: ${myPlayerId}, 현재 플레이어ID: ${state.currentPlayerId}, 내 턴: ${isMyTurn}, 턴 진행중: ${state.turnInProgress}, 마지막 성공: ${state.lastSuccessfulSpell}, 게임종료: ${state.isGameOver}, 버튼비활성화: ${spellButtonsDisabled}, 비활성화: ${isDisabled}`);
+                }
             });
             
             endTurnBtn.disabled = !isMyTurn || state.turnInProgress || state.isGameOver || state.spellFailed;
@@ -3100,7 +3104,8 @@
         }
 
         function checkGameOver() {
-            if (!GameConditions.isGameValid() || !state.players[0] || !state.players[1]) {
+            // 게임 상태 유효성 검증 강화
+            if (!GameConditions.isGameValid() || !state.players || state.players.length < 2 || !state.players[0] || !state.players[1]) {
                 console.log('⚠️ 게임 상태가 유효하지 않아 게임 종료 체크를 건너뜁니다');
                 return false;
             }
@@ -3668,21 +3673,6 @@
             });
         }
 
-        function showDebugInfo() {
-            const player = state.players[0];
-            const ai = state.players[1];
-            debugInfo.innerHTML = `
-                <div>플레이어 체력: ${player.health}</div>
-                <div>AI 체력: ${ai.health}</div>
-                <div>플레이어 손패: [${player.hand.join(', ')}]</div>
-                <div>AI 손패: [${ai.hand.join(', ')}]</div>
-                <div>비밀 전술: ${state.secretStones.length}개</div>
-                <div>사용한 전술: ${state.usedStones.length}개</div>
-                <div>마지막 성공 전략: ${state.lastSuccessfulSpell}</div>
-                <div>게임 종료: ${state.isGameOver}</div>
-            `;
-        }
-
         function showPlayerHand() {
             const player = state.players[0];
             showCardListModal('플레이어 손패', player.hand, true);
@@ -3695,7 +3685,7 @@
 
         // 게임 설정 상수
         const GAME_CONFIG = {
-            maxHealth: 3,
+            maxHealth: 4,
             maxHandSize: 7,
             maxLogEntries: 20,
             turnDuration: {
