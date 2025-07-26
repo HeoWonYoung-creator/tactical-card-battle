@@ -2321,6 +2321,14 @@
                 console.log('🔒 영창 실패 상태 - 버튼 비활성화 유지');
             }
             
+            // 추가 안전장치: 내 턴이고 영창 실패가 아닐 때 강제 활성화
+            if (isMyTurn && !state.spellFailed && !state.isGameOver) {
+                if (spellButtonsDisabled) {
+                    console.log('🔓 안전장치: 내 턴에서 버튼 강제 활성화');
+                    spellButtonsDisabled = false;
+                }
+            }
+            
             const myPlayerId = multiplayerMode ? (isHost ? 1 : 2) : 1;
             console.log(`🎮 버튼 업데이트 - 내 플레이어ID: ${myPlayerId}, 현재 플레이어ID: ${state.currentPlayerId}, 내 턴: ${isMyTurn}, 턴 진행중: ${state.turnInProgress}, 게임종료: ${state.isGameOver}`);
             
@@ -2583,8 +2591,8 @@
             const currentPlayerName = state.currentPlayerId === 1 ? state.players[0].name : (multiplayerMode ? state.players[1].name : 'AI');
             addLog(Messages.turnEnd(currentPlayerName));
             state.lastSuccessfulSpell = 0;
-            // 영창 실패 플래그는 턴이 완전히 끝난 후에만 초기화
-            // state.spellFailed = false; // 영창 실패 플래그 초기화
+            // 영창 실패 플래그 초기화 - 다음 턴 시작 시 버튼 활성화를 위해
+            state.spellFailed = false;
             state.currentPlayerId = state.currentPlayerId === 1 ? 2 : 1;
             
             if (multiplayerMode) {
@@ -2627,9 +2635,17 @@
                 // 새로운 턴 시작 시 영창 실패 플래그 초기화
                 state.spellFailed = false;
                 
-                // 플레이어 턴 시작 시 모든 버튼 활성화
+                // 플레이어 턴 시작 시 모든 버튼 활성화 (강화된 활성화)
                 spellButtonsDisabled = false;
                 enableSpellButtons();
+                
+                // 추가 안전장치: 버튼 상태 강제 업데이트
+                setTimeout(() => {
+                    console.log('🔓 턴 시작 시 버튼 활성화 강제 실행');
+                    spellButtonsDisabled = false;
+                    enableSpellButtons();
+                    updateButtons();
+                }, 100);
                 
                 if (multiplayerMode) {
                     console.log('🎯 내 턴 시작 - 자동 새로고침 실행');
@@ -5081,6 +5097,14 @@
                         safeRefreshGameState();
                     }, 500);
                 }
+                
+                // 내 턴이 시작되면 버튼 활성화
+                if (state.isPlayerTurn) {
+                    console.log('🔓 턴 전환으로 내 턴 시작 - 버튼 활성화');
+                    state.spellFailed = false;
+                    spellButtonsDisabled = false;
+                    enableSpellButtons();
+                }
             } else {
                 state.isPlayerTurn = !state.isPlayerTurn;
                 state.currentPlayerId = state.currentPlayerId === 1 ? 2 : 1;
@@ -5089,6 +5113,14 @@
                 setTimeout(() => {
                     startTurnTimer();
                 }, 500);
+                
+                // 내 턴이 시작되면 버튼 활성화
+                if (state.isPlayerTurn) {
+                    console.log('🔓 AI 모드 턴 전환으로 내 턴 시작 - 버튼 활성화');
+                    state.spellFailed = false;
+                    spellButtonsDisabled = false;
+                    enableSpellButtons();
+                }
             }
             render();
             updateButtons(); // 버튼 상태 업데이트 추가
