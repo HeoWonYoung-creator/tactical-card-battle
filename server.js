@@ -96,16 +96,24 @@ function loadData() {
         
         // 랭킹 데이터 로드
         if (fs.existsSync(RANKINGS_FILE)) {
+            try {
             const rankingsData = JSON.parse(fs.readFileSync(RANKINGS_FILE, 'utf8'));
             rankings.mock = new Map(rankingsData.mock || []);
             rankings.formal = new Map(rankingsData.formal || []);
             console.log(`📊 랭킹 데이터 로드됨: 모의 ${rankings.mock.size}명, 정식 ${rankings.formal.size}명`);
+            } catch (error) {
+                console.error('❌ 랭킹 데이터 파일 파싱 오류:', error);
+                console.log('📊 랭킹 데이터를 초기화합니다.');
+                rankings.mock.clear();
+                rankings.formal.clear();
+            }
         } else {
             console.log(`📁 RANKINGS_FILE이 존재하지 않습니다.`);
         }
         
         // 유저 ID 데이터 로드
         if (fs.existsSync(USER_IDS_FILE)) {
+            try {
             const userIdsData = JSON.parse(fs.readFileSync(USER_IDS_FILE, 'utf8'));
             userIds.clear();
             userNames.clear();
@@ -116,18 +124,31 @@ function loadData() {
             }
             nextUserId = userIdsData.nextUserId || 1;
             console.log(`🆔 유저 ID 데이터 로드됨: ${userIds.size}명, 다음 ID: ${nextUserId}`);
+            } catch (error) {
+                console.error('❌ 유저 ID 데이터 파일 파싱 오류:', error);
+                console.log('🆔 유저 ID 데이터를 초기화합니다.');
+                userIds.clear();
+                userNames.clear();
+                nextUserId = 1;
+            }
         } else {
             console.log(`📁 USER_IDS_FILE이 존재하지 않습니다.`);
         }
         
         // 플레이어 아이콘 데이터 로드
         if (fs.existsSync(PLAYER_ICONS_FILE)) {
+            try {
             const iconsData = JSON.parse(fs.readFileSync(PLAYER_ICONS_FILE, 'utf8'));
             playerIcons.clear();
             for (const [name, icon] of iconsData || []) {
                 playerIcons.set(name, icon);
             }
             console.log(`🎭 플레이어 아이콘 데이터 로드됨: ${playerIcons.size}명`);
+            } catch (error) {
+                console.error('❌ 플레이어 아이콘 데이터 파일 파싱 오류:', error);
+                console.log('🎭 플레이어 아이콘 데이터를 초기화합니다.');
+                playerIcons.clear();
+            }
         } else {
             console.log(`📁 PLAYER_ICONS_FILE이 존재하지 않습니다.`);
         }
@@ -163,16 +184,57 @@ function saveData() {
     }
 }
 
+// 테스트 데이터 생성 함수 (개발용)
+function createTestData() {
+    console.log('🧪 테스트 데이터 생성 중...');
+    
+    // 여러 사용자의 테스트 데이터 생성
+    const testUsers = [
+        { name: '마법사A', mockScore: 15, formalScore: 8, icon: '🧙‍♂️' },
+        { name: '마법사B', mockScore: 12, formalScore: 12, icon: '🧙‍♀️' },
+        { name: '마법사C', mockScore: 8, formalScore: 20, icon: '🔮' },
+        { name: '마법사D', mockScore: 20, formalScore: 5, icon: '⚡' },
+        { name: '마법사E', mockScore: 6, formalScore: 15, icon: '🌟' },
+        { name: '마법사F', mockScore: 18, formalScore: 10, icon: '💫' },
+        { name: '마법사G', mockScore: 10, formalScore: 18, icon: '✨' },
+        { name: '마법사H', mockScore: 14, formalScore: 7, icon: '🎭' }
+    ];
+    
+    testUsers.forEach(user => {
+        // 유저 ID 생성
+        getOrCreateUserId(user.name);
+        
+        // 랭킹 데이터 설정
+        rankings.mock.set(user.name, user.mockScore);
+        rankings.formal.set(user.name, user.formalScore);
+        
+        // 아이콘 설정
+        playerIcons.set(user.name, user.icon);
+        
+        console.log(`🧪 테스트 사용자 생성: ${user.name} (모의: ${user.mockScore}점, 정식: ${user.formalScore}점, 아이콘: ${user.icon})`);
+    });
+    
+    // 데이터 저장
+    saveData();
+    console.log('🧪 테스트 데이터 생성 완료');
+}
+
 // 서버 시작 시 데이터 로드
 console.log('🚀 서버 시작 - 데이터 로드 시작');
 loadData();
 
 // 서버 시작 시 모든 등록된 사용자 정보 출력
 console.log(`🚀 서버 시작 완료 - 등록된 총 사용자: ${userIds.size}명`);
+console.log(`📊 랭킹 데이터 상태: 모의 ${rankings.mock.size}명, 정식 ${rankings.formal.size}명`);
+
 if (userIds.size > 0) {
     console.log(`📊 등록된 사용자 목록: ${Array.from(userIds.keys()).join(', ')}`);
+} else if (rankings.mock.size === 0 && rankings.formal.size === 0) {
+    // 실제로 데이터가 전혀 없을 때만 테스트 데이터 생성
+    console.log(`⚠️ 등록된 사용자가 없고 랭킹 데이터도 없습니다. - 테스트 데이터를 생성합니다.`);
+    createTestData();
 } else {
-    console.log(`⚠️ 등록된 사용자가 없습니다. - 게임을 플레이하면 사용자가 등록됩니다.`);
+    console.log(`📊 랭킹 데이터는 있지만 등록된 사용자가 없습니다. - 기존 데이터를 유지합니다.`);
 }
 
 
@@ -248,21 +310,25 @@ function updateRanking(category, playerName, score, icon = '👤') {
 
 // 랭킹 조회 함수
 function getRanking(category) {
-    console.log(`📊 랭킹 조회 시작: ${category} - 등록된 총 사용자: ${userIds.size}명`);
+    console.log(`📊 랭킹 조회 시작: ${category}`);
+    console.log(`📊 등록된 총 사용자: ${userIds.size}명`);
+    console.log(`📊 ${category} 랭킹에 등록된 사용자: ${rankings[category].size}명`);
     
-    // 모든 등록된 사용자 가져오기
+    // rankings에 있는 모든 사용자를 우선적으로 가져오기
     const allUsers = new Set();
     
-    // userIds에서 모든 사용자 추가 (우선순위)
-    for (const [playerName, userId] of userIds.entries()) {
-        allUsers.add(playerName);
-        console.log(`👤 등록된 사용자 추가: ${playerName} (ID: ${userId})`);
-    }
-    
-    // rankings에서 모든 사용자 추가 (userIds에 없는 경우도 포함)
+    // rankings에서 모든 사용자 추가 (이것이 실제 랭킹 데이터)
     for (const [playerName, score] of rankings[category].entries()) {
         allUsers.add(playerName);
-        console.log(`📊 랭킹에 있는 사용자 추가: ${playerName} (${score}점)`);
+        console.log(`📊 랭킹 데이터에서 사용자 추가: ${playerName} (${score}점)`);
+    }
+    
+    // userIds에서 추가 사용자 확인 (랭킹에 없지만 등록된 사용자)
+    for (const [playerName, userId] of userIds.entries()) {
+        if (!allUsers.has(playerName)) {
+            allUsers.add(playerName);
+            console.log(`👤 등록된 사용자 추가 (랭킹 없음): ${playerName} (ID: ${userId})`);
+        }
     }
     
     // 모든 사용자의 랭킹 데이터 생성
@@ -274,10 +340,11 @@ function getRanking(category) {
         console.log(`📊 최종 사용자: ${playerName} (${score}점, 아이콘: ${icon})`);
     }
     
-    // 점수 높은 순으로 정렬
-    const sortedPlayers = allPlayers.sort((a, b) => b[1] - a[1]);
+    // 점수 높은 순으로 정렬 (0점 사용자도 포함)
+    const sortedPlayers = allPlayers
+        .sort((a, b) => b[1] - a[1]);
     
-    console.log(`📊 랭킹 조회 완료: ${category} - 총 ${sortedPlayers.length}명 표시`);
+    console.log(`📊 랭킹 조회 완료: ${category} - 총 ${sortedPlayers.length}명 표시 (0점 포함)`);
     if (sortedPlayers.length > 0) {
         console.log(`📊 랭킹 상위 5명: ${sortedPlayers.slice(0, 5).map(p => `${p[0]}(${p[1]}점)`).join(', ')}`);
     } else {
