@@ -229,12 +229,8 @@ console.log(`📊 랭킹 데이터 상태: 모의 ${rankings.mock.size}명, 정�
 
 if (userIds.size > 0) {
     console.log(`📊 등록된 사용자 목록: ${Array.from(userIds.keys()).join(', ')}`);
-} else if (rankings.mock.size === 0 && rankings.formal.size === 0) {
-    // 실제로 데이터가 전혀 없을 때만 테스트 데이터 생성
-    console.log(`⚠️ 등록된 사용자가 없고 랭킹 데이터도 없습니다. - 테스트 데이터를 생성합니다.`);
-    createTestData();
 } else {
-    console.log(`📊 랭킹 데이터는 있지만 등록된 사용자가 없습니다. - 기존 데이터를 유지합니다.`);
+    console.log(`📊 등록된 사용자가 없습니다. - 게임을 플레이하면 사용자가 등록됩니다.`);
 }
 
 
