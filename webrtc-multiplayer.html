@@ -5014,13 +5014,47 @@
                 // 비밀 주문 공개 정보는 각 플레이어별로 독립적으로 관리
                 const currentRevealedStones = state.publiclyRevealedSecretStones;
                 
+                // 내 손패와 상대방 손패를 보존하면서 게임 상태 동기화
+                const myPlayerId = isHost ? 1 : 2;
+                const myCurrentHand = state.players.find(p => p.id === myPlayerId)?.hand || [];
+                const opponentCurrentHand = state.players.find(p => p.id !== myPlayerId)?.hand || [];
+                
                 // 상대방이 보낸 게임 상태로 업데이트
                 state = gameState;
                 
                 // 비밀 주문 공개 정보는 현재 플레이어의 정보만 유지
                 state.publiclyRevealedSecretStones = currentRevealedStones;
                 
+                // 내 손패와 상대방 손패 복원
+                if (state.players && state.players.length >= 2) {
+                    const myPlayer = state.players.find(p => p.id === myPlayerId);
+                    const opponentPlayer = state.players.find(p => p.id !== myPlayerId);
+                    
+                    if (myPlayer && opponentPlayer) {
+                        // 내 손패는 그대로 유지, 상대방 손패만 업데이트
+                        myPlayer.hand = myCurrentHand;
+                        opponentPlayer.hand = opponentCurrentHand;
+                    }
+                }
+                
                 console.log('🔄 게임 상태 동기화됨');
+                
+                // 내 손패와 상대방 손패 복원
+                if (state.players && state.players.length >= 2) {
+                    const myPlayer = state.players.find(p => p.id === myPlayerId);
+                    const opponentPlayer = state.players.find(p => p.id !== myPlayerId);
+                    
+                    if (myPlayer && opponentPlayer) {
+                        console.log(`🔄 [handleCardPlayed] 손패 복원 - 내 손패: [${myCurrentHand.join(', ')}] → [${myPlayer.hand.join(', ')}]`);
+                        console.log(`🔄 [handleCardPlayed] 손패 복원 - 상대 손패: [${opponentCurrentHand.join(', ')}] → [${opponentPlayer.hand.join(', ')}]`);
+                        
+                        // 내 손패는 그대로 유지, 상대방 손패만 업데이트
+                        myPlayer.hand = myCurrentHand;
+                        opponentPlayer.hand = opponentCurrentHand;
+                        
+                        console.log(`✅ [handleCardPlayed] 손패 복원 완료 - 내 손패: [${myPlayer.hand.join(', ')}], 상대 손패: [${opponentPlayer.hand.join(', ')}]`);
+                    }
+                }
                 
                 // 상대방의 주문 플레이 효과 실행
                 const player = state.players.find(p => p.id === playerId);
@@ -5055,13 +5089,47 @@
                 // 비밀 주문 공개 정보는 각 플레이어별로 독립적으로 관리
                 const currentRevealedStones = state.publiclyRevealedSecretStones;
                 
+                // 내 손패와 상대방 손패를 보존하면서 게임 상태 동기화
+                const myPlayerId = isHost ? 1 : 2;
+                const myCurrentHand = state.players.find(p => p.id === myPlayerId)?.hand || [];
+                const opponentCurrentHand = state.players.find(p => p.id !== myPlayerId)?.hand || [];
+                
                 // 상대방이 보낸 게임 상태로 업데이트
                 state = gameState;
                 
                 // 비밀 주문 공개 정보는 현재 플레이어의 정보만 유지
                 state.publiclyRevealedSecretStones = currentRevealedStones;
                 
+                // 내 손패와 상대방 손패 복원
+                if (state.players && state.players.length >= 2) {
+                    const myPlayer = state.players.find(p => p.id === myPlayerId);
+                    const opponentPlayer = state.players.find(p => p.id !== myPlayerId);
+                    
+                    if (myPlayer && opponentPlayer) {
+                        // 내 손패는 그대로 유지, 상대방 손패만 업데이트
+                        myPlayer.hand = myCurrentHand;
+                        opponentPlayer.hand = opponentCurrentHand;
+                    }
+                }
+                
                 console.log('🔄 턴 종료 시 게임 상태 동기화됨');
+                
+                // 내 손패와 상대방 손패 복원
+                if (state.players && state.players.length >= 2) {
+                    const myPlayer = state.players.find(p => p.id === myPlayerId);
+                    const opponentPlayer = state.players.find(p => p.id !== myPlayerId);
+                    
+                    if (myPlayer && opponentPlayer) {
+                        console.log(`🔄 [handleTurnEnd] 손패 복원 - 내 손패: [${myCurrentHand.join(', ')}] → [${myPlayer.hand.join(', ')}]`);
+                        console.log(`🔄 [handleTurnEnd] 손패 복원 - 상대 손패: [${opponentCurrentHand.join(', ')}] → [${opponentPlayer.hand.join(', ')}]`);
+                        
+                        // 내 손패는 그대로 유지, 상대방 손패만 업데이트
+                        myPlayer.hand = myCurrentHand;
+                        opponentPlayer.hand = opponentCurrentHand;
+                        
+                        console.log(`✅ [handleTurnEnd] 손패 복원 완료 - 내 손패: [${myPlayer.hand.join(', ')}], 상대 손패: [${opponentPlayer.hand.join(', ')}]`);
+                    }
+                }
                 
                 // 멀티플레이어에서는 currentPlayerId를 기준으로 isPlayerTurn 재설정
                 if (multiplayerMode) {
@@ -5167,13 +5235,47 @@
                 // 비밀 주문 공개 정보는 각 플레이어별로 독립적으로 관리
                 const currentRevealedStones = state.publiclyRevealedSecretStones;
                 
+                // 내 손패와 상대방 손패를 보존하면서 게임 상태 동기화
+                const myPlayerId = isHost ? 1 : 2;
+                const myCurrentHand = state.players.find(p => p.id === myPlayerId)?.hand || [];
+                const opponentCurrentHand = state.players.find(p => p.id !== myPlayerId)?.hand || [];
+                
                 // 상대방이 보낸 게임 상태로 업데이트
                 state = gameState;
                 
                 // 비밀 주문 공개 정보는 현재 플레이어의 정보만 유지
                 state.publiclyRevealedSecretStones = currentRevealedStones;
                 
+                // 내 손패와 상대방 손패 복원
+                if (state.players && state.players.length >= 2) {
+                    const myPlayer = state.players.find(p => p.id === myPlayerId);
+                    const opponentPlayer = state.players.find(p => p.id !== myPlayerId);
+                    
+                    if (myPlayer && opponentPlayer) {
+                        // 내 손패는 그대로 유지, 상대방 손패만 업데이트
+                        myPlayer.hand = myCurrentHand;
+                        opponentPlayer.hand = opponentCurrentHand;
+                    }
+                }
+                
                 console.log('🔄 게임 종료 시 게임 상태 동기화됨');
+                
+                // 내 손패와 상대방 손패 복원
+                if (state.players && state.players.length >= 2) {
+                    const myPlayer = state.players.find(p => p.id === myPlayerId);
+                    const opponentPlayer = state.players.find(p => p.id !== myPlayerId);
+                    
+                    if (myPlayer && opponentPlayer) {
+                        console.log(`🔄 [handleGameOver] 손패 복원 - 내 손패: [${myCurrentHand.join(', ')}] → [${myPlayer.hand.join(', ')}]`);
+                        console.log(`🔄 [handleGameOver] 손패 복원 - 상대 손패: [${opponentCurrentHand.join(', ')}] → [${opponentPlayer.hand.join(', ')}]`);
+                        
+                        // 내 손패는 그대로 유지, 상대방 손패만 업데이트
+                        myPlayer.hand = myCurrentHand;
+                        opponentPlayer.hand = opponentCurrentHand;
+                        
+                        console.log(`✅ [handleGameOver] 손패 복원 완료 - 내 손패: [${myPlayer.hand.join(', ')}], 상대 손패: [${opponentPlayer.hand.join(', ')}]`);
+                    }
+                }
             } else {
                 state.isGameOver = true;
             }
