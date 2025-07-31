@@ -46,7 +46,7 @@
         .card {
             width: 70px;
             height: 100px;
-            border: 2px solid #333333;
+            border: 1px solid #dee2e6;
             border-radius: 8px;
             display: flex;
             justify-content: center;
@@ -77,7 +77,7 @@
         .card-front {
             background: linear-gradient(145deg, #ffffff, #f8f9fa);
             color: #333333;
-            border: 2px solid #333333;
+            border: 1px solid #dee2e6;
         }
         .card-front:hover {
             transform: translateY(-2px);
@@ -490,7 +490,7 @@
         /* 모바일 최적화 스타일 */
         @media (max-width: 768px) {
             body {
-                padding: 8px;
+                padding: 10px;
                 font-size: 14px;
             }
             
@@ -501,40 +501,12 @@
                 padding: 12px 16px;
             }
             
-            /* 모바일에서 카드 크기 조정 - 겹치지 않도록 */
-            .card {
-                width: 45px !important;
-                height: 65px !important;
-                font-size: 18px !important;
-                margin: 0 1px !important;
-                min-width: 45px !important;
-                flex-shrink: 0 !important;
-            }
-            
-            /* 모바일에서 손패 영역 조정 */
-            #my-hand, #opponent-hand {
-                display: flex !important;
-                flex-wrap: nowrap !important;
-                overflow-x: auto !important;
-                gap: 2px !important;
-                padding: 5px !important;
-                justify-content: center !important;
-                align-items: center !important;
-                min-height: 70px !important;
-            }
-            
-            /* 모바일에서 중앙 영역 조정 */
-            .flex.justify-between.items-center.p-4.h-48 {
-                height: 120px !important;
-                padding: 8px !important;
-                flex-direction: column !important;
-                gap: 10px !important;
-            }
-            
-            /* 모바일에서 비밀/사용 주문 영역 조정 */
-            #secret-stones-pile, #used-stones-pile {
-                transform: scale(0.8) !important;
-                margin: 0 5px !important;
+            /* 모바일에서 카드 크기 조정 */
+            .spell-card {
+                width: 50px;
+                height: 70px;
+                font-size: 20px;
+                margin: 0 2px;
             }
             
             /* 모바일에서 게임 로그 숨김 */
@@ -544,60 +516,24 @@
             
             /* 모바일에서 모달 크기 조정 */
             .modal-content {
-                max-width: 95vw !important;
-                max-height: 90vh !important;
-                margin: 10px !important;
-                padding: 15px !important;
-                overflow-y: auto !important;
-                position: relative !important;
-            }
-            
-            /* 모바일에서 모달 내부 스크롤 최적화 */
-            .modal-content::-webkit-scrollbar {
-                width: 6px !important;
-            }
-            
-            .modal-content::-webkit-scrollbar-track {
-                background: rgba(255, 255, 255, 0.1) !important;
-                border-radius: 3px !important;
-            }
-            
-            .modal-content::-webkit-scrollbar-thumb {
-                background: rgba(255, 255, 255, 0.3) !important;
-                border-radius: 3px !important;
-            }
-            
-            /* 모바일에서 모달 배경 클릭으로 닫기 방지 */
-            .modal-bg {
-                align-items: flex-start !important;
-                padding-top: 20px !important;
-                padding-bottom: 20px !important;
+                max-width: 95vw;
+                margin: 10px;
+                padding: 15px;
             }
             
             /* 모바일에서 주문 버튼 컴팩트화 */
             .spell-button {
-                width: 55px !important;
-                height: 55px !important;
-                font-size: 20px !important;
-                margin: 3px !important;
-                border-radius: 8px !important;
-                min-width: 55px !important;
-                flex-shrink: 0 !important;
-            }
-            
-            /* 모바일에서 주문 버튼 컨테이너 조정 */
-            #spell-buttons-container {
-                display: grid !important;
-                grid-template-columns: repeat(6, 1fr) !important;
-                gap: 4px !important;
-                padding: 8px !important;
-                justify-items: center !important;
+                width: 60px;
+                height: 60px;
+                font-size: 24px;
+                margin: 4px;
+                border-radius: 8px;
             }
             
             /* 모바일에서 플레이어 영역 조정 */
-            #my-area, #opponent-area {
-                padding: 8px !important;
-                margin: 3px 0 !important;
+            #player-area, #opponent-area {
+                padding: 10px;
+                margin: 5px 0;
             }
             
             /* 모바일에서 타이틀 화면 조정 */
@@ -622,53 +558,6 @@
             /* 모바일에서 디버그 정보 숨김 */
             #debug-info {
                 display: none !important;
-            }
-            
-            /* 모바일에서 컨트롤 영역 조정 */
-            .p-4.bg-black.bg-opacity-20.rounded-lg {
-                padding: 8px !important;
-                margin: 5px 0 !important;
-            }
-            
-            /* 모바일에서 하단 버튼 영역 조정 */
-            .flex.justify-between.items-center.p-2 {
-                padding: 8px !important;
-                gap: 8px !important;
-            }
-            
-            /* 모바일에서 체력 표시 조정 */
-            #my-health, #opponent-health {
-                font-size: 18px !important;
-                gap: 2px !important;
-            }
-            
-            /* 모바일에서 플레이어 제목 조정 */
-            #my-title, #opponent-area h2 {
-                font-size: 16px !important;
-            }
-        }
-        
-        /* 태블릿 최적화 스타일 */
-        @media (max-width: 1024px) and (min-width: 769px) {
-            /* 태블릿에서 카드 크기 조정 */
-            .card {
-                width: 55px !important;
-                height: 75px !important;
-                font-size: 20px !important;
-                margin: 0 2px !important;
-            }
-            
-            /* 태블릿에서 주문 버튼 조정 */
-            .spell-button {
-                width: 65px !important;
-                height: 65px !important;
-                font-size: 22px !important;
-                margin: 4px !important;
-            }
-            
-            /* 태블릿에서 중앙 영역 조정 */
-            .flex.justify-between.items-center.p-4.h-48 {
-                height: 140px !important;
             }
         }
 
@@ -784,9 +673,9 @@
                 </div>
             </div>
             
-                            <div class="flex justify-center">
-                    <button id="profile-btn" class="w-1/2 py-2 rounded-lg font-bold text-base btn-secondary">👤 내 정보</button>
-                </div>
+            <div class="flex justify-center">
+                <button id="profile-btn" class="w-1/2 py-2 rounded-lg font-bold text-base btn-secondary">👤 내 정보</button>
+            </div>
         </div>
         
         <!-- AI 난이도 선택 모달 -->
@@ -827,7 +716,7 @@
                                 <div class="text-2xl">🔮</div>
                                 <div class="font-bold text-purple-800">1: 운명 변환</div>
                             </div>
-                            <div class="text-sm text-purple-700 text-left">비밀 주문 3개 공개, 타이머 초기화</div>
+                            <div class="text-sm text-purple-700 text-left">비밀 주문 3개를 나에게만 공개</div>
                         </div>
                         <div class="bg-gradient-to-br from-yellow-100 to-yellow-200 border-2 border-yellow-300 p-4 rounded-lg shadow-md hover:shadow-lg transition-all duration-300">
                             <div class="flex items-center space-x-3 mb-2">
@@ -862,7 +751,7 @@
                                 <div class="text-2xl">💤</div>
                                 <div class="font-bold text-indigo-800">6: 명상</div>
                             </div>
-                            <div class="text-sm text-indigo-700 text-left">비밀 주문 1개 공개</div>
+                            <div class="text-sm text-indigo-700 text-left">비밀 주문 1개를 전체 공개</div>
                         </div>
                     </div>
                     <div class="bg-gradient-to-br from-gray-100 to-gray-200 border-2 border-gray-300 p-4 rounded-lg mb-6 shadow-md">
@@ -909,9 +798,48 @@
                 <div id="secret-stones-count" class="text-lg"></div>
                 
                 <!-- 비밀 주문 말풍선 팝업 -->
-                <div id="secret-stones-tooltip" class="absolute right-0 top-0 transform translate-x-full ml-12 bg-white border border-gray-200 rounded-lg p-3 shadow-lg hidden z-[60] min-w-[200px] max-w-[300px]">
-                    <div class="text-center font-bold mb-2 text-sm text-gray-800">비밀 주문 목록</div>
-                    <div id="secret-stones-list" class="text-xs text-gray-700 space-y-1"></div>
+                <div id="secret-stones-tooltip" class="absolute right-0 top-0 transform translate-x-full ml-12 bg-white border border-gray-200 rounded-lg p-3 shadow-lg hidden z-[60] min-w-[280px] max-w-[380px]">
+                    <div class="text-center font-bold mb-3 text-sm text-gray-800 border-b border-gray-200 pb-2">비밀 주문 목록</div>
+                    
+                    <!-- 나에게만 공개된 주문 -->
+                    <div id="personal-revealed-section" class="mb-3 hidden">
+                        <div class="text-xs font-bold text-blue-600 mb-2 flex items-center">
+                            <span class="mr-1">👁️</span>
+                            <span>나에게만 공개</span>
+                            <span class="ml-auto text-xs text-blue-500">(${state.personalRevealedStones ? state.personalRevealedStones.length : 0}개)</span>
+                        </div>
+                        <div id="personal-revealed-list" class="text-xs text-blue-700 space-y-1 bg-blue-50 p-2 rounded"></div>
+                    </div>
+                    
+                    <!-- 상대에게만 공개된 주문 -->
+                    <div id="opponent-personal-revealed-section" class="mb-3 hidden">
+                        <div class="text-xs font-bold text-orange-600 mb-2 flex items-center">
+                            <span class="mr-1">👤</span>
+                            <span>상대에게만 공개</span>
+                            <span class="ml-auto text-xs text-orange-500">(${state.opponentPersonalRevealedStones ? state.opponentPersonalRevealedStones.length : 0}개)</span>
+                        </div>
+                        <div id="opponent-personal-revealed-list" class="text-xs text-orange-700 space-y-1 bg-orange-50 p-2 rounded"></div>
+                    </div>
+                    
+                    <!-- 전체 공개된 주문 -->
+                    <div id="publicly-revealed-section" class="mb-3 hidden">
+                        <div class="text-xs font-bold text-green-600 mb-2 flex items-center">
+                            <span class="mr-1">🌐</span>
+                            <span>전체 공개</span>
+                            <span class="ml-auto text-xs text-green-500">(${state.publiclyRevealedSecretStones ? state.publiclyRevealedSecretStones.length : 0}개)</span>
+                        </div>
+                        <div id="publicly-revealed-list" class="text-xs text-green-700 space-y-1 bg-green-50 p-2 rounded"></div>
+                    </div>
+                    
+                    <!-- 비밀 주문 -->
+                    <div id="secret-stones-section">
+                        <div class="text-xs font-bold text-gray-600 mb-2 flex items-center">
+                            <span class="mr-1">🔒</span>
+                            <span>비밀 주문</span>
+                            <span class="ml-auto text-xs text-gray-500">(${state.secretStones ? state.secretStones.length : 0}개)</span>
+                        </div>
+                        <div id="secret-stones-list" class="text-xs text-gray-700 space-y-1 bg-gray-50 p-2 rounded"></div>
+                    </div>
                 </div>
             </div>
             <div class="flex-grow mx-4">
@@ -1138,10 +1066,18 @@
         const playGameStartSound = () => playSoundEffect('gameStart');
         const playGameOverSound = (isWin) => playSoundEffect(isWin ? 'gameWin' : 'gameLose');
 
-        // DOM 요소 캐시
+        /**
+         * DOM 요소 캐시 및 관리 시스템
+         * 성능 향상과 코드 가독성을 위한 DOM 접근 최적화
+         */
         const DOM = {
             elements: {},
             
+            /**
+             * DOM 요소 가져오기 (캐시 활용)
+             * @param {string} id - 요소 ID
+             * @returns {HTMLElement|null} DOM 요소
+             */
             get(id) {
                 if (!this.elements[id]) {
                     this.elements[id] = document.getElementById(id);
@@ -1149,7 +1085,23 @@
                 return this.elements[id];
             },
             
-            // 자주 사용되는 요소들 미리 캐시
+            /**
+             * 여러 DOM 요소를 한 번에 가져오기
+             * @param {string[]} ids - 요소 ID 배열
+             * @returns {Object} ID별 DOM 요소 객체
+             */
+            getMultiple(ids) {
+                const elements = {};
+                ids.forEach(id => {
+                    elements[id] = this.get(id);
+                });
+                return elements;
+            },
+            
+            /**
+             * 자주 사용되는 요소들 미리 캐시
+             * 성능 향상을 위한 초기화
+             */
             init() {
                 const commonElements = [
                     'title-screen', 'game-screen', 'start-game-btn',
@@ -1167,6 +1119,7 @@
                 ];
                 
                 commonElements.forEach(id => this.get(id));
+                // DOM 캐시 초기화 완료
             }
         };
 
@@ -1196,14 +1149,19 @@
         const debugPanel = DOM.get('debug-panel');
         const debugInfo = DOM.get('debug-info');
 
+
+
+        /**
+         * 게임 상태 관리
+         */
         let state = {};
-        let previousMyHealth = 4;
-        let previousOpponentHealth = 4;
+        let previousMyHealth = 4; // 기본값으로 설정
+        let previousOpponentHealth = 4; // 기본값으로 설정
         
         // 턴 타이머 관련 변수
         let turnTimer = null;
-        let turnTimeLeft = 30; // 30초
-        let TURN_DURATION = 30; // 기본 30초 (AI 난이도별로 변경됨)
+        let turnTimeLeft = 30; // 기본값으로 설정
+        let TURN_DURATION = 30; // 기본값으로 설정
         
         // 연승 관련 변수
         let currentWinStreak = parseInt(localStorage.getItem('currentWinStreak')) || 0;
@@ -1221,7 +1179,7 @@
                 btn.style.opacity = '0.5';
                 btn.style.cursor = 'not-allowed';
             });
-            console.log('🔒 주문 버튼 비활성화됨');
+            // 주문 버튼 비활성화됨
         }
         
         // 주문 버튼 활성화 함수
@@ -1233,11 +1191,24 @@
                 btn.style.opacity = '1';
                 btn.style.cursor = 'pointer';
             });
-            console.log('🔓 주문 버튼 활성화됨');
+            // 주문 버튼 활성화됨
         }
         
         // 디버그: 변수 초기화 확인
-        console.log('🎮 변수 초기화:', { previousMyHealth, previousOpponentHealth });
+        // 변수 초기화 완료
+
+        /**
+         * 게임 설정 초기화 함수
+         * GAME_CONFIG가 정의된 후 호출되어야 함
+         */
+        function initializeGameConfig() {
+            if (typeof GAME_CONFIG !== 'undefined') {
+                previousMyHealth = GAME_CONFIG.maxHealth;
+                previousOpponentHealth = GAME_CONFIG.maxHealth;
+                turnTimeLeft = GAME_CONFIG.turnDuration.normal;
+                TURN_DURATION = GAME_CONFIG.turnDuration.normal;
+            }
+        }
 
         // AI 난이도별 시간 제한 설정
         function setTurnDurationByDifficulty() {
@@ -1251,10 +1222,8 @@
 
         // 턴 타이머 관련 함수들
         function startTurnTimer() {
-            // 기존 타이머 정리
             if (turnTimer) {
                 clearInterval(turnTimer);
-                turnTimer = null;
             }
             
             // 게임 상태가 유효하지 않으면 타이머 시작 중단
@@ -1448,9 +1417,9 @@
                 
                 document.body.appendChild(particle);
                 
-                // 파티클 제거 (메모리 누수 방지)
+                // 파티클 제거
                 setTimeout(() => {
-                    if (particle && particle.parentNode) {
+                    if (particle.parentNode) {
                         particle.parentNode.removeChild(particle);
                     }
                 }, 1000);
@@ -1627,7 +1596,30 @@
             maxWinStreak = parseInt(localStorage.getItem('maxWinStreak')) || 0;
             console.log(`📊 연승 초기화: 현재 ${currentWinStreak}연승, 최고 ${maxWinStreak}연승`);
             
+            // 랭킹 초기화 (게임 시작 시 플레이어를 랭킹에 등록)
+            const playerName = localStorage.getItem('playerName') || 'Player';
+            const playerIcon = localStorage.getItem('playerIcon') || '👤';
+            const trophies = TrophySystem.loadTrophies();
             
+            if (socket) {
+                // 모의 결투 점수 등록
+                socket.emit('updateRanking', {
+                    category: 'mock',
+                    playerName: playerName,
+                    score: trophies.ai,
+                    icon: playerIcon
+                });
+                
+                // 정식 결투 점수 등록
+                socket.emit('updateRanking', {
+                    category: 'formal',
+                    playerName: playerName,
+                    score: trophies.multiplayer,
+                    icon: playerIcon
+                });
+                
+                console.log(`📊 랭킹 초기화: ${playerName} (모의: ${trophies.ai}점, 정식: ${trophies.multiplayer}점, 아이콘: ${playerIcon})`);
+            }
             
             let deck = [];
             for (let spellNumber = 1; spellNumber <= GAME_CONFIG.deckStructure.maxSpell; spellNumber++) {
@@ -1674,7 +1666,9 @@
                 ],
                 secretStones: deck.slice(12),
                 usedStones: [],
-                publiclyRevealedSecretStones: [],
+                publiclyRevealedSecretStones: [], // 전체 공개된 주문 (6번 주문)
+                personalRevealedStones: [], // 나에게만 공개된 주문 (내가 1번 주문 사용)
+                opponentPersonalRevealedStones: [], // 상대에게만 공개된 주문 (상대가 1번 주문 사용)
                 currentPlayerId: firstPlayer,
                 lastSuccessfulSpell: 0,
                 spellFailed: false, // 영창 실패 플래그 초기화
@@ -1717,7 +1711,21 @@
             // 전적 업데이트 (연승 처리 포함)
             updateStats(true, true); // 승리, 멀티플레이어
             
-
+            // 랭킹 즉시 업데이트
+            if (socket && socket.connected) {
+                const playerName = localStorage.getItem('playerName') || 'Player';
+                const playerIcon = localStorage.getItem('playerIcon') || '👤';
+                const trophies = TrophySystem.loadTrophies();
+                
+                socket.emit('updateRanking', {
+                    category: 'formal',
+                    playerName: playerName,
+                    score: trophies.multiplayer,
+                    icon: playerIcon
+                });
+                
+                console.log(`🔄 상대방 도망 후 랭킹 즉시 업데이트: ${playerName}`);
+            }
             
             let message = '상대가 도망쳐서 승리하였습니다!';
             
@@ -1726,7 +1734,7 @@
                 message += `\n\n${Messages.streak(currentWinStreak)}`;
             }
             
-            message += '\n\n🏅 승점 +2';
+            message += '\n\n🏅 승점 +3';
             
             addLog('상대방이 도망쳤습니다.');
             addLog('승리가 기록되었습니다.');
@@ -1793,8 +1801,8 @@
             // 승리 시 증표 추가
             addVictoryTrophy(type) {
                 console.log(`🏆 addVictoryTrophy 호출: 타입=${type}`);
-                const newCount = this.updateTrophy(type, 2);
-                showToast(`🎉 승리의 증표 +2 획득! (${type === 'ai' ? '모의 결투' : '정식 결투'} 점수: ${newCount})`, 'success', 3000);
+                const newCount = this.updateTrophy(type, 3);
+                showToast(`🎉 승리의 증표 +3 획득! (${type === 'ai' ? '모의 결투' : '정식 결투'} 점수: ${newCount})`, 'success', 3000);
             },
             
             // 패배 시 증표 감소
@@ -1979,8 +1987,17 @@
             // 디버그: 하트 변화 로그
             console.log(`💔 하트 변화 감지 - 내 하트: ${previousMyHealth} → ${currentMyHealth}, 상대 하트: ${previousOpponentHealth} → ${currentOpponentHealth}`);
             
-            // 내 손패 (뒷면) - 항상 하단에 표시
+            // 내 손패 표시 (치트키 모드에서는 앞면, 일반 모드에서는 뒷면)
+            if (cheatMode) {
+                myHandEl.innerHTML = myPlayer.hand.map(stone => `
+                    <div class="card card-front flex flex-col items-center justify-center">
+                        <div class="text-2xl mb-1">${getSpellIcon(stone)}</div>
+                        <div class="text-sm font-bold">${stone}</div>
+                    </div>
+                `).join('');
+            } else {
             myHandEl.innerHTML = myPlayer.hand.map(() => `<div class="card card-back"></div>`).join('');
+            }
             
             // 상대 손패 (앞면) - 항상 상단에 표시, 상대의 패를 볼 수 있어야 함
             // 멀티플레이어에서는 상대방의 실제 패를 표시
@@ -2072,12 +2089,12 @@
             spellButtonsContainer.innerHTML = '';
             
             const spellDescriptions = [
-                { number: 1, name: '운명 변환', icon: '🔮', desc: '비밀 주문 3개 공개,<br>타이머 초기화' },
+                { number: 1, name: '운명 변환', icon: '🔮', desc: '비밀 주문 3개를<br>나에게만 공개' },
                 { number: 2, name: '마력 착취', icon: '💫', desc: '피해 1, 회복 1' },
                 { number: 3, name: '정신 교란', icon: '🌀', desc: '공개되지 않은 비밀 주문<br>하나를 상대 패에 투입' },
                 { number: 4, name: '화염 화살', icon: '🔥', desc: '피해 1' },
                 { number: 5, name: '생명 물약', icon: '🧪', desc: '회복 1' },
-                { number: 6, name: '명상', icon: '💤', desc: '비밀 주문 1개 공개' }
+                { number: 6, name: '명상', icon: '💤', desc: '비밀 주문 1개를<br>전체 공개' }
             ];
             
             spellDescriptions.forEach(spell => {
@@ -2323,14 +2340,6 @@
                 console.log('🔒 영창 실패 상태 - 버튼 비활성화 유지');
             }
             
-            // 추가 안전장치: 내 턴이고 영창 실패가 아닐 때 강제 활성화
-            if (isMyTurn && !state.spellFailed && !state.isGameOver) {
-                if (spellButtonsDisabled) {
-                    console.log('🔓 안전장치: 내 턴에서 버튼 강제 활성화');
-                    spellButtonsDisabled = false;
-                }
-            }
-            
             const myPlayerId = multiplayerMode ? (isHost ? 1 : 2) : 1;
             console.log(`🎮 버튼 업데이트 - 내 플레이어ID: ${myPlayerId}, 현재 플레이어ID: ${state.currentPlayerId}, 내 턴: ${isMyTurn}, 턴 진행중: ${state.turnInProgress}, 게임종료: ${state.isGameOver}`);
             
@@ -2361,12 +2370,12 @@
                         const descElement = btn.querySelector('.text-xs.opacity-75');
                         if (descElement) {
                         const spellDescriptions = [
-                                { number: 1, desc: '비밀 주문 3개 공개,<br>타이머 초기화' },
+                                { number: 1, desc: '비밀 주문 3개를<br>나에게만 공개' },
                                 { number: 2, desc: '피해 1, 회복 1' },
                                 { number: 3, desc: '공개되지 않은 비밀 주문<br>하나를 상대 패에 투입' },
                                 { number: 4, desc: '피해 1' },
                                 { number: 5, desc: '회복 1' },
-                                { number: 6, desc: '비밀 주문 1개 공개' }
+                                { number: 6, desc: '비밀 주문 1개를<br>전체 공개' }
                             ];
                         const spell = spellDescriptions.find(s => s.number === spellNumber);
                             if (spell) {
@@ -2383,12 +2392,12 @@
                     const descElement = btn.querySelector('.text-xs.opacity-75');
                     if (descElement) {
                         const spellDescriptions = [
-                            { number: 1, desc: '비밀 주문 3개 공개,<br>타이머 초기화' },
+                            { number: 1, desc: '비밀 주문 3개를<br>나에게만 공개' },
                             { number: 2, desc: '피해 1, 회복 1' },
                             { number: 3, desc: '공개되지 않은 비밀 주문<br>하나를 상대 패에 투입' },
                             { number: 4, desc: '피해 1' },
                             { number: 5, desc: '회복 1' },
-                            { number: 6, desc: '비밀 주문 1개 공개' }
+                            { number: 6, desc: '비밀 주문 1개를<br>전체 공개' }
                         ];
                         const spell = spellDescriptions.find(s => s.number === spellNumber);
                         if (spell) {
@@ -2397,10 +2406,8 @@
                     }
                 }
                 
-                // 디버그용: 버튼 상태 로그 (개발 모드에서만)
-                if (debugPanel && !debugPanel.classList.contains('hidden')) {
-                    console.log(`🔘 영창 ${spellNumber} 버튼 - 내 플레이어ID: ${myPlayerId}, 현재 플레이어ID: ${state.currentPlayerId}, 내 턴: ${isMyTurn}, 턴 진행중: ${state.turnInProgress}, 마지막 성공: ${state.lastSuccessfulSpell}, 게임종료: ${state.isGameOver}, 버튼비활성화: ${spellButtonsDisabled}, 비활성화: ${isDisabled}`);
-                }
+                // 디버그용: 버튼 상태 로그
+                console.log(`🔘 영창 ${spellNumber} 버튼 - 내 플레이어ID: ${myPlayerId}, 현재 플레이어ID: ${state.currentPlayerId}, 내 턴: ${isMyTurn}, 턴 진행중: ${state.turnInProgress}, 마지막 성공: ${state.lastSuccessfulSpell}, 게임종료: ${state.isGameOver}, 버튼비활성화: ${spellButtonsDisabled}, 비활성화: ${isDisabled}`);
             });
             
             endTurnBtn.disabled = !isMyTurn || state.turnInProgress || state.isGameOver || state.spellFailed;
@@ -2414,7 +2421,7 @@
                 endTurnBtn.style.cursor = 'pointer';
             }
             
-            console.log(`🔄 턴 종료 버튼 - 내 플레이어ID: ${myPlayerId}, 현재 플레이어ID: ${state.currentPlayerId}, 내 턴: ${isMyTurn}, 턴 진행중: ${state.turnInProgress}, 게임종료: ${state.isGameOver}, 비활성화: ${endTurnBtn.disabled}`);
+            console.log(`🔄 턴 종료 버튼 - 내 플레이어ID: ${myPlayerId}, 현재 플레이어ID: ${state.currentPlayerId}, 내 턴: ${isMyTurn}, 턴 진행중: ${state.turnInProgress}, 게임종료: ${state.isGameOver}, 영창실패: ${state.spellFailed}, 비활성화: ${endTurnBtn.disabled}`);
         }
 
         async function handleSpellCast(spellNumber) {
@@ -2503,20 +2510,14 @@
                 console.log(`📊 연속 영창 업데이트: ${spellNumber}번 (이제 ${spellNumber}번 이상만 사용 가능)`);
                 
                 render();
+                
                 await executeSpellEffect(myPlayerId, spellNumber);
                 
                 // 성공한 경우 연속 영창 가능하도록 턴 유지
                 state.turnInProgress = false;
                 
-                // 버튼 상태 즉시 업데이트
+                // 버튼 상태 업데이트
                 updateButtons();
-                
-                // 성공 시에도 안전 시간 후 버튼 활성화
-                setTimeout(() => {
-                    enableSpellButtons();
-                    // 버튼 활성화 후 다시 한 번 상태 확인
-                    updateButtons();
-                }, 500); // 0.5초 안전 시간
                 
                 // 연속 영창 시 타이머 계속 유지 (재시작하지 않음)
                 console.log('💡 연속 영창 성공 - 타이머 계속 유지');
@@ -2595,7 +2596,7 @@
             const currentPlayerName = state.currentPlayerId === 1 ? state.players[0].name : (multiplayerMode ? state.players[1].name : 'AI');
             addLog(Messages.turnEnd(currentPlayerName));
             state.lastSuccessfulSpell = 0;
-            // 영창 실패 플래그 초기화 - 다음 턴 시작 시 버튼 활성화를 위해
+            // 영창 실패 플래그 초기화
             state.spellFailed = false;
             state.currentPlayerId = state.currentPlayerId === 1 ? 2 : 1;
             
@@ -2639,17 +2640,9 @@
                 // 새로운 턴 시작 시 영창 실패 플래그 초기화
                 state.spellFailed = false;
                 
-                // 플레이어 턴 시작 시 모든 버튼 활성화 (강화된 활성화)
+                // 플레이어 턴 시작 시 모든 버튼 활성화
                 spellButtonsDisabled = false;
                 enableSpellButtons();
-                
-                // 추가 안전장치: 버튼 상태 강제 업데이트
-                setTimeout(() => {
-                    console.log('🔓 턴 시작 시 버튼 활성화 강제 실행');
-                    spellButtonsDisabled = false;
-                    enableSpellButtons();
-                    updateButtons();
-                }, 100);
                 
                 if (multiplayerMode) {
                     console.log('🎯 내 턴 시작 - 자동 새로고침 실행');
@@ -2690,17 +2683,24 @@
 
         // 주문 효과 함수들
         async function executeMeditation(player, opponent) {
-                    console.log('🧘 명상 효과 실행');
+            console.log('💤 명상 효과 실행');
                     if (state.secretStones.length > 0) {
                         const revealedStone = state.secretStones.splice(0, 1)[0];
+                
+                // 모두에게 공개되는 비밀 주문으로 추가
+                if (!state.publiclyRevealedSecretStones) {
+                    state.publiclyRevealedSecretStones = [];
+                }
                         state.publiclyRevealedSecretStones.push(revealedStone);
-                        console.log(`🧘 비밀 주문 전체 공개: ${revealedStone}`);
-                addLog(Messages.meditate(revealedStone));
+                
+                console.log(`💤 전체 공개된 주문: ${revealedStone}`);
+                addLog(Messages.meditate(revealedStone) + ' (전체 공개)');
+                
                         const icon = SpellIcons[revealedStone] || '❓';
                         await showModal('💤 명상', `비밀 주문 [${icon}${revealedStone}]${getJosa(revealedStone.toString(), '이/가')} 전체 공개되었습니다.`);
                     } else {
                         const message = '명상 종료: 더 이상 공개할 비밀 주문이 없습니다.';
-                        console.log('🧘 더 이상 공개할 비밀 주문 없음');
+                console.log('💤 더 이상 공개할 비밀 주문 없음');
                         addLog(message);
                         await showModal('💤 명상', message);
                     }
@@ -2789,16 +2789,34 @@
                     const toRevealCount = Math.min(3, state.secretStones.length);
                     if (toRevealCount > 0) {
                         const revealedStones = state.secretStones.splice(0, toRevealCount);
-                        state.publiclyRevealedSecretStones.push(...revealedStones);
-                        console.log(`🔮 공개된 주문: [${revealedStones.join(', ')}]`);
-                addLog(Messages.reveal(revealedStones));
+                
+                // 플레이어별 개인 공개 주문으로 추가
+                const myPlayerId = multiplayerMode ? (isHost ? 1 : 2) : 1;
+                if (player.id === myPlayerId) {
+                    // 내가 사용한 경우 - 나에게만 공개
+                    if (!state.personalRevealedStones) {
+                        state.personalRevealedStones = [];
+                    }
+                    state.personalRevealedStones.push(...revealedStones);
+                    console.log(`🔮 나에게만 공개된 주문: [${revealedStones.join(', ')}]`);
+                    addLog(Messages.reveal(revealedStones) + ' (나에게만 공개)');
                         
                         // 공개된 주문들의 아이콘과 함께 팝업 표시
                         const revealedIcons = revealedStones.map(stone => `${SpellIcons[stone] || '❓'}${stone}`).join(', ');
-                        await showModal('🔮 운명 변환', `비밀 주문 [${revealedIcons}]${getJosa(revealedStones.length.toString(), '이/가')} 공개되었습니다.<br><br>⏰ 타이머가 초기화되었습니다!`);
-                        
-                        // 타이머 초기화
-                        resetTurnTimer();
+                    await showModal('🔮 운명 변환', `비밀 주문 [${revealedIcons}]${getJosa(revealedStones.length.toString(), '이/가')} 나에게만 공개되었습니다.`);
+                } else {
+                    // 상대가 사용한 경우 - 상대에게만 공개 (나는 정보를 볼 수 없음)
+                    if (!state.opponentPersonalRevealedStones) {
+                        state.opponentPersonalRevealedStones = [];
+                    }
+                    state.opponentPersonalRevealedStones.push(...revealedStones);
+                    console.log(`🔮 상대에게만 공개된 주문: [${revealedStones.join(', ')}]`);
+                    addLog(Messages.reveal(revealedStones) + ' (상대에게만 공개)');
+                    
+                    await showModal('🔮 운명 변환', `상대가 비밀 주문 ${revealedStones.length}개를 나에게만 공개했습니다.`);
+                }
+                
+                // 타이머 초기화 기능 제거됨
                     } else {
                         await showModal('🔮 운명 변환', '공개할 비밀 주문이 없습니다.');
                     }
@@ -2855,7 +2873,36 @@
         }
 
         function getCastableSpells(ai) {
+            if (!ai || !ai.hand) {
+                console.warn('⚠️ getCastableSpells: ai 객체가 유효하지 않음');
+                return [];
+            }
             return ai.hand.filter(s => s >= state.lastSuccessfulSpell);
+        }
+
+        /**
+         * AI 턴 실행 (지능적 분석 기반)
+         * @param {Object} ai - AI 플레이어 정보
+         * @param {Object} player - 인간 플레이어 정보
+         * @returns {Promise<boolean>} 턴 실행 결과
+         */
+        async function executeAITurn(ai, player) {
+            const opponentName = getAIName();
+            console.log(`🤖 ${opponentName} 턴 시작`);
+            
+            // AI 주문 선택 (지능적 분석 기반)
+            const castableSpells = getCastableSpells(ai);
+            if (castableSpells.length === 0) {
+                console.log(`❌ ${opponentName} 시전 가능한 주문이 없음`);
+                return false;
+            }
+            
+            // 새로운 지능적 AI 주문 선택 시스템 사용
+            const chosenSpell = chooseAISpell(castableSpells, ai, player);
+            console.log(`🎯 ${opponentName} 선택한 주문: ${chosenSpell}번`);
+            
+            // AI 영창 실행
+            return await executeAISpell(ai, player, chosenSpell, opponentName);
         }
 
         async function executeAISpell(ai, player, chosenSpell, opponentName) {
@@ -2978,12 +3025,49 @@
             return false;
         }
 
+        /**
+         * AI 연속 영창 결정 (지능적 분석 기반)
+         * @param {Object} ai - AI 플레이어 정보
+         * @param {string} opponentName - AI 이름
+         * @returns {boolean} 연속 영창 여부
+         */
         function shouldAIContinue(ai, opponentName) {
+            const gameState = AIAnalysis.analyzeGameState();
+            if (!gameState) {
+                // 분석 불가능한 경우 기본 로직 사용
             const continueTurn = ai.hand.length > 0 && Math.random() < getAIContinueRate();
-            console.log(`🤖 ${opponentName} 연속 영창 결정: ${continueTurn ? '계속' : '중단'} (확률: ${Math.random()})`);
+                console.log(`🤖 ${opponentName} 연속 영창 결정 (기본): ${continueTurn ? '계속' : '중단'}`);
             if (!continueTurn) {
                 addLog(`${opponentName}${getJosa(opponentName, '이/가')} 연속 영창을 중단했습니다.`);
             }
+                return continueTurn;
+            }
+            
+            // 지능적 분석 기반 연속 영창 결정
+            const baseContinueRate = getAIContinueRate();
+            const analysisRate = AIAnalysis.evaluateSpellCastability(
+                Math.max(...ai.hand.filter(s => s > state.lastSuccessfulSpell)), 
+                gameState
+            );
+            
+            // 난이도별 가중치 적용
+            const weights = {
+                easy: 0.3,    // 쉬움: 기본 확률 70%, 분석 30%
+                normal: 0.6,  // 보통: 기본 확률 40%, 분석 60%
+                hard: 0.8     // 어려움: 기본 확률 20%, 분석 80%
+            };
+            
+            const weight = weights[aiDifficulty] || 0.6;
+            const finalRate = baseContinueRate * (1 - weight) + analysisRate * weight;
+            
+            const continueTurn = ai.hand.length > 0 && Math.random() < finalRate;
+            
+            console.log(`🤖 ${opponentName} 연속 영창 결정 (지능적): ${continueTurn ? '계속' : '중단'} (기본: ${(baseContinueRate * 100).toFixed(1)}%, 분석: ${(analysisRate * 100).toFixed(1)}%, 최종: ${(finalRate * 100).toFixed(1)}%)`);
+            
+            if (!continueTurn) {
+                addLog(`${opponentName}${getJosa(opponentName, '이/가')} 연속 영창을 중단했습니다.`);
+            }
+            
             return continueTurn;
         }
 
@@ -2996,6 +3080,22 @@
             const ai = state.players[1];
             const player = state.players[0];
             const opponentName = getAIName();
+            
+            // AI 분석 정보 출력
+            const gameState = AIAnalysis.analyzeGameState();
+            if (gameState) {
+                console.log(`🧠 ${opponentName} 분석 정보:`, {
+                    난이도: aiDifficulty,
+                    AI손패: ai.hand,
+                    플레이어손패: gameState.humanHand,
+                    공개된비밀주문: gameState.secretStones,
+                    사용된주문: gameState.usedStones,
+                    AI체력: gameState.aiHealth,
+                    플레이어체력: gameState.humanHealth,
+                    마지막성공주문: gameState.lastSuccessfulSpell
+                });
+            }
+            
             console.log(`🤖 ${opponentName} 턴 시작 (난이도: ${aiDifficulty}, 손패: ${ai.hand})`);
             addLog(Messages.turnStart(opponentName));
             state.turnInProgress = true;
@@ -3071,8 +3171,191 @@
             return Math.max(...castableSpells);
         }
         
-        // 어려운 AI 영창 선택
-        function chooseHardAISpell(castableSpells, ai, player) {
+        /**
+         * AI 주문 선택 시스템 (지능적 분석 기반)
+         * @param {Array} castableSpells - 시전 가능한 주문들
+         * @param {Object} ai - AI 플레이어 정보
+         * @param {Object} player - 인간 플레이어 정보
+         * @returns {number} 선택된 주문 번호
+         */
+        function chooseAISpell(castableSpells, ai, player) {
+            const gameState = AIAnalysis.analyzeGameState();
+            if (!gameState) {
+                // 분석 불가능한 경우 기본 로직 사용
+                return chooseBasicAISpell(castableSpells, ai, player);
+            }
+            
+            // 난이도별 전략 적용
+            switch (aiDifficulty) {
+                case 'easy':
+                    return chooseEasyAISpell(castableSpells, ai, player, gameState);
+                case 'normal':
+                    return chooseNormalAISpell(castableSpells, ai, player, gameState);
+                case 'hard':
+                    return chooseHardAISpell(castableSpells, ai, player, gameState);
+                default:
+                    return chooseNormalAISpell(castableSpells, ai, player, gameState);
+            }
+        }
+        
+        /**
+         * 쉬운 AI 주문 선택 (기본 로직 + 약간의 분석)
+         */
+        function chooseEasyAISpell(castableSpells, ai, player, gameState) {
+            // 기본 전략 (체력 기반)
+            if (player.health <= 2 && castableSpells.includes(4)) return 4;
+            if (ai.health <= 2 && castableSpells.includes(5)) return 5;
+            
+            // 약간의 분석 적용 (30% 확률로)
+            if (Math.random() < 0.3) {
+                const bestSpell = findBestSpellByAnalysis(castableSpells, gameState);
+                if (bestSpell) return bestSpell;
+            }
+            
+            // 기본적으로 랜덤 선택
+            return castableSpells[Math.floor(Math.random() * castableSpells.length)];
+        }
+        
+        /**
+         * 보통 AI 주문 선택 (분석 + 전략)
+         */
+        function chooseNormalAISpell(castableSpells, ai, player, gameState) {
+            // 체력 기반 전략
+            if (player.health <= 2 && castableSpells.includes(4)) return 4;
+            if (ai.health <= 2 && castableSpells.includes(5)) return 5;
+            
+            // 정보 수집 (비밀 주문이 많을 때)
+            if (castableSpells.includes(6) && gameState.secretStones.length > 2) return 6;
+            
+            // 분석 기반 선택 (70% 확률)
+            if (Math.random() < 0.7) {
+                const bestSpell = findBestSpellByAnalysis(castableSpells, gameState);
+                if (bestSpell) return bestSpell;
+            }
+            
+            // 전략적 선택
+            return chooseStrategicSpell(castableSpells, ai, player);
+        }
+        
+        /**
+         * 어려운 AI 주문 선택 (정확한 분석 + 고급 전략)
+         */
+        function chooseHardAISpell(castableSpells, ai, player, gameState) {
+            // 체력 기반 전략
+            if (player.health <= 2 && castableSpells.includes(4)) return 4;
+            if (ai.health <= 2 && castableSpells.includes(5)) return 5;
+            
+            // 정보 수집 (항상 우선)
+            if (castableSpells.includes(6) && gameState.secretStones.length > 0) return 6;
+            
+            // 정확한 분석 기반 선택 (90% 확률)
+            if (Math.random() < 0.9) {
+                const bestSpell = findBestSpellByAnalysis(castableSpells, gameState);
+                if (bestSpell) return bestSpell;
+            }
+            
+            // 고급 전략
+            return chooseAdvancedStrategicSpell(castableSpells, ai, player, gameState);
+        }
+        
+        /**
+         * 분석 기반 최적 주문 찾기
+         */
+        function findBestSpellByAnalysis(castableSpells, gameState) {
+            let bestSpell = null;
+            let bestScore = -1;
+            
+            for (const spell of castableSpells) {
+                const probability = AIAnalysis.evaluateSpellCastability(spell, gameState);
+                const strategicScore = calculateStrategicScore(spell, gameState);
+                const totalScore = probability * 0.7 + strategicScore * 0.3;
+                
+                if (totalScore > bestScore) {
+                    bestScore = totalScore;
+                    bestSpell = spell;
+                }
+            }
+            
+            return bestSpell;
+        }
+        
+        /**
+         * 주문의 전략적 점수 계산
+         */
+        function calculateStrategicScore(spell, gameState) {
+            const { aiHealth, humanHealth } = gameState;
+            
+            switch (spell) {
+                case 1: // 운명 변환 - 정보 수집
+                    return gameState.secretStones.length > 2 ? 0.8 : 0.3;
+                case 2: // 마력 착취 - 균형
+                    return (humanHealth > aiHealth) ? 0.9 : 0.5;
+                case 3: // 정신 교란 - 교란
+                    return gameState.secretStones.length > 0 ? 0.7 : 0.2;
+                case 4: // 화염 화살 - 공격
+                    return humanHealth <= 2 ? 0.9 : 0.6;
+                case 5: // 생명 물약 - 회복
+                    return aiHealth <= 2 ? 0.9 : 0.4;
+                case 6: // 명상 - 정보
+                    return gameState.secretStones.length > 0 ? 0.8 : 0.3;
+                default:
+                    return 0.5;
+            }
+        }
+        
+        /**
+         * 기본 전략적 주문 선택
+         */
+        function chooseStrategicSpell(castableSpells, ai, player) {
+            // 공격 우선
+            if (castableSpells.includes(4) && player.health <= 2) return 4;
+            if (castableSpells.includes(2) && player.health <= 2) return 2;
+            
+            // 회복 우선
+            if (ai.health <= 2 && castableSpells.includes(5)) return 5;
+            
+            // 정보 수집
+            if (castableSpells.includes(6) && state.secretStones.length > 0) return 6;
+            
+            // 교란
+            if (castableSpells.includes(3) && state.secretStones.length > 0) return 3;
+            
+            return Math.max(...castableSpells);
+        }
+        
+        /**
+         * 고급 전략적 주문 선택
+         */
+        function chooseAdvancedStrategicSpell(castableSpells, ai, player, gameState) {
+            // 체력 차이 분석
+            const healthDiff = ai.health - player.health;
+            
+            // AI가 유리한 상황
+            if (healthDiff > 1) {
+                // 공격으로 승리 확정
+                if (castableSpells.includes(4) && player.health <= 2) return 4;
+                if (castableSpells.includes(2) && player.health <= 2) return 2;
+            }
+            
+            // AI가 불리한 상황
+            if (healthDiff < -1) {
+                // 회복 우선
+                if (castableSpells.includes(5) && ai.health <= 2) return 5;
+                // 정보 수집으로 역전 기회 모색
+                if (castableSpells.includes(6) && gameState.secretStones.length > 0) return 6;
+            }
+            
+            // 균형 상황
+            if (castableSpells.includes(2)) return 2; // 마력 착취로 균형 유지
+            if (castableSpells.includes(6) && gameState.secretStones.length > 0) return 6; // 정보 수집
+            
+            return Math.max(...castableSpells);
+        }
+        
+        /**
+         * 기본 AI 주문 선택 (기존 로직)
+         */
+        function chooseBasicAISpell(castableSpells, ai, player) {
             // 공격 우선 (플레이어 체력이 낮을 때)
             if (castableSpells.includes(4) && player.health <= 2) return 4;
             if (castableSpells.includes(2) && player.health <= 2) return 2;
@@ -3093,19 +3376,215 @@
             return Math.max(...castableSpells);
         }
         
-        // AI 성공률 반환 (난이도별)
+        /**
+         * AI 분석 시스템
+         * 상대의 패와 공개된 비밀 카드를 분석하여 자신의 패를 유추
+         */
+        const AIAnalysis = {
+            /**
+             * 게임 상태 분석
+             * @returns {Object} 분석 결과
+             */
+            analyzeGameState() {
+                if (!state || !state.players) return null;
+                
+                const aiPlayer = state.players.find(p => p.id === 2); // AI는 항상 플레이어 2
+                const humanPlayer = state.players.find(p => p.id === 1);
+                
+                if (!aiPlayer || !humanPlayer) return null;
+                
+                return {
+                    aiPlayer: aiPlayer, // AI 플레이어 객체 전체
+                    humanPlayer: humanPlayer, // 인간 플레이어 객체 전체
+                    aiHand: aiPlayer.hand,
+                    humanHand: humanPlayer.hand,
+                    secretStones: state.secretStones || [],
+                    usedStones: state.usedStones || [],
+                    aiHealth: aiPlayer.health,
+                    humanHealth: humanPlayer.health,
+                    lastSuccessfulSpell: state.lastSuccessfulSpell || 0
+                };
+            },
+            
+            /**
+             * 상대의 패에서 특정 주문 개수 계산
+             * @param {Array} opponentHand - 상대의 패
+             * @param {number} spellNumber - 주문 번호
+             * @returns {number} 개수
+             */
+            countSpellInHand(opponentHand, spellNumber) {
+                return opponentHand.filter(card => card === spellNumber).length;
+            },
+            
+            /**
+             * 공개된 비밀 주문에서 특정 주문 개수 계산
+             * @param {Array} secretStones - 공개된 비밀 주문
+             * @param {number} spellNumber - 주문 번호
+             * @returns {number} 개수
+             */
+            countSpellInSecret(secretStones, spellNumber) {
+                return secretStones.filter(stone => stone === spellNumber).length;
+            },
+            
+            /**
+             * 자신의 패에서 특정 주문이 있을 확률 계산
+             * @param {number} spellNumber - 주문 번호
+             * @param {Object} gameState - 게임 상태
+             * @returns {number} 확률 (0~1)
+             */
+            calculateSpellProbability(spellNumber, gameState) {
+                const { humanHand, secretStones, usedStones } = gameState;
+                
+                // 전체 덱에서 해당 주문의 개수
+                const totalSpellCount = spellNumber; // 1번은 1개, 2번은 2개...
+                
+                // 이미 사용된 개수
+                const usedCount = usedStones.filter(stone => stone === spellNumber).length;
+                
+                // 상대 패에 있는 개수
+                const opponentCount = this.countSpellInHand(humanHand, spellNumber);
+                
+                // 공개된 비밀 주문에 있는 개수
+                const secretCount = this.countSpellInSecret(secretStones, spellNumber);
+                
+                // 남은 개수 계산
+                const remainingCount = totalSpellCount - usedCount - opponentCount - secretCount;
+                
+                // AI 패에 있을 확률
+                const aiHandSize = gameState.aiHand.length;
+                const totalRemainingCards = 21 - usedStones.length - humanHand.length - secretStones.length;
+                
+                if (totalRemainingCards <= 0 || remainingCount <= 0) return 0;
+                
+                // 확률 계산 (남은 카드 중에서 해당 주문이 있을 확률)
+                return Math.min(remainingCount / totalRemainingCards, 1);
+            },
+            
+            /**
+             * 난이도별 분석 정확도 조정
+             * @param {number} baseProbability - 기본 확률
+             * @returns {number} 조정된 확률
+             */
+            adjustProbabilityByDifficulty(baseProbability) {
+                const difficultyFactors = {
+                    easy: 0.3,    // 쉬움: 거의 랜덤
+                    normal: 0.7,  // 보통: 어느 정도 분석
+                    hard: 0.9     // 어려움: 정확한 분석
+                };
+                
+                const factor = difficultyFactors[aiDifficulty] || 0.7;
+                return baseProbability * factor + (1 - factor) * Math.random();
+            },
+            
+            /**
+             * 주문 시전 가능성 평가
+             * @param {number} spellNumber - 주문 번호
+             * @param {Object} gameState - 게임 상태
+             * @returns {number} 시전 가능성 점수 (0~1)
+             */
+            evaluateSpellCastability(spellNumber, gameState) {
+                const probability = this.calculateSpellProbability(spellNumber, gameState);
+                const adjustedProbability = this.adjustProbabilityByDifficulty(probability);
+                
+                // 난이도별 최소 확률 설정
+                const minProbabilities = {
+                    easy: 0.1,
+                    normal: 0.3,
+                    hard: 0.5
+                };
+                
+                const minProb = minProbabilities[aiDifficulty] || 0.3;
+                
+                return Math.max(adjustedProbability, minProb);
+            }
+        };
+
+        /**
+         * AI 성공률 계산 (지능적 분석 기반)
+         * @returns {number} 성공률 (0~1)
+         */
         function getAISuccessRate() {
+            const gameState = AIAnalysis.analyzeGameState();
+            if (!gameState) {
             return GAME_CONFIG.aiSuccessRate[aiDifficulty] || GAME_CONFIG.aiSuccessRate.normal;
         }
         
-        // AI 연속 영창 확률 반환 (난이도별)
+            // AI가 시전할 주문 선택
+            const aiPlayer = state.players.find(p => p.id === 2); // AI는 항상 플레이어 2
+            if (!aiPlayer) {
+                return GAME_CONFIG.aiSuccessRate[aiDifficulty] || GAME_CONFIG.aiSuccessRate.normal;
+            }
+            
+            const castableSpells = getCastableSpells(aiPlayer);
+            if (castableSpells.length === 0) return 0;
+            
+            // 가장 높은 확률의 주문 선택
+            let bestSpell = castableSpells[0];
+            let bestProbability = 0;
+            
+            for (const spell of castableSpells) {
+                const probability = AIAnalysis.evaluateSpellCastability(spell, gameState);
+                if (probability > bestProbability) {
+                    bestProbability = probability;
+                    bestSpell = spell;
+                }
+            }
+            
+            // 난이도별 기본 성공률과 분석 기반 성공률을 조합
+            const baseRate = GAME_CONFIG.aiSuccessRate[aiDifficulty] || GAME_CONFIG.aiSuccessRate.normal;
+            const analysisRate = bestProbability;
+            
+            // 난이도별 가중치
+            const weights = {
+                easy: 0.3,    // 쉬움: 기본 성공률 70%, 분석 30%
+                normal: 0.6,  // 보통: 기본 성공률 40%, 분석 60%
+                hard: 0.8     // 어려움: 기본 성공률 20%, 분석 80%
+            };
+            
+            const weight = weights[aiDifficulty] || 0.6;
+            return baseRate * (1 - weight) + analysisRate * weight;
+        }
+        
+        /**
+         * AI 연속 영창 확률 계산 (지능적 분석 기반)
+         * @returns {number} 연속 영창 확률 (0~1)
+         */
         function getAIContinueRate() {
+            const gameState = AIAnalysis.analyzeGameState();
+            if (!gameState) {
             return GAME_CONFIG.aiContinueRate[aiDifficulty] || GAME_CONFIG.aiContinueRate.normal;
+            }
+            
+            // 현재 성공한 주문보다 높은 주문들의 확률 분석
+            const higherSpells = [];
+            for (let i = gameState.lastSuccessfulSpell + 1; i <= 6; i++) {
+                const probability = AIAnalysis.evaluateSpellCastability(i, gameState);
+                higherSpells.push({ spell: i, probability });
+            }
+            
+            if (higherSpells.length === 0) return 0;
+            
+            // 가장 높은 확률의 주문 찾기
+            const bestSpell = higherSpells.reduce((best, current) => 
+                current.probability > best.probability ? current : best
+            );
+            
+            // 난이도별 기본 연속 확률과 분석 기반 확률을 조합
+            const baseRate = GAME_CONFIG.aiContinueRate[aiDifficulty] || GAME_CONFIG.aiContinueRate.normal;
+            const analysisRate = bestSpell.probability;
+            
+            const weights = {
+                easy: 0.2,    // 쉬움: 기본 확률 80%, 분석 20%
+                normal: 0.5,  // 보통: 기본 확률 50%, 분석 50%
+                hard: 0.7     // 어려움: 기본 확률 30%, 분석 70%
+            };
+            
+            const weight = weights[aiDifficulty] || 0.5;
+            return baseRate * (1 - weight) + analysisRate * weight;
         }
 
         function checkGameOver() {
-            // 게임 상태 유효성 검증 강화
-            if (!GameConditions.isGameValid() || !state.players || state.players.length < 2 || !state.players[0] || !state.players[1]) {
+            if (!GameConditions.isGameValid() || !state.players[0] || !state.players[1]) {
                 console.log('⚠️ 게임 상태가 유효하지 않아 게임 종료 체크를 건너뜁니다');
                 return false;
             }
@@ -3188,6 +3667,23 @@
                 // 전적 업데이트 (연승 처리 포함)
                 updateStats(isPlayerWin, multiplayerMode);
                 
+                // 랭킹 즉시 업데이트
+                if (socket && socket.connected) {
+                    const playerName = localStorage.getItem('playerName') || 'Player';
+                    const playerIcon = localStorage.getItem('playerIcon') || '👤';
+                    const trophies = TrophySystem.loadTrophies();
+                    
+                    // 현재 점수로 랭킹 업데이트
+                    socket.emit('updateRanking', {
+                        category: multiplayerMode ? 'formal' : 'mock',
+                        playerName: playerName,
+                        score: multiplayerMode ? trophies.multiplayer : trophies.ai,
+                        icon: playerIcon
+                    });
+                    
+                    console.log(`🔄 게임 종료 후 랭킹 즉시 업데이트: ${playerName} (${multiplayerMode ? '정식' : '모의'} 결투)`);
+                }
+                
                 // 연승 메시지 추가 (updateStats에서 처리된 연승 사용)
                 if (isPlayerWin && currentWinStreak >= 2) {
                     message += `\n\n${Messages.streak(currentWinStreak)}`;
@@ -3210,7 +3706,7 @@
                 
                 // 승점 변화 메시지 추가 (승리/패배 모두 표시)
                 const trophyType = multiplayerMode ? 'multiplayer' : 'ai';
-                const trophyChange = isPlayerWin ? '+2' : '-1';
+                const trophyChange = isPlayerWin ? '+3' : '-1';
                 const trophyMessage = `\n\n🏅 승점 ${trophyChange}`;
                 message += trophyMessage;
                 
@@ -3304,25 +3800,92 @@
         }
 
         function showCombinedSecretStonesModal() {
-            const revealedStones = state.publiclyRevealedSecretStones;
+            // 각 섹션의 카드 개수 계산
+            const personalCount = state.personalRevealedStones ? state.personalRevealedStones.length : 0;
+            const opponentPersonalCount = state.opponentPersonalRevealedStones ? state.opponentPersonalRevealedStones.length : 0;
+            const publicCount = state.publiclyRevealedSecretStones ? state.publiclyRevealedSecretStones.length : 0;
+            const secretCount = state.secretStones ? state.secretStones.length : 0;
+            
             const modal = document.createElement('div');
             modal.className = 'fixed inset-0 flex items-center justify-center z-50 modal-bg';
             modal.innerHTML = `
-                <div class="modal-content p-6 rounded-lg max-w-lg w-full mx-4">
-                    <h3 class="text-xl font-bold mb-4 text-center">공개된 비밀 주문 목록</h3>
-                    ${revealedStones.length > 0 ? `
-                        <div class="grid grid-cols-4 gap-2 mb-4">
-                            ${revealedStones.map(stone => `
+                <div class="modal-content p-6 rounded-lg max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto">
+                    <h3 class="text-xl font-bold mb-4 text-center">비밀 주문 목록</h3>
+                    
+                    <!-- 나에게만 공개된 주문들 -->
+                    ${personalCount > 0 ? `
+                        <div class="mb-4">
+                            <div class="text-sm font-bold text-blue-600 mb-2 flex items-center">
+                                <span class="mr-1">👁️</span><span>나에게만 공개</span><span class="ml-auto text-xs text-blue-500">(${personalCount}개)</span>
+                            </div>
+                            <div class="grid grid-cols-4 gap-2 bg-blue-50 p-3 rounded">
+                                ${state.personalRevealedStones.sort((a, b) => a - b).map(stone => `
                                 <div class="card card-front flex flex-col items-center justify-center text-sm">
                                     <div class="text-lg">${getSpellIcon(stone)}</div>
                                     <div class="text-xs">${stone}</div>
                                 </div>
                             `).join('')}
                         </div>
-                    ` : `
-                        <p class="text-center mb-4 text-gray-400">아직 공개된 비밀 주문이 없습니다.</p>
-                    `}
-                    <button class="w-full py-2 rounded-lg font-bold btn-primary">확인</button>
+                        </div>
+                    ` : ''}
+                    
+                    <!-- 상대에게만 공개된 주문들 -->
+                    ${opponentPersonalCount > 0 ? `
+                        <div class="mb-4">
+                            <div class="text-sm font-bold text-orange-600 mb-2 flex items-center">
+                                <span class="mr-1">👁️</span><span>상대에게만 공개</span><span class="ml-auto text-xs text-orange-500">(${opponentPersonalCount}개)</span>
+                            </div>
+                            <div class="grid grid-cols-4 gap-2 bg-orange-50 p-3 rounded">
+                                ${state.opponentPersonalRevealedStones.sort((a, b) => a - b).map(stone => `
+                                    <div class="card ${cheatMode ? 'card-front' : 'card-back'} flex flex-col items-center justify-center text-sm">
+                                        <div class="text-lg">${cheatMode ? getSpellIcon(stone) : '❓'}</div>
+                                        <div class="text-xs">${cheatMode ? stone : '???'}</div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    ` : ''}
+                    
+                    <!-- 모두에게 공개된 주문들 -->
+                    ${publicCount > 0 ? `
+                        <div class="mb-4">
+                            <div class="text-sm font-bold text-green-600 mb-2 flex items-center">
+                                <span class="mr-1">🌐</span><span>모두에게 공개</span><span class="ml-auto text-xs text-green-500">(${publicCount}개)</span>
+                            </div>
+                            <div class="grid grid-cols-4 gap-2 bg-green-50 p-3 rounded">
+                                ${state.publiclyRevealedSecretStones.sort((a, b) => a - b).map(stone => `
+                                    <div class="card card-front flex flex-col items-center justify-center text-sm">
+                                        <div class="text-lg">${getSpellIcon(stone)}</div>
+                                        <div class="text-xs">${stone}</div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    ` : ''}
+                    
+                    <!-- 아직 공개되지 않은 비밀 주문들 -->
+                    ${secretCount > 0 ? `
+                        <div class="mb-4">
+                            <div class="text-sm font-bold text-gray-600 mb-2 flex items-center">
+                                <span class="mr-1">🔒</span><span>아직 공개되지 않음</span><span class="ml-auto text-xs text-gray-500">(${secretCount}개)</span>
+                            </div>
+                            <div class="grid grid-cols-4 gap-2 bg-gray-50 p-3 rounded">
+                                ${state.secretStones.sort((a, b) => a - b).map(stone => `
+                                    <div class="card ${cheatMode ? 'card-front' : 'card-back'} flex flex-col items-center justify-center text-sm">
+                                        <div class="text-lg">${cheatMode ? getSpellIcon(stone) : '❓'}</div>
+                                        <div class="text-xs">${cheatMode ? stone : '???'}</div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    ` : ''}
+                    
+                    <!-- 모든 섹션이 비어있는 경우 -->
+                    ${personalCount === 0 && opponentPersonalCount === 0 && publicCount === 0 && secretCount === 0 ? `
+                        <p class="text-center mb-4 text-gray-400">아직 비밀 주문이 없습니다.</p>
+                    ` : ''}
+                    
+                    <button class="w-full py-2 rounded-lg font-bold btn-primary mt-4">확인</button>
                 </div>
             `;
             
@@ -3640,25 +4203,92 @@
         }
 
         function showCombinedSecretStonesModal() {
-            const revealedStones = state.publiclyRevealedSecretStones;
+            // 각 섹션의 카드 개수 계산
+            const personalCount = state.personalRevealedStones ? state.personalRevealedStones.length : 0;
+            const opponentPersonalCount = state.opponentPersonalRevealedStones ? state.opponentPersonalRevealedStones.length : 0;
+            const publicCount = state.publiclyRevealedSecretStones ? state.publiclyRevealedSecretStones.length : 0;
+            const secretCount = state.secretStones ? state.secretStones.length : 0;
+            
             const modal = document.createElement('div');
             modal.className = 'fixed inset-0 flex items-center justify-center z-50 modal-bg';
             modal.innerHTML = `
-                <div class="modal-content p-6 rounded-lg max-w-lg w-full mx-4">
-                    <h3 class="text-xl font-bold mb-4 text-center">공개된 비밀 주문 목록</h3>
-                    ${revealedStones.length > 0 ? `
-                        <div class="grid grid-cols-4 gap-2 mb-4">
-                            ${revealedStones.sort((a, b) => a - b).map(stone => `
+                <div class="modal-content p-6 rounded-lg max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto">
+                    <h3 class="text-xl font-bold mb-4 text-center">비밀 주문 목록</h3>
+                    
+                    <!-- 나에게만 공개된 주문들 -->
+                    ${personalCount > 0 ? `
+                        <div class="mb-4">
+                            <div class="text-sm font-bold text-blue-600 mb-2 flex items-center">
+                                <span class="mr-1">👁️</span><span>나에게만 공개</span><span class="ml-auto text-xs text-blue-500">(${personalCount}개)</span>
+                            </div>
+                            <div class="grid grid-cols-4 gap-2 bg-blue-50 p-3 rounded">
+                                ${state.personalRevealedStones.sort((a, b) => a - b).map(stone => `
                                 <div class="card card-front flex flex-col items-center justify-center text-sm">
                                     <div class="text-lg">${getSpellIcon(stone)}</div>
                                     <div class="text-xs">${stone}</div>
                                 </div>
                             `).join('')}
                         </div>
-                    ` : `
-                        <p class="text-center mb-4 text-gray-400">아직 공개된 비밀 주문이 없습니다.</p>
-                    `}
-                    <button class="w-full py-2 rounded-lg font-bold btn-primary">확인</button>
+                        </div>
+                    ` : ''}
+                    
+                    <!-- 상대에게만 공개된 주문들 -->
+                    ${opponentPersonalCount > 0 ? `
+                        <div class="mb-4">
+                            <div class="text-sm font-bold text-orange-600 mb-2 flex items-center">
+                                <span class="mr-1">👁️</span><span>상대에게만 공개</span><span class="ml-auto text-xs text-orange-500">(${opponentPersonalCount}개)</span>
+                            </div>
+                            <div class="grid grid-cols-4 gap-2 bg-orange-50 p-3 rounded">
+                                ${state.opponentPersonalRevealedStones.sort((a, b) => a - b).map(stone => `
+                                    <div class="card ${cheatMode ? 'card-front' : 'card-back'} flex flex-col items-center justify-center text-sm">
+                                        <div class="text-lg">${cheatMode ? getSpellIcon(stone) : '❓'}</div>
+                                        <div class="text-xs">${cheatMode ? stone : '???'}</div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    ` : ''}
+                    
+                    <!-- 모두에게 공개된 주문들 -->
+                    ${publicCount > 0 ? `
+                        <div class="mb-4">
+                            <div class="text-sm font-bold text-green-600 mb-2 flex items-center">
+                                <span class="mr-1">🌐</span><span>모두에게 공개</span><span class="ml-auto text-xs text-green-500">(${publicCount}개)</span>
+                            </div>
+                            <div class="grid grid-cols-4 gap-2 bg-green-50 p-3 rounded">
+                                ${state.publiclyRevealedSecretStones.sort((a, b) => a - b).map(stone => `
+                                    <div class="card card-front flex flex-col items-center justify-center text-sm">
+                                        <div class="text-lg">${getSpellIcon(stone)}</div>
+                                        <div class="text-xs">${stone}</div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    ` : ''}
+                    
+                    <!-- 아직 공개되지 않은 비밀 주문들 -->
+                    ${secretCount > 0 ? `
+                        <div class="mb-4">
+                            <div class="text-sm font-bold text-gray-600 mb-2 flex items-center">
+                                <span class="mr-1">🔒</span><span>아직 공개되지 않음</span><span class="ml-auto text-xs text-gray-500">(${secretCount}개)</span>
+                            </div>
+                            <div class="grid grid-cols-4 gap-2 bg-gray-50 p-3 rounded">
+                                ${state.secretStones.sort((a, b) => a - b).map(stone => `
+                                    <div class="card ${cheatMode ? 'card-front' : 'card-back'} flex flex-col items-center justify-center text-sm">
+                                        <div class="text-lg">${cheatMode ? getSpellIcon(stone) : '❓'}</div>
+                                        <div class="text-xs">${cheatMode ? stone : '???'}</div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    ` : ''}
+                    
+                    <!-- 모든 섹션이 비어있는 경우 -->
+                    ${personalCount === 0 && opponentPersonalCount === 0 && publicCount === 0 && secretCount === 0 ? `
+                        <p class="text-center mb-4 text-gray-400">아직 비밀 주문이 없습니다.</p>
+                    ` : ''}
+                    
+                    <button class="w-full py-2 rounded-lg font-bold btn-primary mt-4">확인</button>
                 </div>
             `;
             
@@ -3673,6 +4303,21 @@
             });
         }
 
+        function showDebugInfo() {
+            const player = state.players[0];
+            const ai = state.players[1];
+            debugInfo.innerHTML = `
+                <div>플레이어 체력: ${player.health}</div>
+                <div>AI 체력: ${ai.health}</div>
+                <div>플레이어 손패: [${player.hand.join(', ')}]</div>
+                <div>AI 손패: [${ai.hand.join(', ')}]</div>
+                <div>비밀 전술: ${state.secretStones.length}개</div>
+                <div>사용한 전술: ${state.usedStones.length}개</div>
+                <div>마지막 성공 전략: ${state.lastSuccessfulSpell}</div>
+                <div>게임 종료: ${state.isGameOver}</div>
+            `;
+        }
+
         function showPlayerHand() {
             const player = state.players[0];
             showCardListModal('플레이어 손패', player.hand, true);
@@ -3683,26 +4328,26 @@
             showCardListModal('AI 손패', ai.hand, true);
         }
 
-        // 게임 설정 상수
+        // 게임 설정 상수 (기존 호환성 유지)
         const GAME_CONFIG = {
             maxHealth: 4,
             maxHandSize: 7,
             maxLogEntries: 20,
             turnDuration: {
-                easy: Infinity,
+                easy: 25,
                 normal: 30,
-                hard: 20,
+                hard: 35,
                 multiplayer: 30
             },
             aiSuccessRate: {
-                easy: 0.7,
-                normal: 0.95,
-                hard: 0.98
-            },
-            aiContinueRate: {
                 easy: 0.3,
                 normal: 0.5,
                 hard: 0.7
+            },
+            aiContinueRate: {
+                easy: 0.4,
+                normal: 0.6,
+                hard: 0.8
             },
             deckStructure: {
                 maxSpell: 6,
@@ -3710,19 +4355,49 @@
             }
         };
 
-        // 조건문 단순화를 위한 헬퍼 함수들
+        // GAME_CONFIG 정의 후 초기화 함수 호출
+        initializeGameConfig();
+
+        /**
+         * 게임 조건 검증 헬퍼 함수들
+         * 복잡한 조건문을 단순화하고 가독성을 향상
+         */
         const GameConditions = {
+            /**
+             * 멀티플레이어 연결 상태 확인
+             * @returns {boolean} 연결 상태
+             */
             isMultiplayerConnected: () => multiplayerMode && dataChannel && dataChannel.readyState === 'open',
+            
+            /**
+             * 게임 상태 유효성 검증
+             * @returns {boolean} 게임 상태 유효성
+             */
             isGameValid: () => state && state.players && state.players.length >= 2,
+            
+            /**
+             * 내 턴인지 확인
+             * @returns {boolean} 내 턴 여부
+             */
             isMyTurn: () => {
                 const myPlayerId = multiplayerMode ? (isHost ? 1 : 2) : 1;
                 return multiplayerMode ? (state.currentPlayerId === myPlayerId) : state.isPlayerTurn;
             },
+            
+            /**
+             * 주문 시전 가능 여부 확인
+             * @returns {boolean} 주문 시전 가능 여부
+             */
             canPlaySpell: () => {
                 const myPlayerId = multiplayerMode ? (isHost ? 1 : 2) : 1;
                 const isMyTurn = multiplayerMode ? (state.currentPlayerId === myPlayerId) : state.isPlayerTurn;
                 return isMyTurn && !state.turnInProgress && !state.isGameOver;
             },
+            
+            /**
+             * 게임 진행 중인지 확인
+             * @returns {boolean} 게임 진행 상태
+             */
             isGameInProgress: () => multiplayerMode && state.gameStarted && !state.isGameOver
         };
 
@@ -3754,7 +4429,13 @@
             streak: (count) => `🔥 ${count}연승`
         };
 
+        /**
+         * 게임 로그 추가 함수
+         * 안전한 로그 추가와 상태 검증을 포함
+         * @param {string} message - 로그 메시지
+         */
         function addLog(message) {
+            try {
             console.log(`📝 게임 로그: ${message}`);
             
             // state나 gameLog가 없으면 초기화
@@ -3764,9 +4445,49 @@
             if (!state.gameLog) {
                 state.gameLog = [];
             }
+                
+                // 메시지 유효성 검증
+                if (typeof message !== 'string' || message.trim() === '') {
+                    console.warn('⚠️ 빈 메시지 또는 잘못된 타입의 로그 시도');
+                    return;
+                }
             
             state.gameLog.unshift(message);
-            if (state.gameLog.length > GAME_CONFIG.maxLogEntries) state.gameLog.pop();
+                
+                // 로그 개수 제한
+                if (state.gameLog.length > GAME_CONFIG.maxLogEntries) {
+                    state.gameLog.pop();
+                }
+                
+                // UI 업데이트
+                updateGameLog();
+                
+            } catch (error) {
+                console.error('❌ 로그 추가 중 오류 발생:', error);
+            }
+        }
+
+        /**
+         * 게임 로그 UI 업데이트
+         */
+        function updateGameLog() {
+            const gameLogEl = DOM.get('game-log');
+            if (!gameLogEl || !state.gameLog) return;
+            
+            gameLogEl.innerHTML = state.gameLog.map(log => {
+                const isSuccess = log.includes('✅');
+                const isFailure = log.includes('❌');
+                const isTurn = log.includes('턴');
+                const isGameEnd = log.includes('게임 종료');
+                
+                let className = '';
+                if (isSuccess) className = 'text-green-400';
+                else if (isFailure) className = 'text-red-400';
+                else if (isTurn) className = 'text-blue-400 font-bold';
+                else if (isGameEnd) className = 'text-purple-400 font-bold';
+                
+                return `<p class="${className}">${log}</p>`;
+            }).join('');
         }
 
         // 길게 누르기 관련 변수들
@@ -3792,26 +4513,116 @@
             }
         }
         
-        // 비밀 주문 툴팁 표시 (공개된 주문들만)
+        // 비밀 주문 툴팁 표시 (개선된 버전)
         function showSecretStonesTooltip() {
             const tooltip = DOM.get('secret-stones-tooltip');
-            const list = DOM.get('secret-stones-list');
+            const personalSection = DOM.get('personal-revealed-section');
+            const personalList = DOM.get('personal-revealed-list');
+            const opponentPersonalSection = DOM.get('opponent-personal-revealed-section');
+            const opponentPersonalList = DOM.get('opponent-personal-revealed-list');
+            const publiclySection = DOM.get('publicly-revealed-section');
+            const publiclyList = DOM.get('publicly-revealed-list');
+            const secretSection = DOM.get('secret-stones-section');
+            const secretList = DOM.get('secret-stones-list');
             
-            if (state.publiclyRevealedSecretStones.length === 0) {
-                list.innerHTML = '<div class="text-center text-gray-500">공개된 비밀 주문이 없습니다.</div>';
-            } else {
-                // 낮은 수부터 정렬
-                const sortedStones = [...state.publiclyRevealedSecretStones].sort((a, b) => a - b);
-                const stonesHtml = sortedStones.map(stone => 
+            // 동적 개수 업데이트
+            updateTooltipCounts();
+            
+            // 나에게만 공개된 주문 표시 (내가 1번 주문으로 발견한 경우)
+            if (state.personalRevealedStones && state.personalRevealedStones.length > 0) {
+                const sortedPersonal = [...state.personalRevealedStones].sort((a, b) => a - b);
+                const personalHtml = sortedPersonal.map(stone => 
                     `<div class="flex items-center justify-between">
                         <span class="text-sm">${SpellIcons[stone] || '❓'}${stone}</span>
                         <span class="text-gray-500 text-sm">${getSpellName(stone)}</span>
                     </div>`
                 ).join('');
-                list.innerHTML = stonesHtml;
+                personalList.innerHTML = personalHtml;
+                personalSection.classList.remove('hidden');
+            } else {
+                personalSection.classList.add('hidden');
+            }
+            
+            // 상대에게만 공개된 주문 표시 (치트키 모드에서는 정보 표시, 일반 모드에서는 숨김)
+            if (state.opponentPersonalRevealedStones && state.opponentPersonalRevealedStones.length > 0) {
+                const sortedOpponentPersonal = [...state.opponentPersonalRevealedStones].sort((a, b) => a - b);
+                const opponentPersonalHtml = sortedOpponentPersonal.map(stone => {
+                    if (cheatMode) {
+                        return `<div class="flex items-center justify-between">
+                            <span class="text-sm">${SpellIcons[stone] || '❓'}${stone}</span>
+                            <span class="text-gray-500 text-sm">${getSpellName(stone)}</span>
+                        </div>`;
+                    } else {
+                        return `<div class="flex items-center justify-between">
+                            <span class="text-sm">❓?</span>
+                            <span class="text-gray-500 text-sm">???</span>
+                        </div>`;
+                    }
+                }).join('');
+                opponentPersonalList.innerHTML = opponentPersonalHtml;
+                opponentPersonalSection.classList.remove('hidden');
+            } else {
+                opponentPersonalSection.classList.add('hidden');
+            }
+            
+            // 전체 공개된 주문 표시 (6번 주문으로 발견된 경우)
+            if (state.publiclyRevealedSecretStones && state.publiclyRevealedSecretStones.length > 0) {
+                const sortedPublicly = [...state.publiclyRevealedSecretStones].sort((a, b) => a - b);
+                const publiclyHtml = sortedPublicly.map(stone => 
+                    `<div class="flex items-center justify-between">
+                        <span class="text-sm">${SpellIcons[stone] || '❓'}${stone}</span>
+                        <span class="text-gray-500 text-sm">${getSpellName(stone)}</span>
+                    </div>`
+                ).join('');
+                publiclyList.innerHTML = publiclyHtml;
+                publiclySection.classList.remove('hidden');
+            } else {
+                publiclySection.classList.add('hidden');
+            }
+            
+            // 아직 공개되지 않은 비밀 주문 표시 (치트키 모드에서는 정보 표시, 일반 모드에서는 숨김)
+            if (state.secretStones && state.secretStones.length > 0) {
+                const sortedSecret = [...state.secretStones].sort((a, b) => a - b);
+                const secretHtml = sortedSecret.map(stone => {
+                    if (cheatMode) {
+                        return `<div class="flex items-center justify-between">
+                            <span class="text-sm">${SpellIcons[stone] || '❓'}${stone}</span>
+                            <span class="text-gray-500 text-sm">${getSpellName(stone)}</span>
+                        </div>`;
+                    } else {
+                        return `<div class="flex items-center justify-between">
+                            <span class="text-sm">❓?</span>
+                            <span class="text-gray-500 text-sm">???</span>
+                        </div>`;
+                    }
+                }).join('');
+                secretList.innerHTML = secretHtml;
+            } else {
+                secretList.innerHTML = '<div class="text-center text-gray-500">비밀 주문이 없습니다.</div>';
             }
             
             tooltip.classList.remove('hidden');
+        }
+        
+        /**
+         * 툴팁 섹션 개수 업데이트
+         */
+        function updateTooltipCounts() {
+            const personalCount = state.personalRevealedStones ? state.personalRevealedStones.length : 0;
+            const opponentPersonalCount = state.opponentPersonalRevealedStones ? state.opponentPersonalRevealedStones.length : 0;
+            const publiclyCount = state.publiclyRevealedSecretStones ? state.publiclyRevealedSecretStones.length : 0;
+            const secretCount = state.secretStones ? state.secretStones.length : 0;
+            
+            // 개수 표시 업데이트
+            const personalTitle = document.querySelector('#personal-revealed-section .text-blue-500');
+            const opponentPersonalTitle = document.querySelector('#opponent-personal-revealed-section .text-orange-500');
+            const publiclyTitle = document.querySelector('#publicly-revealed-section .text-green-500');
+            const secretTitle = document.querySelector('#secret-stones-section .text-gray-500');
+            
+            if (personalTitle) personalTitle.textContent = `(${personalCount}개)`;
+            if (opponentPersonalTitle) opponentPersonalTitle.textContent = `(${opponentPersonalCount}개)`;
+            if (publiclyTitle) publiclyTitle.textContent = `(${publiclyCount}개)`;
+            if (secretTitle) secretTitle.textContent = `(${secretCount}개)`;
         }
         
         // 사용한 주문 툴팁 표시
@@ -3868,6 +4679,13 @@
             }
         });
         
+        // 치트키 키보드 이벤트 리스너
+        document.addEventListener('keydown', function(event) {
+            if (event.key === '-') {
+                toggleCheatMode();
+            }
+        });
+        
         // 도움말 툴팁 함수들
         function showHelpTooltip() {
             const tooltip = DOM.get('help-tooltip');
@@ -3877,6 +4695,29 @@
         function hideHelpTooltip() {
             const tooltip = DOM.get('help-tooltip');
             tooltip.classList.add('hidden');
+        }
+        
+        /**
+         * 치트키 모드 토글
+         */
+        function toggleCheatMode() {
+            cheatMode = !cheatMode;
+            console.log(`🔧 치트키 모드: ${cheatMode ? '활성화' : '비활성화'}`);
+            
+            // UI 업데이트
+            render();
+            
+            // 치트키 상태 표시
+            const status = cheatMode ? '🔧 치트키 활성화됨' : '🔧 치트키 비활성화됨';
+            addLog(status);
+            
+            // 3초 후 치트키 상태 메시지 제거
+            setTimeout(() => {
+                if (state.gameLog && state.gameLog.length > 0) {
+                    state.gameLog = state.gameLog.filter(log => !log.includes('치트키'));
+                    updateGameLog();
+                }
+            }, 3000);
         }
         
         // 멀티플레이어 관련 변수들
@@ -3892,6 +4733,9 @@
         let myPlayerId = null;
         let localMemoNotes = {}; // 개별 플레이어의 메모 노트 (로컬 상태)
         let localMemoPanelActive = false; // 개별 플레이어의 메모 패널 상태 (로컬 상태)
+        
+        // 치트키 관련 변수
+        let cheatMode = false; // 치트키 활성화 상태
         
         // Socket.IO 연결
         let socket = null;
@@ -3970,12 +4814,31 @@
             const playerName = localStorage.getItem('playerName') || 'Player';
             const playerIcon = localStorage.getItem('playerIcon') || '👤';
             
-
-
+            // 다른 카테고리 정보 계산
+            const allTrophies = TrophySystem.loadTrophies();
+            const otherCategory = isMultiplayer ? 'mock' : 'formal';
+            const otherScore = isMultiplayer ? allTrophies.ai : allTrophies.multiplayer;
             
-
+            if (socket) {
+                // 현재 점수로 랭킹 업데이트
+                socket.emit('updateRanking', {
+                    category: category,
+                    playerName: playerName,
+                    score: trophyCount,
+                    icon: playerIcon
+                });
+                
+                // 다른 카테고리도 함께 업데이트 (전체 랭킹 동기화)
+                socket.emit('updateRanking', {
+                    category: otherCategory,
+                    playerName: playerName,
+                    score: otherScore,
+                    icon: playerIcon
+                });
+            }
             
             console.log(`📊 전적 업데이트: ${category} - ${playerName} (증표: ${trophyCount}, 승리: ${stats[category].wins}, 패배: ${stats[category].losses})`);
+            console.log(`📊 랭킹 동기화: ${otherCategory} - ${playerName} (증표: ${otherScore})`);
         }
         
 
@@ -4004,7 +4867,7 @@
             const modal = document.createElement('div');
             modal.className = 'fixed inset-0 flex items-center justify-center z-50 modal-bg';
             modal.innerHTML = `
-                <div class="modal-content p-6 rounded-lg max-w-lg w-full mx-4 max-h-[90vh] overflow-y-auto">
+                <div class="modal-content p-6 rounded-lg max-w-lg w-full mx-4">
                     <h3 class="text-xl font-bold mb-4 text-center">마법 이력서</h3>
                     <div class="space-y-4">
                         <div class="text-center">
@@ -4022,71 +4885,71 @@
                                 </button>
                             </div>
                         </div>
-                        <div class="space-y-3">
+                        <div class="space-y-4">
                             <div class="text-center">
-                                <h4 class="text-base font-bold mb-2 text-yellow-300">🤖 모의 결투</h4>
-                                <div class="grid grid-cols-4 gap-2 mb-2">
+                                <h4 class="text-lg font-bold mb-3 text-yellow-300">🤖 모의 결투 대전 기록</h4>
+                                <div class="grid grid-cols-4 gap-2">
                                     <div class="bg-emerald-600 bg-opacity-40 p-2 rounded-lg border border-emerald-400 border-opacity-30 shadow-lg">
-                                        <div class="text-lg font-bold text-emerald-100">${mockStats.wins}</div>
+                                        <div class="text-sm font-bold text-emerald-100">${mockStats.wins}</div>
                                         <div class="text-xs text-emerald-50 font-semibold">승리</div>
                                     </div>
                                     <div class="bg-rose-600 bg-opacity-40 p-2 rounded-lg border border-rose-400 border-opacity-30 shadow-lg">
-                                        <div class="text-lg font-bold text-rose-100">${mockStats.losses}</div>
+                                        <div class="text-sm font-bold text-rose-100">${mockStats.losses}</div>
                                         <div class="text-xs text-rose-50 font-semibold">패배</div>
                                     </div>
                                     <div class="bg-cyan-600 bg-opacity-40 p-2 rounded-lg border border-cyan-400 border-opacity-30 shadow-lg">
-                                        <div class="text-lg font-bold text-cyan-100">${mockTotalGames}전</div>
+                                        <div class="text-sm font-bold text-cyan-100">${mockTotalGames}전</div>
                                         <div class="text-xs text-cyan-50 font-semibold">총 게임</div>
                                     </div>
                                     <div class="bg-violet-600 bg-opacity-40 p-2 rounded-lg border border-violet-400 border-opacity-30 shadow-lg">
-                                        <div class="text-lg font-bold text-violet-100">${mockWinRate}%</div>
+                                        <div class="text-sm font-bold text-violet-100">${mockWinRate}%</div>
                                         <div class="text-xs text-violet-50 font-semibold">승률</div>
                                     </div>
                                 </div>
                             </div>
                             <div class="text-center">
-                                <h4 class="text-base font-bold mb-2 text-green-300">👥 정식 결투</h4>
-                                <div class="grid grid-cols-4 gap-2 mb-2">
+                                <h4 class="text-lg font-bold mb-3 text-green-300">👥 정식 결투 대전 기록</h4>
+                                <div class="grid grid-cols-4 gap-2">
                                     <div class="bg-teal-600 bg-opacity-40 p-2 rounded-lg border border-teal-400 border-opacity-30 shadow-lg">
-                                        <div class="text-lg font-bold text-teal-100">${formalStats.wins}</div>
+                                        <div class="text-sm font-bold text-teal-100">${formalStats.wins}</div>
                                         <div class="text-xs text-teal-50 font-semibold">승리</div>
                                     </div>
                                     <div class="bg-pink-600 bg-opacity-40 p-2 rounded-lg border border-pink-400 border-opacity-30 shadow-lg">
-                                        <div class="text-lg font-bold text-pink-100">${formalStats.losses}</div>
+                                        <div class="text-sm font-bold text-pink-100">${formalStats.losses}</div>
                                         <div class="text-xs text-pink-50 font-semibold">패배</div>
                                     </div>
                                     <div class="bg-indigo-600 bg-opacity-40 p-2 rounded-lg border border-indigo-400 border-opacity-30 shadow-lg">
-                                        <div class="text-lg font-bold text-indigo-100">${formalTotalGames}전</div>
+                                        <div class="text-sm font-bold text-indigo-100">${formalTotalGames}전</div>
                                         <div class="text-xs text-indigo-50 font-semibold">총 게임</div>
                                     </div>
                                     <div class="bg-fuchsia-600 bg-opacity-40 p-2 rounded-lg border border-fuchsia-400 border-opacity-30 shadow-lg">
-                                        <div class="text-lg font-bold text-fuchsia-100">${formalWinRate}%</div>
+                                        <div class="text-sm font-bold text-fuchsia-100">${formalWinRate}%</div>
                                         <div class="text-xs text-fuchsia-50 font-semibold">승률</div>
                                     </div>
                                 </div>
                             </div>
                             <div class="text-center">
-                                <h4 class="text-base font-bold mb-2 text-orange-300">🔥 연승 기록</h4>
-                                <div class="grid grid-cols-2 gap-2">
-                                    <div class="bg-amber-600 bg-opacity-40 p-2 rounded-lg border border-amber-400 border-opacity-30 shadow-lg">
-                                        <div class="text-lg font-bold text-amber-100">${maxWinStreak}연승</div>
+                                <h4 class="text-lg font-bold mb-3 text-orange-300">🔥 연승 기록</h4>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div class="bg-amber-600 bg-opacity-40 p-3 rounded-lg border border-amber-400 border-opacity-30 shadow-lg">
+                                        <div class="text-xl font-bold text-amber-100">${maxWinStreak}연승</div>
                                         <div class="text-xs text-amber-50 font-semibold">최고 연승</div>
                                     </div>
-                                    <div class="bg-lime-600 bg-opacity-40 p-2 rounded-lg border border-lime-400 border-opacity-30 shadow-lg">
-                                        <div class="text-lg font-bold text-lime-100">${currentWinStreak}연승</div>
+                                    <div class="bg-lime-600 bg-opacity-40 p-3 rounded-lg border border-lime-400 border-opacity-30 shadow-lg">
+                                        <div class="text-xl font-bold text-lime-100">${currentWinStreak}연승</div>
                                         <div class="text-xs text-lime-50 font-semibold">현재 연승</div>
                                     </div>
                                 </div>
                             </div>
                             <div class="text-center">
-                                <h4 class="text-base font-bold mb-2 text-yellow-300">🏆 승리의 증표</h4>
-                                <div class="grid grid-cols-2 gap-2">
-                                    <div class="bg-yellow-600 bg-opacity-40 p-2 rounded-lg border border-yellow-400 border-opacity-30 shadow-lg">
-                                        <div class="text-lg font-bold text-yellow-100">🏅 ${trophies.ai}개</div>
+                                <h4 class="text-lg font-bold mb-3 text-yellow-300">🏆 승리의 증표</h4>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div class="bg-yellow-600 bg-opacity-40 p-3 rounded-lg border border-yellow-400 border-opacity-30 shadow-lg">
+                                        <div class="text-xl font-bold text-yellow-100">🏅 ${trophies.ai}개</div>
                                         <div class="text-xs text-yellow-50 font-semibold">모의 결투 점수</div>
                                     </div>
-                                    <div class="bg-red-600 bg-opacity-40 p-2 rounded-lg border border-red-400 border-opacity-30 shadow-lg">
-                                        <div class="text-lg font-bold text-red-100">🏅 ${trophies.multiplayer}개</div>
+                                    <div class="bg-red-600 bg-opacity-40 p-3 rounded-lg border border-red-400 border-opacity-30 shadow-lg">
+                                        <div class="text-xl font-bold text-red-100">🏅 ${trophies.multiplayer}개</div>
                                         <div class="text-xs text-red-50 font-semibold">정식 결투 점수</div>
                                     </div>
                                 </div>
@@ -4115,29 +4978,10 @@
             return new Promise(resolve => {
                 const closeBtn = modal.querySelector('#close-profile-btn');
                 
-                // 닫기 버튼 클릭
                 closeBtn.addEventListener('click', () => {
                     document.body.removeChild(modal);
                     resolve();
                 });
-                
-                // 모달 배경 클릭으로도 닫기 가능
-                modal.addEventListener('click', (e) => {
-                    if (e.target === modal) {
-                        document.body.removeChild(modal);
-                        resolve();
-                    }
-                });
-                
-                // ESC 키로도 닫기 가능
-                const handleEscKey = (e) => {
-                    if (e.key === 'Escape') {
-                        document.body.removeChild(modal);
-                        document.removeEventListener('keydown', handleEscKey);
-                        resolve();
-                    }
-                };
-                document.addEventListener('keydown', handleEscKey);
             });
         }
         
@@ -4348,7 +5192,17 @@
                 console.log('🔌 Socket.IO 연결 성공');
                 serverConnected = true;
                 
-
+                // 연결 성공 시 랭킹 데이터 새로고침 (랭킹 모달이 열려있는 경우)
+                const rankingModal = document.querySelector('.modal-bg');
+                if (rankingModal && rankingModal.innerHTML.includes('마법 랭킹')) {
+                    console.log('🔄 랭킹 모달 감지 - 데이터 새로고침');
+                    // 랭킹 데이터 자동 요청
+                    if (socket && socket.connected) {
+                        socket.emit('getRanking', { category: 'ai' });
+                        socket.emit('getRanking', { category: 'multiplayer' });
+                        socket.emit('getRanking', { category: 'daily' });
+                    }
+                }
             });
             
             socket.on('disconnect', () => {
@@ -4356,7 +5210,23 @@
                 serverConnected = false;
                 addLog('🔌 서버와의 연결이 해제되었습니다.');
                 
-
+                // 연결 해제 시 랭킹 모달에 에러 표시
+                const rankingModal = document.querySelector('.modal-bg');
+                if (rankingModal && rankingModal.innerHTML.includes('마법 랭킹')) {
+                    const containers = ['ai-ranking', 'multiplayer-ranking', 'daily-king-ranking'];
+                    containers.forEach(containerId => {
+                        const container = document.getElementById(containerId);
+                        if (container) {
+                            container.innerHTML = `
+                                <div class="text-center text-red-400">
+                                    <div class="text-lg mb-2">🔌</div>
+                                    <div class="text-sm">서버 연결 해제</div>
+                                    <div class="text-xs mt-1">연결 복구 시 자동으로 새로고침됩니다</div>
+                                </div>
+                            `;
+                        }
+                    });
+                }
             });
             
             // 연결 재시도
@@ -4408,7 +5278,21 @@
                 if (multiplayerMode && state && state.gameStarted && !state.isGameOver) {
                     handleOpponentDisconnect(data.disconnectedPlayerName);
                     
-
+                    // 강제종료한 플레이어의 패배도 기록 (서버에 전송)
+                    if (data.isDisconnectedAsLoser && data.disconnectedPlayerName) {
+                        // 강제종료한 플레이어의 패배 기록을 서버에 전송
+                        socket.emit('updateRanking', {
+                            category: 'multiplayer',
+                            playerName: data.disconnectedPlayerName,
+                            stats: {
+                                wins: 0,
+                                losses: 1,
+                                currentWinStreak: 0,
+                                maxWinStreak: 0,
+                                trophies: 0
+                            }
+                        });
+                    }
                 } else {
                     setTimeout(() => {
                         showTitleScreen();
@@ -5014,47 +5898,13 @@
                 // 비밀 주문 공개 정보는 각 플레이어별로 독립적으로 관리
                 const currentRevealedStones = state.publiclyRevealedSecretStones;
                 
-                // 내 손패와 상대방 손패를 보존하면서 게임 상태 동기화
-                const myPlayerId = isHost ? 1 : 2;
-                const myCurrentHand = state.players.find(p => p.id === myPlayerId)?.hand || [];
-                const opponentCurrentHand = state.players.find(p => p.id !== myPlayerId)?.hand || [];
-                
                 // 상대방이 보낸 게임 상태로 업데이트
                 state = gameState;
                 
                 // 비밀 주문 공개 정보는 현재 플레이어의 정보만 유지
                 state.publiclyRevealedSecretStones = currentRevealedStones;
                 
-                // 내 손패와 상대방 손패 복원
-                if (state.players && state.players.length >= 2) {
-                    const myPlayer = state.players.find(p => p.id === myPlayerId);
-                    const opponentPlayer = state.players.find(p => p.id !== myPlayerId);
-                    
-                    if (myPlayer && opponentPlayer) {
-                        // 내 손패는 그대로 유지, 상대방 손패만 업데이트
-                        myPlayer.hand = myCurrentHand;
-                        opponentPlayer.hand = opponentCurrentHand;
-                    }
-                }
-                
                 console.log('🔄 게임 상태 동기화됨');
-                
-                // 내 손패와 상대방 손패 복원
-                if (state.players && state.players.length >= 2) {
-                    const myPlayer = state.players.find(p => p.id === myPlayerId);
-                    const opponentPlayer = state.players.find(p => p.id !== myPlayerId);
-                    
-                    if (myPlayer && opponentPlayer) {
-                        console.log(`🔄 [handleCardPlayed] 손패 복원 - 내 손패: [${myCurrentHand.join(', ')}] → [${myPlayer.hand.join(', ')}]`);
-                        console.log(`🔄 [handleCardPlayed] 손패 복원 - 상대 손패: [${opponentCurrentHand.join(', ')}] → [${opponentPlayer.hand.join(', ')}]`);
-                        
-                        // 내 손패는 그대로 유지, 상대방 손패만 업데이트
-                        myPlayer.hand = myCurrentHand;
-                        opponentPlayer.hand = opponentCurrentHand;
-                        
-                        console.log(`✅ [handleCardPlayed] 손패 복원 완료 - 내 손패: [${myPlayer.hand.join(', ')}], 상대 손패: [${opponentPlayer.hand.join(', ')}]`);
-                    }
-                }
                 
                 // 상대방의 주문 플레이 효과 실행
                 const player = state.players.find(p => p.id === playerId);
@@ -5089,47 +5939,13 @@
                 // 비밀 주문 공개 정보는 각 플레이어별로 독립적으로 관리
                 const currentRevealedStones = state.publiclyRevealedSecretStones;
                 
-                // 내 손패와 상대방 손패를 보존하면서 게임 상태 동기화
-                const myPlayerId = isHost ? 1 : 2;
-                const myCurrentHand = state.players.find(p => p.id === myPlayerId)?.hand || [];
-                const opponentCurrentHand = state.players.find(p => p.id !== myPlayerId)?.hand || [];
-                
                 // 상대방이 보낸 게임 상태로 업데이트
                 state = gameState;
                 
                 // 비밀 주문 공개 정보는 현재 플레이어의 정보만 유지
                 state.publiclyRevealedSecretStones = currentRevealedStones;
                 
-                // 내 손패와 상대방 손패 복원
-                if (state.players && state.players.length >= 2) {
-                    const myPlayer = state.players.find(p => p.id === myPlayerId);
-                    const opponentPlayer = state.players.find(p => p.id !== myPlayerId);
-                    
-                    if (myPlayer && opponentPlayer) {
-                        // 내 손패는 그대로 유지, 상대방 손패만 업데이트
-                        myPlayer.hand = myCurrentHand;
-                        opponentPlayer.hand = opponentCurrentHand;
-                    }
-                }
-                
                 console.log('🔄 턴 종료 시 게임 상태 동기화됨');
-                
-                // 내 손패와 상대방 손패 복원
-                if (state.players && state.players.length >= 2) {
-                    const myPlayer = state.players.find(p => p.id === myPlayerId);
-                    const opponentPlayer = state.players.find(p => p.id !== myPlayerId);
-                    
-                    if (myPlayer && opponentPlayer) {
-                        console.log(`🔄 [handleTurnEnd] 손패 복원 - 내 손패: [${myCurrentHand.join(', ')}] → [${myPlayer.hand.join(', ')}]`);
-                        console.log(`🔄 [handleTurnEnd] 손패 복원 - 상대 손패: [${opponentCurrentHand.join(', ')}] → [${opponentPlayer.hand.join(', ')}]`);
-                        
-                        // 내 손패는 그대로 유지, 상대방 손패만 업데이트
-                        myPlayer.hand = myCurrentHand;
-                        opponentPlayer.hand = opponentCurrentHand;
-                        
-                        console.log(`✅ [handleTurnEnd] 손패 복원 완료 - 내 손패: [${myPlayer.hand.join(', ')}], 상대 손패: [${opponentPlayer.hand.join(', ')}]`);
-                    }
-                }
                 
                 // 멀티플레이어에서는 currentPlayerId를 기준으로 isPlayerTurn 재설정
                 if (multiplayerMode) {
@@ -5155,14 +5971,6 @@
                         safeRefreshGameState();
                     }, 500);
                 }
-                
-                // 내 턴이 시작되면 버튼 활성화
-                if (state.isPlayerTurn) {
-                    console.log('🔓 턴 전환으로 내 턴 시작 - 버튼 활성화');
-                    state.spellFailed = false;
-                    spellButtonsDisabled = false;
-                    enableSpellButtons();
-                }
             } else {
                 state.isPlayerTurn = !state.isPlayerTurn;
                 state.currentPlayerId = state.currentPlayerId === 1 ? 2 : 1;
@@ -5171,14 +5979,6 @@
                 setTimeout(() => {
                     startTurnTimer();
                 }, 500);
-                
-                // 내 턴이 시작되면 버튼 활성화
-                if (state.isPlayerTurn) {
-                    console.log('🔓 AI 모드 턴 전환으로 내 턴 시작 - 버튼 활성화');
-                    state.spellFailed = false;
-                    spellButtonsDisabled = false;
-                    enableSpellButtons();
-                }
             }
             render();
             updateButtons(); // 버튼 상태 업데이트 추가
@@ -5206,7 +6006,21 @@
             // 전적 업데이트 (연승 처리 포함)
             updateStats(true, true); // 승리, 멀티플레이어
             
-
+            // 랭킹 즉시 업데이트
+            if (socket && socket.connected) {
+                const playerName = localStorage.getItem('playerName') || 'Player';
+                const playerIcon = localStorage.getItem('playerIcon') || '👤';
+                const trophies = TrophySystem.loadTrophies();
+                
+                socket.emit('updateRanking', {
+                    category: 'formal',
+                    playerName: playerName,
+                    score: trophies.multiplayer,
+                    icon: playerIcon
+                });
+                
+                console.log(`🔄 상대방 강제종료 후 랭킹 즉시 업데이트: ${playerName}`);
+            }
             
             let message = `상대 ${opponentName}이(가) 강제종료하여 승리하였습니다!`;
             
@@ -5215,7 +6029,7 @@
                 message += `\n\n${Messages.streak(currentWinStreak)}`;
             }
             
-            message += '\n\n🏅 승점 +2';
+            message += '\n\n🏅 승점 +3';
             
             addLog(`상대방 ${opponentName}이(가) 강제종료했습니다.`);
             addLog('승리가 기록되었습니다.');
@@ -5235,47 +6049,13 @@
                 // 비밀 주문 공개 정보는 각 플레이어별로 독립적으로 관리
                 const currentRevealedStones = state.publiclyRevealedSecretStones;
                 
-                // 내 손패와 상대방 손패를 보존하면서 게임 상태 동기화
-                const myPlayerId = isHost ? 1 : 2;
-                const myCurrentHand = state.players.find(p => p.id === myPlayerId)?.hand || [];
-                const opponentCurrentHand = state.players.find(p => p.id !== myPlayerId)?.hand || [];
-                
                 // 상대방이 보낸 게임 상태로 업데이트
                 state = gameState;
                 
                 // 비밀 주문 공개 정보는 현재 플레이어의 정보만 유지
                 state.publiclyRevealedSecretStones = currentRevealedStones;
                 
-                // 내 손패와 상대방 손패 복원
-                if (state.players && state.players.length >= 2) {
-                    const myPlayer = state.players.find(p => p.id === myPlayerId);
-                    const opponentPlayer = state.players.find(p => p.id !== myPlayerId);
-                    
-                    if (myPlayer && opponentPlayer) {
-                        // 내 손패는 그대로 유지, 상대방 손패만 업데이트
-                        myPlayer.hand = myCurrentHand;
-                        opponentPlayer.hand = opponentCurrentHand;
-                    }
-                }
-                
                 console.log('🔄 게임 종료 시 게임 상태 동기화됨');
-                
-                // 내 손패와 상대방 손패 복원
-                if (state.players && state.players.length >= 2) {
-                    const myPlayer = state.players.find(p => p.id === myPlayerId);
-                    const opponentPlayer = state.players.find(p => p.id !== myPlayerId);
-                    
-                    if (myPlayer && opponentPlayer) {
-                        console.log(`🔄 [handleGameOver] 손패 복원 - 내 손패: [${myCurrentHand.join(', ')}] → [${myPlayer.hand.join(', ')}]`);
-                        console.log(`🔄 [handleGameOver] 손패 복원 - 상대 손패: [${opponentCurrentHand.join(', ')}] → [${opponentPlayer.hand.join(', ')}]`);
-                        
-                        // 내 손패는 그대로 유지, 상대방 손패만 업데이트
-                        myPlayer.hand = myCurrentHand;
-                        opponentPlayer.hand = opponentCurrentHand;
-                        
-                        console.log(`✅ [handleGameOver] 손패 복원 완료 - 내 손패: [${myPlayer.hand.join(', ')}], 상대 손패: [${opponentPlayer.hand.join(', ')}]`);
-                    }
-                }
             } else {
                 state.isGameOver = true;
             }
@@ -5287,7 +6067,21 @@
             // 전적 업데이트
             updateStats(isPlayerWin, true);
             
-
+            // 랭킹 즉시 업데이트
+            if (socket && socket.connected) {
+                const playerName = localStorage.getItem('playerName') || 'Player';
+                const playerIcon = localStorage.getItem('playerIcon') || '👤';
+                const trophies = TrophySystem.loadTrophies();
+                
+                socket.emit('updateRanking', {
+                    category: 'formal',
+                    playerName: playerName,
+                    score: trophies.multiplayer,
+                    icon: playerIcon
+                });
+                
+                console.log(`🔄 멀티플레이어 게임 종료 후 랭킹 즉시 업데이트: ${playerName} (${isPlayerWin ? '승리' : '패배'})`);
+            }
             
             // 승리/패배 메시지 생성
             const winnerPlayer = state.players.find(p => p.id === winner);
@@ -5490,10 +6284,10 @@
                 btn.style.cursor = 'not-allowed';
             });
             
-            // 2초 후 버튼 활성화
+            // 1초 후 버튼 활성화
             setTimeout(() => {
                 enableTitleButtons();
-            }, 2000);
+            }, 1000);
         }
         
         // 타이틀 화면 버튼 활성화
@@ -5819,7 +6613,37 @@
         // 리사이즈 이벤트 리스너 추가
         window.addEventListener('resize', handleResize);
         
-
+        // localStorage의 승리의 증표 데이터를 서버로 전송
+        const syncLocalDataToServer = () => {
+            if (socket && socket.connected) {
+                const playerName = localStorage.getItem('playerName') || 'Player';
+                const playerIcon = localStorage.getItem('playerIcon') || '👤';
+                const aiTrophies = parseInt(localStorage.getItem('aiTrophies')) || 0;
+                const multiplayerTrophies = parseInt(localStorage.getItem('multiplayerTrophies')) || 0;
+                
+                console.log(`📊 localStorage 데이터 서버 동기화: ${playerName} (AI: ${aiTrophies}점, 멀티: ${multiplayerTrophies}점)`);
+                
+                // AI 랭킹 업데이트
+                if (aiTrophies > 0) {
+                    socket.emit('updateRanking', {
+                        category: 'mock',
+                        playerName: playerName,
+                        score: aiTrophies,
+                        icon: playerIcon
+                    });
+                }
+                
+                // 멀티플레이어 랭킹 업데이트
+                if (multiplayerTrophies > 0) {
+                    socket.emit('updateRanking', {
+                        category: 'formal',
+                        playerName: playerName,
+                        score: multiplayerTrophies,
+                        icon: playerIcon
+                    });
+                }
+            }
+        };
         
         // 페이지 로드 시 기본 이름 초기화
         document.addEventListener('DOMContentLoaded', () => {
@@ -5835,9 +6659,21 @@
                 console.log('🔊 AudioContext 일시 중단 상태 - 사용자 상호작용 대기 중');
             }
             
-
+            // 소켓 연결 초기화 (랭킹 기능을 위해)
+            console.log('🔌 페이지 로드 시 소켓 연결 초기화');
+            initializeSocketIO();
             
-
+            // 소켓 연결 후 localStorage 데이터 동기화
+            setTimeout(() => {
+                if (socket && socket.connected) {
+                    syncLocalDataToServer();
+                } else {
+                    // 소켓 연결 대기 후 다시 시도
+                    socket.on('connect', () => {
+                        syncLocalDataToServer();
+                    });
+                }
+            }, 1000);
         });
 
     </script>

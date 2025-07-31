@@ -1,11 +1,13 @@
 {
-  "name": "tactical-card-battle-signaling",
+  "name": "cast-me-if-you-can",
   "version": "1.0.0",
-  "description": "WebRTC signaling server for tactical card battle multiplayer game with real-time communication",
+  "description": "A tactical card battle game with AI and multiplayer support using WebRTC and Socket.IO",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "nodemon server.js"
+    "dev": "nodemon server.js",
+    "lint": "eslint .",
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
     "cors": "^2.8.5",
@@ -25,8 +27,23 @@
     "socket.io",
     "express",
     "card-game",
-    "tactical"
+    "tactical",
+    "ai",
+    "battle",
+    "magic",
+    "spells"
   ],
-  "author": "",
-  "license": "MIT"
+  "author": "Game Developer",
+  "license": "MIT",
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/cast-me-if-you-can.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/cast-me-if-you-can/issues"
+  },
+  "homepage": "https://github.com/yourusername/cast-me-if-you-can#readme"
 }

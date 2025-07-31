@@ -86,7 +86,11 @@ if (!fs.existsSync(DATA_DIR)) {
     console.log('📁 데이터 디렉토리 생성됨');
 }
 
-// 데이터 로드 함수
+/**
+ * 데이터 로드 함수
+ * 파일 시스템에서 게임 데이터를 안전하게 로드
+ * @returns {boolean} 로드 성공 여부
+ */
 function loadData() {
     try {
         console.log('📁 데이터 파일 확인 중...');
@@ -97,7 +101,7 @@ function loadData() {
         // 랭킹 데이터 로드
         if (fs.existsSync(RANKINGS_FILE)) {
             try {
-            const rankingsData = JSON.parse(fs.readFileSync(RANKINGS_FILE, 'utf8'));
+                const rankingsData = JSON.parse(fs.readFileSync(RANKINGS_FILE, 'utf8'));
             rankings.mock = new Map(rankingsData.mock || []);
             rankings.formal = new Map(rankingsData.formal || []);
             console.log(`📊 랭킹 데이터 로드됨: 모의 ${rankings.mock.size}명, 정식 ${rankings.formal.size}명`);
