@@ -1,0 +1,40 @@
+{
+  "1": {
+    "userId": 1,
+    "username": "testuser1",
+    "nickname": "?????1",
+    "password": "$2b$10$fLmynwL5n5oLwMOQECv79OQXK4NI1tl7YTJkbYmvYVcN8Mn1.wMDK",
+    "trophies": {
+      "mock": 0,
+      "formal": 0
+    },
+    "lastNicknameChange": 0,
+    "createdAt": 1754577726056
+  },
+  "2": {
+    "userId": 2,
+    "username": "123456",
+    "nickname": "123456",
+    "password": "$2b$10$ACmz2nMXTBQOga25wdOnMuqkLYIcaDObYldNko.IX3lWD8jLEBJCy",
+    "trophies": {
+      "mock": 21,
+      "formal": 0
+    },
+    "lastNicknameChange": 0,
+    "createdAt": 1754577756079,
+    "icon": "🧙‍♀️"
+  },
+  "3": {
+    "userId": 3,
+    "username": "tale",
+    "nickname": "테일",
+    "password": "$2b$10$k0nf6HDfePOa9A.TZ3/AUedRBj8DsJ0OjD.zMuHjSx9xHnbN70ZWO",
+    "icon": "🦁",
+    "trophies": {
+      "mock": 0,
+      "formal": 0
+    },
+    "lastNicknameChange": 0,
+    "createdAt": 1754581018269
+  }
+}

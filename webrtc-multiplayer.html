@@ -635,24 +635,50 @@
                 <li>상대의 체력을 0으로 만들거나, 내 마법 카드를 모두 사용하면 승리합니다!</li>
             </ul>
         </div>
-        <!-- 이름 입력 영역 -->
+        <!-- 마법사 정보 영역 -->
         <div class="bg-black bg-opacity-10 p-4 rounded-lg mb-6">
             <div class="flex items-center justify-between mb-2">
-                <label class="text-sm font-bold text-white">지팡이 주인 이름</label>
-                <span id="name-save-status" class="text-xs text-green-400 hidden">✓ 저장됨</span>
+                <label class="text-sm font-bold text-white">마법사 정보</label>
+                <span id="account-status" class="text-xs text-green-400 hidden">✓ 로그인됨</span>
             </div>
-            <div class="flex space-x-2 mb-2">
-                <div class="flex-1 relative">
-                    <div id="current-icon-display" class="absolute left-3 top-1/2 transform -translate-y-1/2 text-xl pointer-events-none">
-                        👤
+            
+            <!-- 게스트 모드 표시 -->
+            <div id="guest-mode-display" class="mb-4 p-3 bg-gray-700 rounded-lg">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-2">
+                        <div class="text-xl">👤</div>
+                        <div class="flex flex-col items-start">
+                            <div class="text-sm font-bold text-white">게스트 모드</div>
+                            <div class="text-xs text-gray-300">모의 결투만 가능하며, 점수가 저장되지 않습니다</div>
+                        </div>
                     </div>
-                    <input type="text" id="player-name-input" 
-                           class="w-full px-3 py-2 pl-10 bg-gray-800 border border-gray-600 rounded-lg text-white focus:outline-none focus:border-blue-400"
-                           placeholder="이름을 입력하세요" maxlength="10" value="">
+                    <button id="login-btn" class="px-4 py-2 rounded-lg font-bold btn-primary text-sm">로그인</button>
                 </div>
-                <button id="save-name-btn" class="px-4 py-2 rounded-lg font-bold btn-primary text-sm whitespace-nowrap">저장</button>
             </div>
-
+            
+            <!-- 계정 모드 표시 -->
+            <div id="account-mode-display" class="mb-4 p-3 bg-gray-100 rounded-lg hidden">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <div class="text-xl mr-2">👤</div>
+                        <div id="account-nickname" class="text-sm font-bold text-gray-800">닉네임</div>
+                    </div>
+                    <button id="logout-btn" class="px-3 py-1 rounded-lg font-bold bg-red-600 hover:bg-red-700 text-white text-sm">로그아웃</button>
+                </div>
+            </div>
+            
+            <!-- 게스트 이름 입력 -->
+            <div id="guest-name-input" class="mb-4">
+                <div class="flex space-x-2">
+                    <div class="flex-1 relative">
+                        <div class="absolute left-3 top-1/2 transform -translate-y-1/2 text-xl pointer-events-none">👤</div>
+                        <input type="text" id="player-name-input" 
+                               class="w-full px-3 py-2 pl-10 bg-gray-800 border border-gray-600 rounded-lg text-white focus:outline-none focus:border-blue-400"
+                               placeholder="게스트 이름을 입력하세요" maxlength="15" value="">
+                    </div>
+                    <button id="save-name-btn" class="px-4 py-2 rounded-lg font-bold btn-primary text-sm whitespace-nowrap">저장</button>
+                </div>
+            </div>
         </div>
         
         <div class="space-y-4">
@@ -660,7 +686,7 @@
             <button id="multiplayer-btn" class="w-full py-4 rounded-lg font-bold text-xl bg-red-600 hover:bg-red-700 text-white transition-all duration-300 hover:transform hover:-translate-y-0.5 hover:shadow-lg" style="box-shadow: 0 2px 4px rgba(220, 53, 69, 0.3);">정식 결투 <span class="text-sm font-normal">(vs 다른 마법사)</span></button>
             
             <!-- 승리의 증표 표시 영역 -->
-            <div class="flex justify-center items-center space-x-4 mb-4">
+            <div id="trophy-display" class="flex justify-center items-center space-x-4 mb-4 hidden">
                 <div class="text-2xl">🏅</div>
                 <div class="flex items-center space-x-2">
                     <div class="text-sm font-bold text-yellow-300">모의 결투</div>
@@ -673,8 +699,9 @@
                 </div>
             </div>
             
-            <div class="flex justify-center">
-                <button id="profile-btn" class="w-1/2 py-2 rounded-lg font-bold text-base btn-secondary">👤 내 정보</button>
+            <div class="flex justify-center space-x-2">
+                <button id="profile-btn" class="w-1/2 py-2 rounded-lg font-bold text-base btn-secondary hidden">👤 내 정보</button>
+                <button id="ranking-btn" class="w-1/2 py-2 rounded-lg font-bold text-base btn-secondary hidden">🏆 랭킹 보기</button>
             </div>
         </div>
         
@@ -700,6 +727,67 @@
                         </button>
                         <button id="cancel-difficulty-btn" class="w-full py-2 rounded-lg font-bold btn-secondary">취소</button>
                     </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 로그인/회원가입 모달 -->
+        <div id="auth-modal" class="fixed inset-0 flex items-center justify-center hidden modal-bg z-50">
+            <div class="modal-content p-6 rounded-lg max-w-md w-full mx-4">
+                <div class="text-center mb-6">
+                    <div class="text-4xl mb-4">🔐</div>
+                    <h3 id="auth-title" class="text-xl font-bold mb-2">로그인</h3>
+                    <p id="auth-subtitle" class="text-gray-600">계정으로 로그인하여 점수를 저장하세요</p>
+                </div>
+                
+                <!-- 로그인 폼 -->
+                <form id="login-form" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-2">아이디</label>
+                        <input type="text" id="login-username" 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                               placeholder="아이디를 입력하세요" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-2">비밀번호</label>
+                        <input type="password" id="login-password" 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                               placeholder="비밀번호를 입력하세요" required>
+                    </div>
+                    <div class="flex space-x-2">
+                        <button type="submit" class="flex-1 py-2 rounded-lg font-bold btn-primary">로그인</button>
+                        <button type="button" id="switch-to-register" class="flex-1 py-2 rounded-lg font-bold btn-secondary">회원가입</button>
+                    </div>
+                </form>
+                
+                <!-- 회원가입 폼 -->
+                <form id="register-form" class="space-y-4 hidden">
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-2">아이디</label>
+                        <input type="text" id="register-username" 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                               placeholder="3-20자 영문, 숫자, 언더스코어" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-2">비밀번호</label>
+                        <input type="password" id="register-password" 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                               placeholder="6자 이상" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-2">닉네임</label>
+                        <input type="text" id="register-nickname" 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                               placeholder="2-15자" required>
+                    </div>
+                    <div class="flex space-x-2">
+                        <button type="submit" class="flex-1 py-2 rounded-lg font-bold btn-primary">회원가입</button>
+                        <button type="button" id="switch-to-login" class="flex-1 py-2 rounded-lg font-bold btn-secondary">로그인</button>
+                    </div>
+                </form>
+                
+                <div class="text-center mt-4">
+                    <button id="close-auth-btn" class="px-4 py-2 rounded-lg font-bold btn-secondary">취소</button>
                 </div>
             </div>
         </div>
@@ -3689,7 +3777,14 @@
                     message += `\n\n${Messages.streak(currentWinStreak)}`;
                 }
                 
-                // 승리의 증표 업데이트
+                // 계정 시스템과 연동된 게임 결과 업데이트
+                const gameType = multiplayerMode ? 'formal' : 'mock';
+                const opponentName = multiplayerMode ? (opponentPlayer.name || '상대방') : 'AI 허수아비';
+                
+                // 서버로 게임 결과 전송 (계정 유저만)
+                updateGameResult(gameType, isPlayerWin, opponentName);
+                
+                // 기존 증표 시스템 (게스트 모드용)
                 if (isPlayerWin) {
                     if (multiplayerMode) {
                         TrophySystem.addVictoryTrophy('multiplayer');
@@ -4843,26 +4938,172 @@
         
 
         
+        // 랭킹 모달 표시 함수
+        function showRankingModal() {
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 flex items-center justify-center z-50 modal-bg';
+            modal.innerHTML = `
+                <div class="modal-content p-6 rounded-lg max-w-4xl w-full mx-4 max-h-[80vh] overflow-y-auto">
+                    <div class="text-center mb-6">
+                        <div class="text-4xl mb-4">🏆</div>
+                        <h3 class="text-xl font-bold mb-2">마법 랭킹</h3>
+                        <p class="text-gray-600">모든 마법사의 승리의 증표를 확인하세요</p>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- 모의 결투 랭킹 -->
+                        <div class="bg-gray-100 rounded-lg p-4">
+                            <h4 class="text-lg font-bold mb-4 text-center">🎭 모의 결투 랭킹</h4>
+                            <div id="mock-ranking-list" class="space-y-2">
+                                <div class="text-center text-gray-500">로딩 중...</div>
+                            </div>
+                        </div>
+                        
+                        <!-- 정식 결투 랭킹 -->
+                        <div class="bg-gray-100 rounded-lg p-4">
+                            <h4 class="text-lg font-bold mb-4 text-center">⚔️ 정식 결투 랭킹</h4>
+                            <div id="formal-ranking-list" class="space-y-2">
+                                <div class="text-center text-gray-500">로딩 중...</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="text-center mt-6 space-x-2">
+                        <button id="refresh-ranking-btn" class="px-4 py-2 rounded-lg font-bold bg-blue-600 hover:bg-blue-700 text-white">🔄 새로고침</button>
+                        <button id="close-ranking-btn" class="px-6 py-2 rounded-lg font-bold btn-secondary">닫기</button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            // 랭킹 데이터 로드
+            loadRankingData();
+            
+            // 새로고침 버튼 이벤트
+            const refreshBtn = modal.querySelector('#refresh-ranking-btn');
+            refreshBtn.addEventListener('click', () => {
+                console.log('🔄 사용자가 랭킹 새로고침 요청');
+                loadRankingData();
+            });
+            
+            // 닫기 버튼 이벤트
+            const closeBtn = modal.querySelector('#close-ranking-btn');
+            closeBtn.addEventListener('click', () => {
+                document.body.removeChild(modal);
+            });
+            
+            // 배경 클릭 시 닫기
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    document.body.removeChild(modal);
+                }
+            });
+        }
+        
+        // 랭킹 데이터 로드 함수
+        function loadRankingData() {
+            console.log('🔄 랭킹 데이터 새로고침 중...');
+            
+            // 모의 결투 랭킹 로드
+            fetch('/api/rankings/mock')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        console.log('📊 모의 결투 랭킹 로드 완료:', data.rankings.length + '명');
+                        displayRanking('mock-ranking-list', data.rankings, '🎭');
+                    }
+                })
+                .catch(error => {
+                    console.error('모의 결투 랭킹 로드 오류:', error);
+                    document.getElementById('mock-ranking-list').innerHTML = '<div class="text-center text-red-500">로딩 실패</div>';
+                });
+            
+            // 정식 결투 랭킹 로드
+            fetch('/api/rankings/formal')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        console.log('📊 정식 결투 랭킹 로드 완료:', data.rankings.length + '명');
+                        displayRanking('formal-ranking-list', data.rankings, '⚔️');
+                    }
+                })
+                .catch(error => {
+                    console.error('정식 결투 랭킹 로드 오류:', error);
+                    document.getElementById('formal-ranking-list').innerHTML = '<div class="text-center text-red-500">로딩 실패</div>';
+                });
+        }
+        
+        // 랭킹 표시 함수
+        function displayRanking(containerId, rankings, icon) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            
+            if (rankings.length === 0) {
+                container.innerHTML = '<div class="text-center text-gray-500">아직 랭킹 데이터가 없습니다.</div>';
+                return;
+            }
+            
+            let html = '';
+            rankings.forEach((rank, index) => {
+                const rankClass = index === 0 ? 'bg-yellow-100 border-yellow-300' : 
+                                index === 1 ? 'bg-gray-100 border-gray-300' : 
+                                index === 2 ? 'bg-orange-100 border-orange-300' : 
+                                'bg-white border-gray-200';
+                const rankIcon = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}`;
+                
+                html += `
+                    <div class="flex items-center justify-between p-3 border rounded-lg ${rankClass}">
+                        <div class="flex items-center space-x-3">
+                            <span class="text-lg font-bold">${rankIcon}</span>
+                            <span class="font-semibold">${rank.nickname}</span>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-lg font-bold text-blue-600">${rank.score}점</div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
+        
         function showProfileModal() {
-            const stats = loadStats();
-            const mockStats = stats.mock || { wins: 0, losses: 0 };
-            const formalStats = stats.formal || { wins: 0, losses: 0 };
-            
-            const mockTotalGames = mockStats.wins + mockStats.losses;
-            const formalTotalGames = formalStats.wins + formalStats.losses;
-            
-            const mockWinRate = mockTotalGames > 0 ? ((mockStats.wins / mockTotalGames) * 100).toFixed(1) : 0;
-            const formalWinRate = formalTotalGames > 0 ? ((formalStats.wins / formalTotalGames) * 100).toFixed(1) : 0;
-            
-            const playerName = localStorage.getItem('playerName') || '';
-            const playerIcon = localStorage.getItem('playerIcon') || '👤';
-            
-            // 연승 정보 가져오기
-            const currentWinStreak = parseInt(localStorage.getItem('currentWinStreak')) || 0;
-            const maxWinStreak = parseInt(localStorage.getItem('maxWinStreak')) || 0;
-            
-            // 증표 정보 가져오기
-            const trophies = TrophySystem.loadTrophies();
+            // 서버에서 최신 유저 데이터 가져오기
+            fetch(`/api/profile/${currentUserData.userId}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    showToast('유저 정보를 가져올 수 없습니다.', 'error', 3000);
+                    return;
+                }
+                
+                const userData = data.userData;
+                const stats = loadStats();
+                const mockStats = stats.mock || { wins: 0, losses: 0 };
+                const formalStats = stats.formal || { wins: 0, losses: 0 };
+                
+                const mockTotalGames = mockStats.wins + mockStats.losses;
+                const formalTotalGames = formalStats.wins + formalStats.losses;
+                
+                const mockWinRate = mockTotalGames > 0 ? ((mockStats.wins / mockTotalGames) * 100).toFixed(1) : 0;
+                const formalWinRate = formalTotalGames > 0 ? ((formalStats.wins / formalTotalGames) * 100).toFixed(1) : 0;
+                
+                // 로그인한 계정의 닉네임 사용
+                const playerName = userData.nickname || '';
+                const playerIcon = localStorage.getItem('playerIcon') || '👤';
+                
+                // 연승 정보 가져오기
+                const currentWinStreak = parseInt(localStorage.getItem('currentWinStreak')) || 0;
+                const maxWinStreak = parseInt(localStorage.getItem('maxWinStreak')) || 0;
+                
+                // 서버의 트로피 정보 사용
+                const trophies = userData.trophies || { mock: 0, formal: 0 };
             
             const modal = document.createElement('div');
             modal.className = 'fixed inset-0 flex items-center justify-center z-50 modal-bg';
@@ -4945,11 +5186,11 @@
                                 <h4 class="text-lg font-bold mb-3 text-yellow-300">🏆 승리의 증표</h4>
                                 <div class="grid grid-cols-2 gap-4">
                                     <div class="bg-yellow-600 bg-opacity-40 p-3 rounded-lg border border-yellow-400 border-opacity-30 shadow-lg">
-                                        <div class="text-xl font-bold text-yellow-100">🏅 ${trophies.ai}개</div>
+                                        <div class="text-xl font-bold text-yellow-100">🏅 ${trophies.mock}개</div>
                                         <div class="text-xs text-yellow-50 font-semibold">모의 결투 점수</div>
                                     </div>
                                     <div class="bg-red-600 bg-opacity-40 p-3 rounded-lg border border-red-400 border-opacity-30 shadow-lg">
-                                        <div class="text-xl font-bold text-red-100">🏅 ${trophies.multiplayer}개</div>
+                                        <div class="text-xl font-bold text-red-100">🏅 ${trophies.formal}개</div>
                                         <div class="text-xs text-red-50 font-semibold">정식 결투 점수</div>
                                     </div>
                                 </div>
@@ -4965,23 +5206,24 @@
             document.body.appendChild(modal);
             playCardSound();
             
-            // 아이콘 변경 버튼 이벤트 리스너 추가
-            const changeIconBtn = modal.querySelector('#change-icon-btn');
-            changeIconBtn.addEventListener('click', () => {
-                showIconSelectionModal().then(() => {
-                    // 아이콘 선택 후 모달 닫기
-                    document.body.removeChild(modal);
-                    resolve();
+                // 아이콘 변경 버튼 이벤트 리스너 추가
+                const changeIconBtn = modal.querySelector('#change-icon-btn');
+                changeIconBtn.addEventListener('click', () => {
+                    showIconSelectionModal().then(() => {
+                        // 아이콘 선택 후 모달 닫기
+                        document.body.removeChild(modal);
+                    });
                 });
-            });
-            
-            return new Promise(resolve => {
+                
                 const closeBtn = modal.querySelector('#close-profile-btn');
                 
                 closeBtn.addEventListener('click', () => {
                     document.body.removeChild(modal);
-                    resolve();
                 });
+            })
+            .catch(error => {
+                console.error('프로필 정보 가져오기 오류:', error);
+                showToast('유저 정보를 가져올 수 없습니다.', 'error', 3000);
             });
         }
         
@@ -5153,8 +5395,43 @@
                 
                 confirmBtn.addEventListener('click', () => {
                     localStorage.setItem('playerIcon', selectedIcon);
+                    
+                    // 로그인한 상태라면 서버에도 아이콘 저장
+                    if (isLoggedIn && currentUserData && currentSessionId) {
+                        fetch('/api/change-icon', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                sessionId: currentSessionId,
+                                icon: selectedIcon
+                            })
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                showToast('대표 아이콘이 변경되었습니다.', 'success', 2000);
+                                // 서버 데이터 업데이트
+                                if (currentUserData) {
+                                    currentUserData.icon = selectedIcon;
+                                    console.log('✅ 아이콘 변경 완료:', selectedIcon);
+                                }
+                            } else {
+                                showToast('아이콘 변경에 실패했습니다.', 'error', 3000);
+                                console.error('❌ 아이콘 변경 실패:', data.error);
+                            }
+                        })
+                        .catch(error => {
+                            console.error('아이콘 변경 오류:', error);
+                            showToast('아이콘 변경에 실패했습니다.', 'error', 3000);
+                        });
+                    } else {
+                        showToast('대표 아이콘이 변경되었습니다.', 'success', 2000);
+                    }
+                    
                     updatePlayerName(); // 플레이어 이름 업데이트로 아이콘도 함께 업데이트
-                    showToast('대표 아이콘이 변경되었습니다.', 'success', 2000);
+                    updateAccountUI(); // 계정 UI 업데이트
                     document.body.removeChild(modal);
                     resolve();
                 });
@@ -6371,6 +6648,14 @@
                 showToast('잠시만 기다려주세요.', 'info', 3000);
                 return;
             }
+            
+            // 계정 로그인 확인
+            if (!isLoggedIn) {
+                showToast('정식 결투는 계정이 필요합니다. 로그인해주세요.', 'warning', 3000);
+                showAuthModal('login');
+                return;
+            }
+            
             activateAudioContext(); // AudioContext 활성화
             startMatching();
         });
@@ -6469,6 +6754,15 @@
             showProfileModal();
         });
         
+        // 랭킹 버튼 이벤트 리스너
+        DOM.get('ranking-btn').addEventListener('click', (e) => {
+            if (e.target.disabled) {
+                showToast('잠시만 기다려주세요.', 'info', 3000);
+                return;
+            }
+            showRankingModal();
+        });
+        
 
         
         // 이름 입력 및 저장 기능
@@ -6517,17 +6811,22 @@
         function updateNameSaveStatus() {
             const currentName = localStorage.getItem('playerName') || '';
             const inputName = playerNameInput.value.trim();
+            const nameSaveStatus = DOM.get('name-save-status');
             
             if (inputName === currentName && inputName !== '') {
                 saveNameBtn.disabled = true;
                 saveNameBtn.style.opacity = '0.5';
                 saveNameBtn.style.cursor = 'not-allowed';
-                nameSaveStatus.classList.remove('hidden');
+                if (nameSaveStatus) {
+                    nameSaveStatus.classList.remove('hidden');
+                }
             } else {
                 saveNameBtn.disabled = false;
                 saveNameBtn.style.opacity = '1';
                 saveNameBtn.style.cursor = 'pointer';
-                nameSaveStatus.classList.add('hidden');
+                if (nameSaveStatus) {
+                    nameSaveStatus.classList.add('hidden');
+                }
             }
         }
         
@@ -6543,19 +6842,35 @@
             return userId;
         }
         
-        // 이름과 아이콘을 함께 가져오기
+                // 이름과 아이콘을 함께 가져오기
         function getPlayerDisplayName() {
-            const playerName = localStorage.getItem('playerName') || 'Player';
-            const playerIcon = localStorage.getItem('playerIcon') || '👤';
-            return `${playerIcon} ${playerName}`;
+            try {
+                // isLoggedIn이 정의되지 않았거나 false인 경우 게스트 모드로 처리
+                if (typeof isLoggedIn !== 'undefined' && isLoggedIn && currentUserData) {
+                    // 로그인한 계정: 서버의 아이콘과 닉네임 사용
+                    const playerIcon = currentUserData.icon || localStorage.getItem('playerIcon') || '👤';
+                    return `${playerIcon} ${currentUserData.nickname}`;
+                } else {
+                    // 게스트 모드: '지나가는 마법사' 고정
+                    const playerIcon = localStorage.getItem('playerIcon') || '👤';
+                    return `${playerIcon} 지나가는 마법사`;
+                }
+            } catch (error) {
+                // 오류 발생 시 게스트 모드로 처리
+                const playerIcon = localStorage.getItem('playerIcon') || '👤';
+                return `${playerIcon} 지나가는 마법사`;
+            }
         }
         
         // 이름 저장 성공 표시
         function showNameSaveSuccess() {
-            nameSaveStatus.classList.remove('hidden');
-            setTimeout(() => {
-                nameSaveStatus.classList.add('hidden');
-            }, 2000);
+            const nameSaveStatus = DOM.get('name-save-status');
+            if (nameSaveStatus) {
+                nameSaveStatus.classList.remove('hidden');
+                setTimeout(() => {
+                    nameSaveStatus.classList.add('hidden');
+                }, 2000);
+            }
         }
 
         // 클릭 시 확인 팝업 표시
@@ -6645,6 +6960,389 @@
             }
         };
         
+        // 계정 시스템 변수들
+        let currentSessionId = null;
+        let currentUserData = null;
+        let isLoggedIn = false;
+
+        // 계정 시스템 초기화
+        function initializeAccountSystem() {
+            // 저장된 세션 확인
+            const savedSessionId = localStorage.getItem('sessionId');
+            if (savedSessionId) {
+                verifySession(savedSessionId);
+            }
+            
+            // UI 업데이트
+            updateAccountUI();
+            
+            // 이벤트 리스너 등록
+            setupAccountEventListeners();
+        }
+
+        // 세션 확인
+        async function verifySession(sessionId) {
+            try {
+                const response = await fetch('/api/verify-session', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ sessionId })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    currentSessionId = sessionId;
+                    currentUserData = data.userData;
+                    isLoggedIn = true;
+                    
+                    // 서버 응답 확인
+                    console.log('🔍 서버 응답 userData:', data.userData);
+                    
+                    // 로컬 스토리지에 저장
+                    localStorage.setItem('sessionId', sessionId);
+                    localStorage.setItem('userData', JSON.stringify(data.userData));
+                    
+                    // UI 업데이트
+                    updateAccountUI();
+                    updateTrophyDisplay();
+                    
+                    console.log(`🔐 세션 확인 성공: ${currentUserData.nickname}`);
+                } else {
+                    // 세션이 유효하지 않으면 삭제
+                    localStorage.removeItem('sessionId');
+                    localStorage.removeItem('userData');
+                    currentSessionId = null;
+                    currentUserData = null;
+                    isLoggedIn = false;
+                    updateAccountUI();
+                }
+            } catch (error) {
+                console.error('❌ 세션 확인 오류:', error);
+                localStorage.removeItem('sessionId');
+                localStorage.removeItem('userData');
+                currentSessionId = null;
+                currentUserData = null;
+                isLoggedIn = false;
+                updateAccountUI();
+            }
+        }
+
+        // 로그인 함수
+        async function login(username, password) {
+            try {
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    currentSessionId = data.sessionId;
+                    currentUserData = data.userData;
+                    isLoggedIn = true;
+                    
+                    // 서버 응답 확인
+                    console.log('🔍 서버 응답 userData:', data.userData);
+                    
+                    // 로컬 스토리지에 저장
+                    localStorage.setItem('sessionId', data.sessionId);
+                    localStorage.setItem('userData', JSON.stringify(data.userData));
+                    
+                    // UI 업데이트
+                    updateAccountUI();
+                    updateTrophyDisplay();
+                    
+                    console.log(`🔐 로그인 성공: ${currentUserData.nickname}`);
+                    return { success: true };
+                } else {
+                    return { success: false, error: data.error };
+                }
+            } catch (error) {
+                console.error('❌ 로그인 오류:', error);
+                return { success: false, error: '서버 오류가 발생했습니다.' };
+            }
+        }
+
+        // 회원가입 함수
+        async function register(username, password, nickname) {
+            try {
+                const response = await fetch('/api/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username, password, nickname })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    currentSessionId = data.sessionId;
+                    currentUserData = data.userData;
+                    isLoggedIn = true;
+                    
+                    // 서버 응답 확인
+                    console.log('🔍 서버 응답 userData:', data.userData);
+                    
+                    // 로컬 스토리지에 저장
+                    localStorage.setItem('sessionId', data.sessionId);
+                    localStorage.setItem('userData', JSON.stringify(data.userData));
+                    
+                    // UI 업데이트
+                    updateAccountUI();
+                    updateTrophyDisplay();
+                    
+                    console.log(` 회원가입 성공: ${currentUserData.nickname}`);
+                    return { success: true };
+                } else {
+                    return { success: false, error: data.error };
+                }
+            } catch (error) {
+                console.error('❌ 회원가입 오류:', error);
+                return { success: false, error: '서버 오류가 발생했습니다.' };
+            }
+        }
+
+        // 로그아웃 함수
+        function logout() {
+            currentSessionId = null;
+            currentUserData = null;
+            isLoggedIn = false;
+            
+            // 로컬 스토리지에서 계정 정보 삭제
+            localStorage.removeItem('sessionId');
+            localStorage.removeItem('userData');
+            
+            // UI 업데이트
+            updateAccountUI();
+            updateTrophyDisplay();
+            
+            console.log('🔐 로그아웃됨');
+            showToast('로그아웃되었습니다.', 'info', 2000);
+        }
+
+        // UI 업데이트 함수들
+        function updateAccountUI() {
+            const guestDisplay = DOM.get('guest-mode-display');
+            const accountDisplay = DOM.get('account-mode-display');
+            const guestNameInput = DOM.get('guest-name-input');
+            const accountStatus = DOM.get('account-status');
+            const nameInput = DOM.get('player-name-input');
+            const saveBtn = DOM.get('save-name-btn');
+            const profileBtn = DOM.get('profile-btn');
+            const trophyDisplay = DOM.get('trophy-display');
+            
+            if (isLoggedIn && currentUserData) {
+                // 로그인 상태
+                guestDisplay.classList.add('hidden');
+                accountDisplay.classList.remove('hidden');
+                guestNameInput.classList.add('hidden');
+                accountStatus.classList.remove('hidden');
+                
+                // 계정 정보 표시
+                DOM.get('account-nickname').textContent = currentUserData.nickname;
+                
+                // 서버의 아이콘 표시
+                const accountIcon = DOM.get('account-mode-display').querySelector('.text-xl');
+                if (accountIcon && currentUserData) {
+                    console.log('🔍 아이콘 업데이트:', currentUserData.icon || '👤');
+                    console.log('🔍 전체 userData:', currentUserData);
+                    accountIcon.textContent = currentUserData.icon || '👤';
+                }
+                
+                // 이름 입력 비활성화
+                nameInput.disabled = true;
+                nameInput.style.opacity = '0.6';
+                saveBtn.style.display = 'none';
+                
+                // 내 정보 버튼, 랭킹 버튼과 트로피 표시
+                profileBtn.classList.remove('hidden');
+                DOM.get('ranking-btn').classList.remove('hidden');
+                trophyDisplay.classList.remove('hidden');
+                
+            } else {
+                // 게스트 상태
+                guestDisplay.classList.remove('hidden');
+                accountDisplay.classList.add('hidden');
+                guestNameInput.classList.remove('hidden');
+                accountStatus.classList.add('hidden');
+                
+                // 게스트 닉네임을 '지나가는 마법사'로 고정
+                DOM.get('account-nickname').textContent = '지나가는 마법사';
+                
+                // 이름 입력 비활성화 (게스트는 닉네임 변경 불가)
+                nameInput.disabled = true;
+                nameInput.style.opacity = '0.6';
+                nameInput.value = '지나가는 마법사';
+                saveBtn.style.display = 'none';
+                
+                // 내 정보 버튼, 랭킹 버튼과 트로피 숨김
+                profileBtn.classList.add('hidden');
+                DOM.get('ranking-btn').classList.add('hidden');
+                trophyDisplay.classList.add('hidden');
+            }
+        }
+
+        function updateTrophyDisplay() {
+            const aiTrophyCount = DOM.get('ai-trophy-count');
+            const multiplayerTrophyCount = DOM.get('multiplayer-trophy-count');
+            
+            if (isLoggedIn && currentUserData) {
+                aiTrophyCount.textContent = currentUserData.trophies.mock || 0;
+                multiplayerTrophyCount.textContent = currentUserData.trophies.formal || 0;
+            } else {
+                // 게스트 모드: 0으로 표시
+                aiTrophyCount.textContent = '0';
+                multiplayerTrophyCount.textContent = '0';
+            }
+        }
+
+        // 이벤트 리스너 설정
+        function setupAccountEventListeners() {
+            // 로그인 버튼
+            DOM.get('login-btn').addEventListener('click', () => {
+                showAuthModal('login');
+            });
+            
+            // 로그아웃 버튼
+            DOM.get('logout-btn').addEventListener('click', logout);
+            
+            // 인증 모달 이벤트
+            setupAuthModalEvents();
+            
+            // 게임 버튼 이벤트 수정 (계정 시스템과 연동)
+            // 정식 결투 버튼은 이미 위에서 처리됨
+        }
+
+        // 인증 모달 표시
+        function showAuthModal(mode = 'login') {
+            const modal = DOM.get('auth-modal');
+            const loginForm = DOM.get('login-form');
+            const registerForm = DOM.get('register-form');
+            const title = DOM.get('auth-title');
+            const subtitle = DOM.get('auth-subtitle');
+            
+            if (mode === 'login') {
+                title.textContent = '로그인';
+                subtitle.textContent = '계정으로 로그인하여 점수를 저장하세요';
+                loginForm.classList.remove('hidden');
+                registerForm.classList.add('hidden');
+            } else {
+                title.textContent = '회원가입';
+                subtitle.textContent = '새 계정을 만들어 점수를 저장하세요';
+                loginForm.classList.add('hidden');
+                registerForm.classList.remove('hidden');
+            }
+            
+            modal.classList.remove('hidden');
+        }
+
+        // 인증 모달 이벤트 설정
+        function setupAuthModalEvents() {
+            const modal = DOM.get('auth-modal');
+            const loginForm = DOM.get('login-form');
+            const registerForm = DOM.get('register-form');
+            const switchToRegister = DOM.get('switch-to-register');
+            const switchToLogin = DOM.get('switch-to-login');
+            const closeBtn = DOM.get('close-auth-btn');
+            
+            // 폼 전환
+            switchToRegister.addEventListener('click', () => {
+                showAuthModal('register');
+            });
+            
+            switchToLogin.addEventListener('click', () => {
+                showAuthModal('login');
+            });
+            
+            // 로그인 폼 제출
+            loginForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const username = DOM.get('login-username').value;
+                const password = DOM.get('login-password').value;
+                
+                const result = await login(username, password);
+                
+                if (result.success) {
+                    modal.classList.add('hidden');
+                    showToast('로그인되었습니다.', 'success', 2000);
+                } else {
+                    showToast(result.error, 'error', 3000);
+                }
+            });
+            
+            // 회원가입 폼 제출
+            registerForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const username = DOM.get('register-username').value;
+                const password = DOM.get('register-password').value;
+                const nickname = DOM.get('register-nickname').value;
+                
+                const result = await register(username, password, nickname);
+                
+                if (result.success) {
+                    modal.classList.add('hidden');
+                    showToast('회원가입이 완료되었습니다.', 'success', 2000);
+                } else {
+                    showToast(result.error, 'error', 3000);
+                }
+            });
+            
+            // 닫기 버튼
+            closeBtn.addEventListener('click', () => {
+                modal.classList.add('hidden');
+            });
+        }
+
+        // 게임 결과 업데이트
+        async function updateGameResult(gameType, isWin, opponentNickname = null) {
+            if (!isLoggedIn || !currentSessionId) {
+                console.log('게스트 모드: 점수 저장하지 않음');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/update-trophies', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        sessionId: currentSessionId,
+                        category: gameType,
+                        change: isWin ? 2 : -1
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    currentUserData.trophies = data.trophies;
+                    updateTrophyDisplay();
+                    
+                    console.log(` 게임 결과 업데이트: ${gameType} ${isWin ? '승리' : '패배'}`);
+                    
+                    // 랭킹 모달이 열려있다면 랭킹 데이터 새로고침
+                    const rankingModal = document.querySelector('#ranking-modal');
+                    if (rankingModal && !rankingModal.classList.contains('hidden')) {
+                        console.log('🔄 게임 결과 반영하여 랭킹 새로고침');
+                        loadRankingData();
+                    }
+                }
+            } catch (error) {
+                console.error('❌ 게임 결과 업데이트 오류:', error);
+            }
+        }
+
         // 페이지 로드 시 기본 이름 초기화
         document.addEventListener('DOMContentLoaded', () => {
             console.log('🚀 페이지 로드 - 기본 이름 초기화');
@@ -6652,6 +7350,9 @@
             TrophySystem.init(); // 증표 시스템 초기화
             getOrCreateUserId(); // 유저 ID 초기화
             initializePlayerName();
+            
+            // 계정 시스템 초기화 추가
+            initializeAccountSystem();
             
             // AudioContext 초기화 시도
             console.log('🔊 AudioContext 상태:', audioContext.state);

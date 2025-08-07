@@ -3,6 +3,8 @@ const http = require('http');
 const socketIo = require('socket.io');
 const cors = require('cors');
 const path = require('path');
+const bcrypt = require('bcrypt');
+const crypto = require('crypto');
 
 const app = express();
 const server = http.createServer(app);
@@ -19,6 +21,7 @@ const io = socketIo(server, {
 
 // CORS 설정
 app.use(cors());
+app.use(express.json()); // JSON 파싱 추가
 
 // 정적 파일 제공 개선
 app.use(express.static(path.join(__dirname)));
@@ -45,11 +48,7 @@ app.get('/favicon.ico', (req, res) => {
     res.send(svgIcon);
 });
 
-// 404 에러 처리
-app.use((req, res) => {
-    console.log(`404 에러: ${req.method} ${req.url}`);
-    res.status(404).send('파일을 찾을 수 없습니다.');
-});
+
 
 // 게임 상태 관리
 const waitingPlayers = new Map(); // 대기 중인 플레이어들
@@ -57,28 +56,26 @@ const activeGames = new Map(); // 활성 게임들
 const playerSessions = new Map(); // 플레이어 세션 관리
 const gameStates = new Map(); // 게임 상태 저장
 
-// 랭킹 시스템 (점수와 아이콘 정보 저장)
+// 계정 시스템
+const users = new Map(); // userId -> userData
+const usernames = new Map(); // username -> userId
+const sessions = new Map(); // sessionId -> userId
+let nextUserId = 1;
+
+// 랭킹 시스템
 const rankings = {
-    mock: new Map(), // 모의 결투 점수
-    formal: new Map() // 정식 결투 점수
+    mock: new Map(), // 모의 결투 랭킹 (username -> score)
+    formal: new Map() // 정식 결투 랭킹 (username -> score)
 };
-
-// 플레이어 아이콘 정보 저장
-const playerIcons = new Map(); // 플레이어 이름 -> 아이콘 매핑
-
-// 유저 ID 시스템
-const userIds = new Map(); // 플레이어 이름 -> 유저 ID 매핑
-const userNames = new Map(); // 유저 ID -> 플레이어 이름 매핑
-let nextUserId = 1; // 다음 유저 ID
 
 // 파일 시스템을 사용한 영구 저장소
 const fs = require('fs');
 
 // 데이터 파일 경로
 const DATA_DIR = path.join(__dirname, 'data');
+const USERS_FILE = path.join(DATA_DIR, 'users.json');
 const RANKINGS_FILE = path.join(DATA_DIR, 'rankings.json');
-const USER_IDS_FILE = path.join(DATA_DIR, 'userIds.json');
-const PLAYER_ICONS_FILE = path.join(DATA_DIR, 'playerIcons.json');
+const SESSIONS_FILE = path.join(DATA_DIR, 'sessions.json');
 
 // 데이터 디렉토리 생성
 if (!fs.existsSync(DATA_DIR)) {
@@ -88,82 +85,88 @@ if (!fs.existsSync(DATA_DIR)) {
 
 /**
  * 데이터 로드 함수
- * 파일 시스템에서 게임 데이터를 안전하게 로드
- * @returns {boolean} 로드 성공 여부
  */
 function loadData() {
     try {
         console.log('📁 데이터 파일 확인 중...');
-        console.log(`📁 RANKINGS_FILE 존재: ${fs.existsSync(RANKINGS_FILE)}`);
-        console.log(`📁 USER_IDS_FILE 존재: ${fs.existsSync(USER_IDS_FILE)}`);
-        console.log(`📁 PLAYER_ICONS_FILE 존재: ${fs.existsSync(PLAYER_ICONS_FILE)}`);
+        
+        // 유저 데이터 로드
+        if (fs.existsSync(USERS_FILE)) {
+            try {
+                const usersData = JSON.parse(fs.readFileSync(USERS_FILE, 'utf8'));
+                users.clear();
+                usernames.clear();
+                
+                for (const [userId, userData] of Object.entries(usersData)) {
+                    users.set(parseInt(userId), userData);
+                    usernames.set(userData.username, parseInt(userId));
+                }
+                nextUserId = Math.max(...Object.keys(usersData).map(Number), 0) + 1;
+                console.log(`👤 유저 데이터 로드됨: ${users.size}명, 다음 ID: ${nextUserId}`);
+                
+                // 기존 유저들을 랭킹에 등록 (없는 경우에만)
+                for (const [userId, userData] of users) {
+                    if (!rankings.mock.has(userData.nickname)) {
+                        rankings.mock.set(userData.nickname, userData.trophies.mock || 0);
+                    }
+                    if (!rankings.formal.has(userData.nickname)) {
+                        rankings.formal.set(userData.nickname, userData.trophies.formal || 0);
+                    }
+                }
+            } catch (error) {
+                console.error('❌ 유저 데이터 파일 파싱 오류:', error);
+                users.clear();
+                usernames.clear();
+                nextUserId = 1;
+            }
+        }
         
         // 랭킹 데이터 로드
         if (fs.existsSync(RANKINGS_FILE)) {
             try {
                 const rankingsData = JSON.parse(fs.readFileSync(RANKINGS_FILE, 'utf8'));
-            rankings.mock = new Map(rankingsData.mock || []);
-            rankings.formal = new Map(rankingsData.formal || []);
-            console.log(`📊 랭킹 데이터 로드됨: 모의 ${rankings.mock.size}명, 정식 ${rankings.formal.size}명`);
+                rankings.mock = new Map(rankingsData.mock || []);
+                rankings.formal = new Map(rankingsData.formal || []);
+                console.log(`📊 랭킹 데이터 로드됨: 모의 ${rankings.mock.size}명, 정식 ${rankings.formal.size}명`);
             } catch (error) {
                 console.error('❌ 랭킹 데이터 파일 파싱 오류:', error);
-                console.log('📊 랭킹 데이터를 초기화합니다.');
                 rankings.mock.clear();
                 rankings.formal.clear();
             }
-        } else {
-            console.log(`📁 RANKINGS_FILE이 존재하지 않습니다.`);
         }
         
-        // 유저 ID 데이터 로드
-        if (fs.existsSync(USER_IDS_FILE)) {
+        // 세션 데이터 로드
+        if (fs.existsSync(SESSIONS_FILE)) {
             try {
-            const userIdsData = JSON.parse(fs.readFileSync(USER_IDS_FILE, 'utf8'));
-            userIds.clear();
-            userNames.clear();
-            
-            for (const [name, id] of userIdsData.userIds || []) {
-                userIds.set(name, id);
-                userNames.set(id, name);
-            }
-            nextUserId = userIdsData.nextUserId || 1;
-            console.log(`🆔 유저 ID 데이터 로드됨: ${userIds.size}명, 다음 ID: ${nextUserId}`);
+                const sessionsData = JSON.parse(fs.readFileSync(SESSIONS_FILE, 'utf8'));
+                sessions.clear();
+                for (const [sessionId, userId] of Object.entries(sessionsData)) {
+                    sessions.set(sessionId, parseInt(userId));
+                }
+                console.log(`🔐 세션 데이터 로드됨: ${sessions.size}개`);
             } catch (error) {
-                console.error('❌ 유저 ID 데이터 파일 파싱 오류:', error);
-                console.log('🆔 유저 ID 데이터를 초기화합니다.');
-                userIds.clear();
-                userNames.clear();
-                nextUserId = 1;
+                console.error('❌ 세션 데이터 파일 파싱 오류:', error);
+                sessions.clear();
             }
-        } else {
-            console.log(`📁 USER_IDS_FILE이 존재하지 않습니다.`);
         }
         
-        // 플레이어 아이콘 데이터 로드
-        if (fs.existsSync(PLAYER_ICONS_FILE)) {
-            try {
-            const iconsData = JSON.parse(fs.readFileSync(PLAYER_ICONS_FILE, 'utf8'));
-            playerIcons.clear();
-            for (const [name, icon] of iconsData || []) {
-                playerIcons.set(name, icon);
-            }
-            console.log(`🎭 플레이어 아이콘 데이터 로드됨: ${playerIcons.size}명`);
-            } catch (error) {
-                console.error('❌ 플레이어 아이콘 데이터 파일 파싱 오류:', error);
-                console.log('🎭 플레이어 아이콘 데이터를 초기화합니다.');
-                playerIcons.clear();
-            }
-        } else {
-            console.log(`📁 PLAYER_ICONS_FILE이 존재하지 않습니다.`);
-        }
     } catch (error) {
         console.error('❌ 데이터 로드 중 오류:', error);
     }
 }
 
-// 데이터 저장 함수
+/**
+ * 데이터 저장 함수
+ */
 function saveData() {
     try {
+        // 유저 데이터 저장
+        const usersData = {};
+        for (const [userId, userData] of users) {
+            usersData[userId] = userData;
+        }
+        fs.writeFileSync(USERS_FILE, JSON.stringify(usersData, null, 2));
+        
         // 랭킹 데이터 저장
         const rankingsData = {
             mock: Array.from(rankings.mock.entries()),
@@ -171,16 +174,12 @@ function saveData() {
         };
         fs.writeFileSync(RANKINGS_FILE, JSON.stringify(rankingsData, null, 2));
         
-        // 유저 ID 데이터 저장
-        const userIdsData = {
-            userIds: Array.from(userIds.entries()),
-            nextUserId: nextUserId
-        };
-        fs.writeFileSync(USER_IDS_FILE, JSON.stringify(userIdsData, null, 2));
-        
-        // 플레이어 아이콘 데이터 저장
-        const iconsData = Array.from(playerIcons.entries());
-        fs.writeFileSync(PLAYER_ICONS_FILE, JSON.stringify(iconsData, null, 2));
+        // 세션 데이터 저장
+        const sessionsData = {};
+        for (const [sessionId, userId] of sessions) {
+            sessionsData[sessionId] = userId;
+        }
+        fs.writeFileSync(SESSIONS_FILE, JSON.stringify(sessionsData, null, 2));
         
         console.log('💾 데이터 저장 완료');
     } catch (error) {
@@ -188,175 +187,450 @@ function saveData() {
     }
 }
 
-// 테스트 데이터 생성 함수 (개발용)
-function createTestData() {
-    console.log('🧪 테스트 데이터 생성 중...');
-    
-    // 여러 사용자의 테스트 데이터 생성
-    const testUsers = [
-        { name: '마법사A', mockScore: 15, formalScore: 8, icon: '🧙‍♂️' },
-        { name: '마법사B', mockScore: 12, formalScore: 12, icon: '🧙‍♀️' },
-        { name: '마법사C', mockScore: 8, formalScore: 20, icon: '🔮' },
-        { name: '마법사D', mockScore: 20, formalScore: 5, icon: '⚡' },
-        { name: '마법사E', mockScore: 6, formalScore: 15, icon: '🌟' },
-        { name: '마법사F', mockScore: 18, formalScore: 10, icon: '💫' },
-        { name: '마법사G', mockScore: 10, formalScore: 18, icon: '✨' },
-        { name: '마법사H', mockScore: 14, formalScore: 7, icon: '🎭' }
-    ];
-    
-    testUsers.forEach(user => {
-        // 유저 ID 생성
-        getOrCreateUserId(user.name);
-        
-        // 랭킹 데이터 설정
-        rankings.mock.set(user.name, user.mockScore);
-        rankings.formal.set(user.name, user.formalScore);
-        
-        // 아이콘 설정
-        playerIcons.set(user.name, user.icon);
-        
-        console.log(`🧪 테스트 사용자 생성: ${user.name} (모의: ${user.mockScore}점, 정식: ${user.formalScore}점, 아이콘: ${user.icon})`);
-    });
-    
-    // 데이터 저장
-    saveData();
-    console.log('🧪 테스트 데이터 생성 완료');
+/**
+ * 세션 ID 생성
+ */
+function generateSessionId() {
+    return crypto.randomBytes(32).toString('hex');
 }
 
-// 서버 시작 시 데이터 로드
-console.log('🚀 서버 시작 - 데이터 로드 시작');
-loadData();
-
-// 서버 시작 시 모든 등록된 사용자 정보 출력
-console.log(`🚀 서버 시작 완료 - 등록된 총 사용자: ${userIds.size}명`);
-console.log(`📊 랭킹 데이터 상태: 모의 ${rankings.mock.size}명, 정식 ${rankings.formal.size}명`);
-
-if (userIds.size > 0) {
-    console.log(`📊 등록된 사용자 목록: ${Array.from(userIds.keys()).join(', ')}`);
-} else {
-    console.log(`📊 등록된 사용자가 없습니다. - 게임을 플레이하면 사용자가 등록됩니다.`);
-}
-
-
-
-// 유저 ID 관리 함수
-function getOrCreateUserId(playerName) {
-    // 이미 존재하는 유저인지 확인
-    if (userIds.has(playerName)) {
-        return userIds.get(playerName);
-        }
-    
-    // 새로운 유저 ID 발급
-    const userId = nextUserId++;
-    userIds.set(playerName, userId);
-    userNames.set(userId, playerName);
+/**
+ * 계정 생성 API
+ */
+app.post('/api/register', async (req, res) => {
+    try {
+        const { username, password, nickname } = req.body;
         
-    console.log(`🆔 새로운 유저 ID 발급: ${playerName} -> ID ${userId}`);
-    return userId;
-}
-
-// 유저 이름 업데이트 함수
-function updateUserName(oldName, newName, icon) {
-    if (userIds.has(oldName)) {
-        const userId = userIds.get(oldName);
-        
-        // 기존 이름 제거
-        userIds.delete(oldName);
-        
-        // 새 이름으로 업데이트
-        userIds.set(newName, userId);
-        userNames.set(userId, newName);
-        
-        // 랭킹 데이터도 새 이름으로 업데이트
-        const mockScore = rankings.mock.get(oldName) || 0;
-        const formalScore = rankings.formal.get(oldName) || 0;
-        
-        if (mockScore > 0 || formalScore > 0) {
-            rankings.mock.delete(oldName);
-            rankings.formal.delete(oldName);
-            rankings.mock.set(newName, mockScore);
-            rankings.formal.set(newName, formalScore);
+        // 입력 검증
+        if (!username || !password || !nickname) {
+            return res.status(400).json({ error: '모든 필드를 입력해주세요.' });
         }
         
-        // 아이콘 정보 업데이트
-        playerIcons.delete(oldName);
-        playerIcons.set(newName, icon);
+        if (username.length < 3 || username.length > 20) {
+            return res.status(400).json({ error: '아이디는 3-20자 사이여야 합니다.' });
+        }
         
-        // 데이터를 파일에 저장
+        if (password.length < 6) {
+            return res.status(400).json({ error: '비밀번호는 6자 이상이어야 합니다.' });
+        }
+        
+        if (nickname.length < 2 || nickname.length > 15) {
+            return res.status(400).json({ error: '닉네임은 2-15자 사이여야 합니다.' });
+        }
+        
+        // 아이디 중복 확인
+        if (usernames.has(username)) {
+            return res.status(400).json({ error: '이미 사용 중인 아이디입니다.' });
+        }
+        
+        // 닉네임 중복 확인
+        for (const [_, userData] of users) {
+            if (userData.nickname === nickname) {
+                return res.status(400).json({ error: '이미 사용 중인 닉네임입니다.' });
+            }
+        }
+        
+        // 비밀번호 해시화
+        const hashedPassword = await bcrypt.hash(password, 10);
+        
+        // 유저 생성
+        const userId = nextUserId++;
+        const userData = {
+            userId,
+            username,
+            nickname,
+            password: hashedPassword,
+            icon: '👤', // 기본 아이콘
+            trophies: {
+                mock: 0,
+                formal: 0
+            },
+            lastNicknameChange: 0,
+            createdAt: Date.now()
+        };
+        
+        users.set(userId, userData);
+        usernames.set(username, userId);
+        
+        // 랭킹에 0점으로 등록
+        rankings.mock.set(nickname, 0);
+        rankings.formal.set(nickname, 0);
+        
+        // 세션 생성
+        const sessionId = generateSessionId();
+        sessions.set(sessionId, userId);
+        
         saveData();
         
-        console.log(`🔄 유저 이름 업데이트: ${oldName} -> ${newName} (ID: ${userId})`);
-    }
-}
+        console.log(`👤 새 계정 생성: ${username} (${nickname})`);
         
-// 랭킹 업데이트 함수
-function updateRanking(category, playerName, score, icon = '👤') {
-    // 유저 ID 확인/생성
-    const userId = getOrCreateUserId(playerName);
-    
-    // 0점이어도 플레이어를 랭킹에 포함시킴
-    rankings[category].set(playerName, score);
-    
-    // 아이콘 정보 저장
-    playerIcons.set(playerName, icon);
-    
-    // 데이터를 파일에 저장
-    saveData();
-    
-    console.log(`📊 랭킹 업데이트: ${category} - ${playerName} (ID: ${userId}, ${score}점, 아이콘: ${icon})`);
-    console.log(`📊 현재 등록된 총 사용자: ${userIds.size}명`);
-    console.log(`📊 등록된 사용자 목록: ${Array.from(userIds.keys()).join(', ')}`);
-}
-
-// 랭킹 조회 함수
-function getRanking(category) {
-    console.log(`📊 랭킹 조회 시작: ${category}`);
-    console.log(`📊 등록된 총 사용자: ${userIds.size}명`);
-    console.log(`📊 ${category} 랭킹에 등록된 사용자: ${rankings[category].size}명`);
-    
-    // rankings에 있는 모든 사용자를 우선적으로 가져오기
-    const allUsers = new Set();
-    
-    // rankings에서 모든 사용자 추가 (이것이 실제 랭킹 데이터)
-    for (const [playerName, score] of rankings[category].entries()) {
-        allUsers.add(playerName);
-        console.log(`📊 랭킹 데이터에서 사용자 추가: ${playerName} (${score}점)`);
+        res.json({
+            success: true,
+            sessionId,
+            userData: {
+                userId,
+                username,
+                nickname,
+                icon: userData.icon,
+                trophies: userData.trophies
+            }
+        });
+        
+    } catch (error) {
+        console.error('❌ 계정 생성 오류:', error);
+        res.status(500).json({ error: '서버 오류가 발생했습니다.' });
     }
-    
-    // userIds에서 추가 사용자 확인 (랭킹에 없지만 등록된 사용자)
-    for (const [playerName, userId] of userIds.entries()) {
-        if (!allUsers.has(playerName)) {
-            allUsers.add(playerName);
-            console.log(`👤 등록된 사용자 추가 (랭킹 없음): ${playerName} (ID: ${userId})`);
+});
+
+/**
+ * 로그인 API
+ */
+app.post('/api/login', async (req, res) => {
+    try {
+        const { username, password } = req.body;
+        
+        // 입력 검증
+        if (!username || !password) {
+            return res.status(400).json({ error: '아이디와 비밀번호를 입력해주세요.' });
         }
-    }
-    
-    // 모든 사용자의 랭킹 데이터 생성
-    const allPlayers = [];
-    for (const playerName of allUsers) {
-        const score = rankings[category].get(playerName) || 0; // 랭킹에 없으면 0점
-        const icon = playerIcons.get(playerName) || '👤';
-        allPlayers.push([playerName, score, icon]);
-        console.log(`📊 최종 사용자: ${playerName} (${score}점, 아이콘: ${icon})`);
-    }
-    
-    // 점수 높은 순으로 정렬 (0점 사용자도 포함)
-    const sortedPlayers = allPlayers
-        .sort((a, b) => b[1] - a[1]);
-    
-    console.log(`📊 랭킹 조회 완료: ${category} - 총 ${sortedPlayers.length}명 표시 (0점 포함)`);
-    if (sortedPlayers.length > 0) {
-        console.log(`📊 랭킹 상위 5명: ${sortedPlayers.slice(0, 5).map(p => `${p[0]}(${p[1]}점)`).join(', ')}`);
-    } else {
-        console.log(`⚠️ 표시할 사용자가 없습니다.`);
-    }
-    
-    return sortedPlayers;
-}
         
-// 랭킹 정렬 함수 제거됨
+        // 유저 찾기
+        const userId = usernames.get(username);
+        if (!userId) {
+            return res.status(400).json({ error: '아이디 또는 비밀번호가 잘못되었습니다.' });
+        }
+        
+        const userData = users.get(userId);
+        if (!userData) {
+            return res.status(400).json({ error: '아이디 또는 비밀번호가 잘못되었습니다.' });
+        }
+        
+        // 비밀번호 확인
+        const isValidPassword = await bcrypt.compare(password, userData.password);
+        if (!isValidPassword) {
+            return res.status(400).json({ error: '아이디 또는 비밀번호가 잘못되었습니다.' });
+        }
+        
+        // 세션 생성
+        const sessionId = generateSessionId();
+        sessions.set(sessionId, userId);
+        
+        console.log(`🔐 로그인 성공: ${username}`);
+        
+        // 기존 유저 데이터에 icon 필드가 없으면 추가
+        if (!userData.icon) {
+            userData.icon = '👤';
+            saveData();
+        }
+        
+        res.json({
+            success: true,
+            sessionId,
+            userData: {
+                userId,
+                username,
+                nickname: userData.nickname,
+                icon: userData.icon,
+                trophies: userData.trophies
+            }
+        });
+        
+    } catch (error) {
+        console.error('❌ 로그인 오류:', error);
+        res.status(500).json({ error: '서버 오류가 발생했습니다.' });
+    }
+});
 
-// 중복 이름 정리 함수 제거됨
+/**
+ * 세션 확인 API
+ */
+app.post('/api/verify-session', (req, res) => {
+    try {
+        const { sessionId } = req.body;
+        
+        if (!sessionId) {
+            return res.status(400).json({ error: '세션 ID가 필요합니다.' });
+        }
+        
+        const userId = sessions.get(sessionId);
+        if (!userId) {
+            return res.status(401).json({ error: '유효하지 않은 세션입니다.' });
+        }
+        
+        const userData = users.get(userId);
+        if (!userData) {
+            return res.status(401).json({ error: '유저 데이터를 찾을 수 없습니다.' });
+        }
+        
+        // 기존 유저 데이터에 icon 필드가 없으면 추가
+        if (!userData.icon) {
+            userData.icon = '👤';
+            saveData();
+        }
+        
+        res.json({
+            success: true,
+            userData: {
+                userId,
+                username: userData.username,
+                nickname: userData.nickname,
+                icon: userData.icon,
+                trophies: userData.trophies
+            }
+        });
+        
+    } catch (error) {
+        console.error('❌ 세션 확인 오류:', error);
+        res.status(500).json({ error: '서버 오류가 발생했습니다.' });
+    }
+});
+
+/**
+ * 닉네임 변경 API
+ */
+app.post('/api/change-nickname', (req, res) => {
+    try {
+        const { sessionId, newNickname } = req.body;
+        
+        if (!sessionId || !newNickname) {
+            return res.status(400).json({ error: '세션 ID와 새 닉네임이 필요합니다.' });
+        }
+        
+        const userId = sessions.get(sessionId);
+        if (!userId) {
+            return res.status(401).json({ error: '유효하지 않은 세션입니다.' });
+        }
+        
+        const userData = users.get(userId);
+        if (!userData) {
+            return res.status(401).json({ error: '유저 데이터를 찾을 수 없습니다.' });
+        }
+        
+        // 닉네임 길이 검증
+        if (newNickname.length < 2 || newNickname.length > 15) {
+            return res.status(400).json({ error: '닉네임은 2-15자 사이여야 합니다.' });
+        }
+        
+        // 1시간 제한 확인
+        const now = Date.now();
+        const oneHour = 60 * 60 * 1000;
+        if (userData.lastNicknameChange && (now - userData.lastNicknameChange) < oneHour) {
+            const remainingTime = Math.ceil((oneHour - (now - userData.lastNicknameChange)) / (60 * 1000));
+            return res.status(400).json({ 
+                error: `닉네임 변경은 1시간에 1번만 가능합니다. ${remainingTime}분 후에 다시 시도해주세요.` 
+            });
+        }
+        
+        // 닉네임 중복 확인
+        for (const [_, otherUserData] of users) {
+            if (otherUserData.userId !== userId && otherUserData.nickname === newNickname) {
+                return res.status(400).json({ error: '이미 사용 중인 닉네임입니다.' });
+            }
+        }
+        
+        // 기존 닉네임으로 랭킹 데이터 업데이트
+        const oldNickname = userData.nickname;
+        const mockScore = rankings.mock.get(oldNickname) || 0;
+        const formalScore = rankings.formal.get(oldNickname) || 0;
+        
+        if (mockScore > 0) {
+            rankings.mock.delete(oldNickname);
+            rankings.mock.set(newNickname, mockScore);
+        }
+        if (formalScore > 0) {
+            rankings.formal.delete(oldNickname);
+            rankings.formal.set(newNickname, formalScore);
+        }
+        
+        // 닉네임 변경
+        userData.nickname = newNickname;
+        userData.lastNicknameChange = now;
+        
+        saveData();
+        
+        console.log(`🔄 닉네임 변경: ${oldNickname} -> ${newNickname}`);
+        
+        res.json({
+            success: true,
+            userData: {
+                userId,
+                username: userData.username,
+                nickname: userData.nickname,
+                trophies: userData.trophies
+            }
+        });
+        
+    } catch (error) {
+        console.error('❌ 닉네임 변경 오류:', error);
+        res.status(500).json({ error: '서버 오류가 발생했습니다.' });
+    }
+});
+
+/**
+ * 아이콘 변경 API
+ */
+app.post('/api/change-icon', (req, res) => {
+    try {
+        const { sessionId, icon } = req.body;
+        
+        console.log('🔍 아이콘 변경 요청:', { sessionId, icon });
+        
+        if (!sessionId || !icon) {
+            console.log('❌ 필수 정보 누락:', { sessionId: !!sessionId, icon: !!icon });
+            return res.status(400).json({ error: '필수 정보가 누락되었습니다.' });
+        }
+        
+        const userId = sessions.get(sessionId);
+        if (!userId) {
+            return res.status(401).json({ error: '유효하지 않은 세션입니다.' });
+        }
+        
+        const userData = users.get(userId);
+        if (!userData) {
+            return res.status(401).json({ error: '유저 데이터를 찾을 수 없습니다.' });
+        }
+        
+        // 아이콘 유효성 검증 (빈 문자열이 아닌지만 확인)
+        if (!icon || icon.trim() === '') {
+            console.log('❌ 빈 아이콘:', icon);
+            return res.status(400).json({ error: '아이콘을 선택해주세요.' });
+        }
+        
+        // 아이콘 변경
+        userData.icon = icon;
+        
+        saveData();
+        
+        console.log(`🔄 아이콘 변경: ${userData.nickname} -> ${icon}`);
+        
+        res.json({
+            success: true,
+            icon: icon
+        });
+        
+    } catch (error) {
+        console.error('❌ 아이콘 변경 오류:', error);
+        res.status(500).json({ error: '서버 오류가 발생했습니다.' });
+    }
+});
+
+/**
+ * 랭킹 조회 API
+ */
+app.get('/api/rankings/:category', (req, res) => {
+    try {
+        const { category } = req.params;
+        
+        if (!rankings[category]) {
+            return res.status(400).json({ error: '유효하지 않은 카테고리입니다.' });
+        }
+        
+        // 랭킹 데이터 생성
+        const rankingData = [];
+        for (const [nickname, score] of rankings[category]) {
+            rankingData.push({ nickname, score });
+        }
+        
+        // 점수 높은 순으로 정렬
+        rankingData.sort((a, b) => b.score - a.score);
+        
+        console.log(`📊 랭킹 조회: ${category} - ${rankingData.length}명`);
+        
+        res.json({
+            success: true,
+            category,
+            rankings: rankingData
+        });
+        
+    } catch (error) {
+        console.error('❌ 랭킹 조회 오류:', error);
+        res.status(500).json({ error: '서버 오류가 발생했습니다.' });
+    }
+});
+
+/**
+ * 승리의 증표 업데이트 API
+ */
+app.post('/api/update-trophies', (req, res) => {
+    try {
+        const { sessionId, category, change } = req.body;
+        
+        if (!sessionId || !category || change === undefined) {
+            return res.status(400).json({ error: '필수 정보가 누락되었습니다.' });
+        }
+        
+        const userId = sessions.get(sessionId);
+        if (!userId) {
+            return res.status(401).json({ error: '유효하지 않은 세션입니다.' });
+        }
+        
+        const userData = users.get(userId);
+        if (!userData) {
+            return res.status(401).json({ error: '유저 데이터를 찾을 수 없습니다.' });
+        }
+        
+        // 증표 업데이트
+        const oldScore = userData.trophies[category] || 0;
+        const newScore = Math.max(0, oldScore + change);
+        userData.trophies[category] = newScore;
+        
+        // 랭킹 업데이트
+        rankings[category].set(userData.nickname, newScore);
+        
+        saveData();
+        
+        console.log(`🏆 증표 업데이트: ${userData.nickname} ${category} ${oldScore} -> ${newScore} (${change > 0 ? '+' : ''}${change})`);
+        
+        res.json({
+            success: true,
+            trophies: userData.trophies
+        });
+        
+    } catch (error) {
+        console.error('❌ 증표 업데이트 오류:', error);
+        res.status(500).json({ error: '서버 오류가 발생했습니다.' });
+    }
+});
+
+/**
+ * 유저 프로필 조회 API
+ */
+app.get('/api/profile/:userId', (req, res) => {
+    try {
+        const userId = parseInt(req.params.userId);
+        
+        if (!userId || userId <= 0) {
+            return res.status(400).json({ error: '유효하지 않은 유저 ID입니다.' });
+        }
+        
+        const userData = users.get(userId);
+        if (!userData) {
+            return res.status(404).json({ error: '유저를 찾을 수 없습니다.' });
+        }
+        
+        // 기본 정보만 반환 (비밀번호 제외)
+        const profileData = {
+            userId: userData.userId,
+            username: userData.username,
+            nickname: userData.nickname,
+            icon: userData.icon || '👤',
+            trophies: userData.trophies,
+            createdAt: userData.createdAt,
+            lastNicknameChange: userData.lastNicknameChange
+        };
+        
+        console.log(`👤 프로필 조회: ${userData.nickname} (ID: ${userId})`);
+        
+        res.json({
+            success: true,
+            userData: profileData
+        });
+        
+    } catch (error) {
+        console.error('❌ 프로필 조회 오류:', error);
+        res.status(500).json({ error: '서버 오류가 발생했습니다.' });
+    }
+});
 
 // 서버 상태
 let serverStats = {
@@ -393,7 +667,10 @@ io.on('connection', (socket) => {
         gameId: null,
         opponent: null,
         lastPing: Date.now(),
-        connectionAttempts: 0
+        connectionAttempts: 0,
+        isGuest: true, // 기본값은 게스트
+        userId: null,
+        sessionId: null
     };
     
     playerSessions.set(socket.id, playerInfo);
@@ -407,14 +684,59 @@ io.on('connection', (socket) => {
         socket.emit('pong');
     });
     
+    // 계정 로그인
+    socket.on('login', (data) => {
+        try {
+            const { sessionId } = data;
+            
+            if (!sessionId) {
+                socket.emit('loginResult', { success: false, error: '세션 ID가 필요합니다.' });
+                return;
+            }
+            
+            const userId = sessions.get(sessionId);
+            if (!userId) {
+                socket.emit('loginResult', { success: false, error: '유효하지 않은 세션입니다.' });
+                return;
+            }
+            
+            const userData = users.get(userId);
+            if (!userData) {
+                socket.emit('loginResult', { success: false, error: '유저 데이터를 찾을 수 없습니다.' });
+                return;
+            }
+            
+            // 플레이어 정보 업데이트
+            playerInfo.isGuest = false;
+            playerInfo.userId = userId;
+            playerInfo.sessionId = sessionId;
+            playerInfo.name = userData.nickname;
+            
+            console.log(`🔐 소켓 로그인: ${userData.nickname} (${socket.id})`);
+            
+            socket.emit('loginResult', {
+                success: true,
+                userData: {
+                    userId,
+                    username: userData.username,
+                    nickname: userData.nickname,
+                    trophies: userData.trophies
+                }
+            });
+            
+        } catch (error) {
+            handleError(socket, error, 'login');
+        }
+    });
+    
     // 매칭 요청
     socket.on('requestMatch', (data) => {
         try {
-            const playerName = data.playerName || 'Player';
+            const playerName = data.playerName || '게스트';
             playerInfo.name = playerName;
             playerInfo.isWaiting = true;
             
-            console.log(`🎯 매칭 요청: ${playerName} (${socket.id})`);
+            console.log(`🎯 매칭 요청: ${playerName} (${socket.id}) - ${playerInfo.isGuest ? '게스트' : '계정'}`);
             
             // 대기 중인 다른 플레이어 찾기
             let matchedPlayer = null;
@@ -439,8 +761,8 @@ io.on('connection', (socket) => {
                 const gameSession = {
                     id: gameId,
                     players: [
-                        { id: socket.id, name: playerName, isHost: true },
-                        { id: matchedPlayer.id, name: matchedPlayer.name, isHost: false }
+                        { id: socket.id, name: playerName, isHost: true, isGuest: playerInfo.isGuest },
+                        { id: matchedPlayer.id, name: matchedPlayer.name, isHost: false, isGuest: matchedPlayer.isGuest }
                     ],
                     createdAt: Date.now(),
                     lastActivity: Date.now()
@@ -461,7 +783,8 @@ io.on('connection', (socket) => {
                     gameId: gameId,
                     opponent: {
                         id: matchedPlayer.id,
-                        name: matchedPlayer.name
+                        name: matchedPlayer.name,
+                        isGuest: matchedPlayer.isGuest
                     },
                     isHost: true
                 });
@@ -470,7 +793,8 @@ io.on('connection', (socket) => {
                     gameId: gameId,
                     opponent: {
                         id: socket.id,
-                        name: playerName
+                        name: playerName,
+                        isGuest: playerInfo.isGuest
                     },
                     isHost: false
                 });
@@ -502,17 +826,17 @@ io.on('connection', (socket) => {
     socket.on('offer', (data) => {
         try {
             const { target, offer } = data;
-                if (isPlayerConnected(target)) {
-        io.to(target).emit('offer', {
-            from: socket.id,
-            offer: offer
-        });
-    } else {
-        socket.emit('error', {
-            message: '상대방이 연결되지 않았습니다.',
-            context: 'offer'
-        });
-    }
+            if (isPlayerConnected(target)) {
+                io.to(target).emit('offer', {
+                    from: socket.id,
+                    offer: offer
+                });
+            } else {
+                socket.emit('error', {
+                    message: '상대방이 연결되지 않았습니다.',
+                    context: 'offer'
+                });
+            }
         } catch (error) {
             handleError(socket, error, 'offer');
         }
@@ -616,7 +940,7 @@ io.on('connection', (socket) => {
     // 게임 종료
     socket.on('gameOver', (data) => {
         try {
-            const { target, winner, gameState } = data;
+            const { target, winner, gameState, isGuest } = data;
             
             if (isPlayerConnected(target)) {
                 // 게임 상태 업데이트
@@ -627,136 +951,12 @@ io.on('connection', (socket) => {
                 io.to(target).emit('gameOver', {
                     from: socket.id,
                     winner: winner,
-                    gameState: gameState
+                    gameState: gameState,
+                    isGuest: isGuest
                 });
             }
         } catch (error) {
             handleError(socket, error, 'gameOver');
-        }
-    });
-    
-    // 랭킹 업데이트
-    socket.on('updateRanking', (data) => {
-        try {
-            const { category, playerName, score, icon } = data;
-            updateRanking(category, playerName, score, icon);
-        } catch (error) {
-            handleError(socket, error, 'updateRanking');
-        }
-    });
-    
-    // 유저 이름 업데이트
-    socket.on('updateUserName', (data) => {
-        try {
-            const { oldName, newName, icon } = data;
-            updateUserName(oldName, newName, icon);
-        } catch (error) {
-            handleError(socket, error, 'updateUserName');
-        }
-    });
-    
-    // 랭킹 조회
-    socket.on('getRanking', (data) => {
-        try {
-            const { category } = data;
-            console.log(`📊 랭킹 조회 요청 수신: ${category} (소켓 ID: ${socket.id})`);
-            console.log(`📊 등록된 총 사용자: ${userIds.size}명`);
-            console.log(`📊 rankings 상태: mock=${rankings.mock.size}명, formal=${rankings.formal.size}명`);
-            
-            // 등록된 사용자 목록 출력
-            if (userIds.size > 0) {
-                console.log(`📊 등록된 사용자 목록: ${Array.from(userIds.keys()).join(', ')}`);
-            } else {
-                console.log(`⚠️ 등록된 사용자가 없습니다.`);
-            }
-            
-            // rankings에 있는 모든 사용자 목록 출력
-            if (rankings[category].size > 0) {
-                console.log(`📊 ${category} 랭킹에 있는 사용자 목록: ${Array.from(rankings[category].keys()).join(', ')}`);
-            } else {
-                console.log(`⚠️ ${category} 랭킹에 사용자가 없습니다.`);
-            }
-            
-            const ranking = getRanking(category);
-            console.log(`📊 랭킹 조회 완료: ${category} - ${ranking.length}명의 데이터 반환`);
-            
-            // 응답 데이터 로그 (상위 5개만)
-            if (ranking.length > 0) {
-                console.log(`📊 ${category} 랭킹 상위 5명:`, ranking.slice(0, 5).map(p => `${p[0]}(${p[1]}점)`));
-            }
-            
-            socket.emit('rankingData', {
-                category: category,
-                ranking: ranking
-            });
-        } catch (error) {
-            console.error(`❌ 랭킹 조회 중 오류:`, error);
-            handleError(socket, error, 'getRanking');
-        }
-    });
-
-    // 치트: 모든 서버 데이터 초기화
-    socket.on('resetAllServerData', () => {
-        try {
-            console.log(`🧹 치트: 모든 서버 데이터 초기화 요청 (${socket.id})`);
-            
-            // 모든 게임 세션 초기화
-            activeGames.clear();
-            gameStates.clear();
-            waitingPlayers.clear();
-            
-            // 서버 통계 초기화
-            serverStats = {
-                totalConnections: serverStats.totalConnections,
-                activeGames: 0,
-                waitingPlayers: 0,
-                totalMatches: 0
-            };
-            
-            // 모든 클라이언트에게 초기화 완료 알림
-            io.emit('serverDataReset', {
-                message: '모든 서버 데이터가 초기화되었습니다.',
-                timestamp: Date.now()
-            });
-            
-            console.log(`✅ 모든 서버 데이터 초기화 완료`);
-        } catch (error) {
-            handleError(socket, error, 'resetAllServerData');
-        }
-    });
-
-    // 치트: 자신의 데이터만 초기화
-    socket.on('resetMyData', (data) => {
-        try {
-            const { playerName } = data;
-            console.log(`🧹 치트: 개인 데이터 초기화 요청 (${socket.id}) - ${playerName}`);
-            
-            // 요청한 클라이언트에게만 초기화 완료 알림
-            socket.emit('myDataReset', {
-                message: '개인 데이터가 초기화되었습니다.',
-                playerName: playerName,
-                timestamp: Date.now()
-            });
-            
-            console.log(`✅ 개인 데이터 초기화 완료: ${playerName}`);
-        } catch (error) {
-            handleError(socket, error, 'resetMyData');
-        }
-    });
-    
-    // 게임 상태 복구 요청
-    socket.on('requestGameState', (data) => {
-        try {
-            if (playerInfo.gameId) {
-                const savedGameState = gameStates.get(playerInfo.gameId);
-                if (savedGameState) {
-                    socket.emit('gameStateRecovery', {
-                        gameState: savedGameState
-                    });
-                }
-            }
-        } catch (error) {
-            handleError(socket, error, 'requestGameState');
         }
     });
     
@@ -787,17 +987,6 @@ io.on('connection', (socket) => {
                             disconnectedPlayerId: socket.id,
                             isDisconnectedAsLoser: true
                         });
-                        
-                        // 강제종료한 플레이어를 도망으로 인한 패배로 기록
-                        if (disconnectedPlayer) {
-                            console.log(`🏃 강제종료한 플레이어 ${disconnectedPlayer.name}을(를) 도망으로 인한 패배로 기록`);
-                            // 강제종료한 플레이어의 패배 기록 (나중에 랭킹 업데이트 시 사용)
-                            const disconnectedPlayerInfo = playerSessions.get(socket.id);
-                            if (disconnectedPlayerInfo) {
-                                disconnectedPlayerInfo.disconnectedAsLoser = true;
-                                disconnectedPlayerInfo.disconnectedGameId = playerInfo.gameId;
-                            }
-                        }
                     }
                     
                     activeGames.delete(playerInfo.gameId);
@@ -849,8 +1038,6 @@ setInterval(() => {
             serverStats.activeGames = Math.max(0, serverStats.activeGames - 1);
         }
     }
-    
-    // 중복 이름 정리 제거됨
 }, 30000);
 
 // 서버 상태 모니터링
@@ -858,14 +1045,30 @@ setInterval(() => {
     console.log(`📊 서버 상태: 연결 ${serverStats.totalConnections}, 게임 ${serverStats.activeGames}, 대기 ${serverStats.waitingPlayers}, 총 매칭 ${serverStats.totalMatches}`);
 }, 30000);
 
+// 404 에러 처리 (모든 라우트 이후에 등록)
+app.use((req, res) => {
+    console.log(`404 에러: ${req.method} ${req.url}`);
+    
+    // API 요청인 경우 JSON 응답
+    if (req.path.startsWith('/api/')) {
+        res.status(404).json({ error: 'API 엔드포인트를 찾을 수 없습니다.' });
+    } else {
+        // 일반 페이지 요청인 경우 HTML 응답
+        res.status(404).send('파일을 찾을 수 없습니다.');
+    }
+});
+
 // 서버 시작
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
     console.log(`🚀 시그널링 서버가 포트 ${PORT}에서 시작되었습니다!`);
     console.log(`🌐 http://localhost:${PORT}`);
     console.log(`📡 WebSocket: ws://localhost:${PORT}`);
-    console.log(`🔧 개선된 에러 핸들링 및 연결 안정성 적용됨`);
+    console.log(`🔧 계정 시스템 및 랭킹 시스템 활성화됨`);
     console.log(`💾 영구 저장소 시스템 활성화됨`);
+    
+    // 데이터 로드
+    loadData();
 });
 
 // 서버 종료 시 데이터 저장
