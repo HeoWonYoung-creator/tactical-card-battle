@@ -7162,10 +7162,12 @@
                 nameInput.style.opacity = '0.6';
                 saveBtn.style.display = 'none';
                 
-                // 내 정보 버튼, 랭킹 버튼과 트로피 표시
+                // 내 정보 버튼과 트로피 표시 (로그인한 유저만)
                 profileBtn.classList.remove('hidden');
-                DOM.get('ranking-btn').classList.remove('hidden');
                 trophyDisplay.classList.remove('hidden');
+                
+                // 랭킹 버튼은 항상 표시 (게스트도 볼 수 있음)
+                DOM.get('ranking-btn').classList.remove('hidden');
                 
             } else {
                 // 게스트 상태
@@ -7183,10 +7185,12 @@
                 nameInput.value = '지나가는 마법사';
                 saveBtn.style.display = 'none';
                 
-                // 내 정보 버튼, 랭킹 버튼과 트로피 숨김
+                // 내 정보 버튼과 트로피 숨김 (게스트는 볼 수 없음)
                 profileBtn.classList.add('hidden');
-                DOM.get('ranking-btn').classList.add('hidden');
                 trophyDisplay.classList.add('hidden');
+                
+                // 랭킹 버튼은 게스트도 볼 수 있음
+                DOM.get('ranking-btn').classList.remove('hidden');
             }
         }
 
