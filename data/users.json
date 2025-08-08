@@ -1,40 +1,28 @@
 {
   "1": {
     "userId": 1,
-    "username": "testuser1",
-    "nickname": "?????1",
-    "password": "$2b$10$fLmynwL5n5oLwMOQECv79OQXK4NI1tl7YTJkbYmvYVcN8Mn1.wMDK",
+    "username": "tale6314",
+    "nickname": "테일",
+    "password": "$2b$10$BDFBr2LKbTTSsD/mUc/9LuYOJn9y7jpKx3QZI5A0kHTbAjwaujzMK",
+    "icon": "👑",
     "trophies": {
       "mock": 0,
       "formal": 0
     },
     "lastNicknameChange": 0,
-    "createdAt": 1754577726056
+    "createdAt": 1754660460615
   },
   "2": {
     "userId": 2,
-    "username": "123456",
-    "nickname": "123456",
-    "password": "$2b$10$ACmz2nMXTBQOga25wdOnMuqkLYIcaDObYldNko.IX3lWD8jLEBJCy",
-    "trophies": {
-      "mock": 21,
-      "formal": 0
-    },
-    "lastNicknameChange": 0,
-    "createdAt": 1754577756079,
-    "icon": "🧙‍♀️"
-  },
-  "3": {
-    "userId": 3,
-    "username": "tale",
-    "nickname": "테일",
-    "password": "$2b$10$k0nf6HDfePOa9A.TZ3/AUedRBj8DsJ0OjD.zMuHjSx9xHnbN70ZWO",
+    "username": "lepain1004",
+    "nickname": "르팡",
+    "password": "$2b$10$/dFFjo73qLjZAdo.V7E4JO6iQAHXRFFDDg3BBwlXLvPjZoyip2BHW",
     "icon": "🦁",
     "trophies": {
       "mock": 0,
       "formal": 0
     },
     "lastNicknameChange": 0,
-    "createdAt": 1754581018269
+    "createdAt": 1754660938589
   }
 }

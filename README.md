@@ -31,7 +31,7 @@ npm start
 npm run dev
 ```
 
-서버가 `http://localhost:3000`에서 시작됩니다.
+서버가 `http://localhost:${PORT}`에서 시작됩니다. 기본값은 3000입니다.
 
 ## 🎮 게임 실행 방법
 
@@ -43,7 +43,7 @@ npm run dev
 ## 🔧 기술 스택
 
 - **프론트엔드**: HTML5, CSS3, JavaScript (Vanilla)
-- **백엔드**: Node.js, Express
+- **백엔드**: Node.js, Express, SQLite (better-sqlite3)
 - **실시간 통신**: Socket.IO
 - **P2P 연결**: WebRTC
 
@@ -54,6 +54,7 @@ npm run dev
 - **게임 상태 동기화**: 실시간 게임 상태 업데이트
 - **연결 관리**: 플레이어 연결 상태 모니터링
 - **랭킹 시스템**: AI 대전 및 멀티플레이어 랭킹 관리
+ - **보안/안정성**: Helmet, Rate Limit, Zod 검증, 세션 만료, DB 영속화(SQLite)
 
 ## 🎯 게임 규칙
 
@@ -121,6 +122,33 @@ npm run dev
 ## 🛠️ 개발 모드
 
 `npm run dev`로 실행하면 파일 변경 시 자동으로 서버가 재시작됩니다.
+
+### 3. 환경 변수 설정(.env)
+
+프로젝트 루트에 `.env` 파일을 생성해 다음 값을 필요에 맞게 설정하세요. 기본값은 주석 옆에 표시되어 있습니다.
+
+```
+# 서버
+PORT=3000
+CORS_ORIGIN=*
+SIO_PING_TIMEOUT_MS=60000
+SIO_PING_INTERVAL_MS=25000
+
+# 세션/저장
+SESSION_TTL_MS=86400000
+SAVE_DEBOUNCE_MS=200
+
+# 데이터베이스
+DB_PATH=./data/game.db
+
+# WebRTC ICE (쉼표로 여러 개 지정 가능)
+STUN_URLS=stun:stun.l.google.com:19302,stun:stun1.l.google.com:19302
+TURN_URLS=
+TURN_USERNAME=
+TURN_CREDENTIAL=
+```
+
+클라이언트는 `/api/webrtc-ice` 엔드포인트를 통해 ICE 서버 구성을 받아 사용합니다.
 
 ## 🎮 게임 모드
 

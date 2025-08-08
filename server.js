@@ -1,30 +1,82 @@
+require('dotenv').config();
 const express = require('express');
 const http = require('http');
-const socketIo = require('socket.io');
+const { Server: SocketIOServer } = require('socket.io');
 const cors = require('cors');
 const path = require('path');
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
+const helmetModule = require('helmet');
+const helmet = typeof helmetModule === 'function' ? helmetModule : helmetModule.default;
+const rateLimit = require('express-rate-limit').default;
+const pino = require('pino');
+const pinoHttpModule = require('pino-http');
+const pinoHttp = typeof pinoHttpModule === 'function' ? pinoHttpModule : pinoHttpModule.default;
+const client = require('prom-client');
+const { z } = require('zod');
 
 const app = express();
 const server = http.createServer(app);
-const io = socketIo(server, {
+const io = new SocketIOServer(server, {
     cors: {
-        origin: "*",
+        origin: process.env.CORS_ORIGIN || "*",
         methods: ["GET", "POST"]
     },
     // 연결 안정성 개선
-    pingTimeout: 60000,
-    pingInterval: 25000,
+    pingTimeout: Number(process.env.SIO_PING_TIMEOUT_MS || 60000),
+    pingInterval: Number(process.env.SIO_PING_INTERVAL_MS || 25000),
     transports: ['websocket', 'polling']
 });
 
-// CORS 설정
+// CORS & 보안 헤더 & JSON 파서
 app.use(cors());
-app.use(express.json()); // JSON 파싱 추가
+app.use(helmet({
+    contentSecurityPolicy: {
+        useDefaults: false,
+        directives: {
+            defaultSrc: ["'self'"],
+            imgSrc: ["'self'", 'data:'],
+            styleSrc: [
+                "'self'",
+                "'unsafe-inline'",
+                'https://fonts.googleapis.com'
+            ],
+            fontSrc: [
+                "'self'",
+                'https://fonts.gstatic.com',
+                'data:'
+            ],
+            scriptSrc: [
+                "'self'",
+                "'unsafe-inline'",
+                'https://cdn.tailwindcss.com',
+                'https://cdn.socket.io'
+            ],
+            connectSrc: ["'self'", 'ws:', 'wss:'],
+            objectSrc: ["'none'"],
+            baseUri: ["'self'"],
+            frameAncestors: ["'self'"],
+            upgradeInsecureRequests: []
+        }
+    }
+}));
+app.use(express.json({ limit: '100kb' }));
+const logger = pino({ level: process.env.LOG_LEVEL || 'info' });
+app.use(pinoHttp({ logger }));
 
-// 정적 파일 제공 개선
-app.use(express.static(path.join(__dirname)));
+// 레이트리밋: API 엔드포인트 보호
+const apiLimiter = rateLimit({
+    windowMs: 60 * 1000, // 1분
+    max: 100, // 분당 100 요청
+    standardHeaders: true,
+    legacyHeaders: false
+});
+app.use('/api/', apiLimiter);
+
+// 라우터에서 독립 스키마 사용
+
+// 정적 파일 제공 개선: 공개 디렉토리만 서빙 (data 등 민감 경로 차단)
+app.use(express.static(path.join(__dirname, 'public')));
 
 // 메인 페이지 라우트
 app.get('/', (req, res) => {
@@ -35,6 +87,51 @@ app.get('/', (req, res) => {
 app.get('/webrtc-multiplayer.html', (req, res) => {
     res.sendFile(path.join(__dirname, 'webrtc-multiplayer.html'));
 });
+
+// 필요한 정적 자산만 선택적으로 제공 (전체 디렉토리 서빙 방지)
+app.get('/magic_battle.png', (req, res) => {
+    res.sendFile(path.join(__dirname, 'magic_battle.png'));
+});
+
+// ICE 서버 설정 노출 (TURN/STUN 구성 환경변수화)
+app.get('/api/webrtc-ice', (req, res) => {
+    const iceServers = [];
+    const stun = process.env.STUN_URLS || 'stun:stun.l.google.com:19302,stun:stun1.l.google.com:19302';
+    stun.split(',').map(s => s.trim()).filter(Boolean).forEach(url => iceServers.push({ urls: url }));
+    const turn = process.env.TURN_URLS || '';
+    const turnUser = process.env.TURN_USERNAME || '';
+    const turnCred = process.env.TURN_CREDENTIAL || '';
+    if (turn) {
+        turn.split(',').map(s => s.trim()).filter(Boolean).forEach(url => {
+            const entry = { urls: url };
+            if (turnUser) entry.username = turnUser;
+            if (turnCred) entry.credential = turnCred;
+            iceServers.push(entry);
+        });
+    }
+    res.json({ success: true, iceServers });
+});
+
+// Prometheus 메트릭 설정
+const collectDefaultMetrics = client.collectDefaultMetrics;
+collectDefaultMetrics();
+const connectionsGauge = new client.Gauge({ name: 'server_total_connections', help: 'Total connections' });
+const activeGamesGauge = new client.Gauge({ name: 'server_active_games', help: 'Active games' });
+const waitingPlayersGauge = new client.Gauge({ name: 'server_waiting_players', help: 'Waiting players' });
+const totalMatchesCounter = new client.Counter({ name: 'server_total_matches', help: 'Total matches' });
+
+app.get('/metrics', async (req, res) => {
+    try {
+        res.set('Content-Type', client.register.contentType);
+        res.end(await client.register.metrics());
+    } catch (err) {
+        res.status(500).end(err.message);
+    }
+});
+
+// 컨텍스트 구성 및 라우터 등록은 데이터 구조 선언 이후에 수행됨
+
+// 라우터 등록은 서버 시작 후 컨텍스트 초기화 시점에 수행됨
 
 // favicon.ico 라우트 추가
 app.get('/favicon.ico', (req, res) => {
@@ -59,17 +156,24 @@ const gameStates = new Map(); // 게임 상태 저장
 // 계정 시스템
 const users = new Map(); // userId -> userData
 const usernames = new Map(); // username -> userId
-const sessions = new Map(); // sessionId -> userId
+const sessions = new Map(); // sessionId -> { userId, expiresAt, lastUsedAt } (구버전 숫자 지원)
 let nextUserId = 1;
 
-// 랭킹 시스템
+// 랭킹 시스템 (userId -> score)
 const rankings = {
-    mock: new Map(), // 모의 결투 랭킹 (username -> score)
-    formal: new Map() // 정식 결투 랭킹 (username -> score)
+    mock: new Map(),
+    formal: new Map()
 };
 
-// 파일 시스템을 사용한 영구 저장소
+// 게임 결과 합의 대기 저장소 (gameId -> { claims: Map<socketId, winnerSocketId> })
+const pendingResults = new Map();
+
+// 파일 시스템을 사용한 영구 저장소 + DB
 const fs = require('fs');
+const fsp = require('fs').promises;
+const db = require('./db');
+const { getSessionRecord, getUserIdFromSession: getUserIdFromSessionUtil } = require('./utils/session');
+const { getGameIdOf: getGameIdOfUtil, getOpponentSocketId: getOpponentSocketIdUtil, arePlayersInSameGame: arePlayersInSameGameUtil } = require('./utils/game');
 
 // 데이터 파일 경로
 const DATA_DIR = path.join(__dirname, 'data');
@@ -89,6 +193,32 @@ if (!fs.existsSync(DATA_DIR)) {
 function loadData() {
     try {
         console.log('📁 데이터 파일 확인 중...');
+        // DB 초기화 및 선로딩
+        db.init();
+        if (db.hasAnyData()) {
+            // DB 우선 로드
+            const loadedUsers = db.loadUsers();
+            users.clear();
+            usernames.clear();
+            for (const [uid, u] of loadedUsers) {
+                users.set(uid, u);
+            }
+            const usernameIdx = db.loadUsernamesIndex(users);
+            for (const [uname, uid] of usernameIdx) {
+                usernames.set(uname, uid);
+            }
+            const loadedSessions = db.loadSessions();
+            sessions.clear();
+            for (const [sid, val] of loadedSessions) {
+                sessions.set(sid, val);
+            }
+            const loadedRankings = db.loadRankings();
+            rankings.mock = loadedRankings.mock;
+            rankings.formal = loadedRankings.formal;
+            nextUserId = Math.max(...Array.from(users.keys()), 0) + 1;
+            console.log(`🗄️ DB로부터 데이터 로드: 유저 ${users.size}, 세션 ${sessions.size}, mock ${rankings.mock.size}, formal ${rankings.formal.size}`);
+            return;
+        }
         
         // 유저 데이터 로드
         if (fs.existsSync(USERS_FILE)) {
@@ -104,13 +234,13 @@ function loadData() {
                 nextUserId = Math.max(...Object.keys(usersData).map(Number), 0) + 1;
                 console.log(`👤 유저 데이터 로드됨: ${users.size}명, 다음 ID: ${nextUserId}`);
                 
-                // 기존 유저들을 랭킹에 등록 (없는 경우에만)
+                // 기존 유저들을 랭킹에 등록 (없는 경우에만) — userId 기반
                 for (const [userId, userData] of users) {
-                    if (!rankings.mock.has(userData.nickname)) {
-                        rankings.mock.set(userData.nickname, userData.trophies.mock || 0);
+                    if (!rankings.mock.has(userId)) {
+                        rankings.mock.set(userId, userData.trophies.mock || 0);
                     }
-                    if (!rankings.formal.has(userData.nickname)) {
-                        rankings.formal.set(userData.nickname, userData.trophies.formal || 0);
+                    if (!rankings.formal.has(userId)) {
+                        rankings.formal.set(userId, userData.trophies.formal || 0);
                     }
                 }
             } catch (error) {
@@ -127,6 +257,9 @@ function loadData() {
                 const rankingsData = JSON.parse(fs.readFileSync(RANKINGS_FILE, 'utf8'));
                 rankings.mock = new Map(rankingsData.mock || []);
                 rankings.formal = new Map(rankingsData.formal || []);
+                // 닉네임 키였던 기존 데이터를 userId 키로 마이그레이션
+                migrateRankingKeysToUserId(rankings.mock);
+                migrateRankingKeysToUserId(rankings.formal);
                 console.log(`📊 랭킹 데이터 로드됨: 모의 ${rankings.mock.size}명, 정식 ${rankings.formal.size}명`);
             } catch (error) {
                 console.error('❌ 랭킹 데이터 파일 파싱 오류:', error);
@@ -140,8 +273,16 @@ function loadData() {
             try {
                 const sessionsData = JSON.parse(fs.readFileSync(SESSIONS_FILE, 'utf8'));
                 sessions.clear();
-                for (const [sessionId, userId] of Object.entries(sessionsData)) {
-                    sessions.set(sessionId, parseInt(userId));
+                for (const [sessionId, value] of Object.entries(sessionsData)) {
+                    if (typeof value === 'object' && value !== null) {
+                        sessions.set(sessionId, {
+                            userId: parseInt(value.userId),
+                            expiresAt: value.expiresAt || (Date.now() + SESSION_TTL_MS),
+                            lastUsedAt: value.lastUsedAt || Date.now()
+                        });
+                    } else {
+                        sessions.set(sessionId, parseInt(value));
+                    }
                 }
                 console.log(`🔐 세션 데이터 로드됨: ${sessions.size}개`);
             } catch (error) {
@@ -158,33 +299,119 @@ function loadData() {
 /**
  * 데이터 저장 함수
  */
-function saveData() {
+const SAVE_DEBOUNCE_MS = Number(process.env.SAVE_DEBOUNCE_MS || 200);
+let saveTimer = null;
+async function saveDataImmediate() {
     try {
         // 유저 데이터 저장
         const usersData = {};
         for (const [userId, userData] of users) {
             usersData[userId] = userData;
         }
-        fs.writeFileSync(USERS_FILE, JSON.stringify(usersData, null, 2));
+        await fsp.writeFile(USERS_FILE, JSON.stringify(usersData, null, 2));
         
-        // 랭킹 데이터 저장
+        // 랭킹 데이터 저장 (userId -> score)
         const rankingsData = {
             mock: Array.from(rankings.mock.entries()),
             formal: Array.from(rankings.formal.entries())
         };
-        fs.writeFileSync(RANKINGS_FILE, JSON.stringify(rankingsData, null, 2));
+        await fsp.writeFile(RANKINGS_FILE, JSON.stringify(rankingsData, null, 2));
         
         // 세션 데이터 저장
         const sessionsData = {};
-        for (const [sessionId, userId] of sessions) {
-            sessionsData[sessionId] = userId;
+        for (const [sessionId, value] of sessions) {
+            if (typeof value === 'number') {
+                sessionsData[sessionId] = { userId: value, expiresAt: Date.now() + SESSION_TTL_MS, lastUsedAt: Date.now() };
+            } else {
+                sessionsData[sessionId] = value;
+            }
         }
-        fs.writeFileSync(SESSIONS_FILE, JSON.stringify(sessionsData, null, 2));
+        await fsp.writeFile(SESSIONS_FILE, JSON.stringify(sessionsData, null, 2));
         
         console.log('💾 데이터 저장 완료');
     } catch (error) {
         console.error('❌ 데이터 저장 중 오류:', error);
     }
+}
+
+function saveData() {
+    if (saveTimer) {
+        clearTimeout(saveTimer);
+    }
+    saveTimer = setTimeout(() => {
+        saveDataImmediate();
+        // DB에도 동기화
+        try {
+            db.upsertUsers(users);
+            db.upsertSessions(sessions);
+            db.upsertRankings(rankings);
+        } catch (e) {
+            console.error('❌ DB 동기화 실패:', e);
+        }
+    }, SAVE_DEBOUNCE_MS);
+}
+
+// 세션 유효기간
+const SESSION_TTL_MS = Number(process.env.SESSION_TTL_MS || (24 * 60 * 60 * 1000));
+
+function getUserIdFromSession(sessionId) {
+    return getUserIdFromSessionUtil(sessions, sessionId, SESSION_TTL_MS);
+}
+
+function migrateRankingKeysToUserId(rankMap) {
+    for (const [key, score] of Array.from(rankMap.entries())) {
+        if (typeof key === 'string' && isNaN(Number(key))) {
+            // 닉네임인 경우 userId 찾기
+            let foundUserId = null;
+            for (const [uid, udata] of users) {
+                if (udata.nickname === key) {
+                    foundUserId = uid;
+                    break;
+                }
+            }
+            rankMap.delete(key);
+            if (foundUserId !== null) {
+                rankMap.set(foundUserId, score);
+            }
+        } else if (typeof key === 'string') {
+            const numKey = Number(key);
+            rankMap.delete(key);
+            rankMap.set(numKey, score);
+        }
+    }
+}
+
+/**
+ * 경기 결과 확정 및 점수 반영 (서버 권위)
+ */
+function finalizeGameResult(gameId, winnerSocketId) {
+    const session = activeGames.get(gameId);
+    if (!session) return;
+    const loser = session.players.find(p => p.id !== winnerSocketId);
+    const winner = session.players.find(p => p.id === winnerSocketId);
+    if (!winner || !loser) return;
+
+    // 게스트 경기면 점수 반영 안 함
+    if (winner.isGuest || loser.isGuest) {
+        return;
+    }
+
+    // 유저 데이터 확보
+    const winnerInfo = playerSessions.get(winner.id);
+    const loserInfo = playerSessions.get(loser.id);
+    if (!winnerInfo || !loserInfo) return;
+
+    const winnerUser = users.get(winnerInfo.userId);
+    const loserUser = users.get(loserInfo.userId);
+    if (!winnerUser || !loserUser) return;
+
+    // 정식 결투 점수 +1 (하한 0)
+    const current = winnerUser.trophies.formal || 0;
+    const updated = Math.max(0, current + 1);
+    winnerUser.trophies.formal = updated;
+    rankings.formal.set(winnerInfo.userId, updated);
+            saveData();
+    console.log(`🏆 정식 결투 결과 확정: ${winnerUser.nickname} 승리 (+1)`);
 }
 
 /**
@@ -194,403 +421,34 @@ function generateSessionId() {
     return crypto.randomBytes(32).toString('hex');
 }
 
-/**
- * 계정 생성 API
- */
-app.post('/api/register', async (req, res) => {
-    try {
-        const { username, password, nickname } = req.body;
-        
-        // 입력 검증
-        if (!username || !password || !nickname) {
-            return res.status(400).json({ error: '모든 필드를 입력해주세요.' });
-        }
-        
-        if (username.length < 3 || username.length > 20) {
-            return res.status(400).json({ error: '아이디는 3-20자 사이여야 합니다.' });
-        }
-        
-        if (password.length < 6) {
-            return res.status(400).json({ error: '비밀번호는 6자 이상이어야 합니다.' });
-        }
-        
-        if (nickname.length < 2 || nickname.length > 15) {
-            return res.status(400).json({ error: '닉네임은 2-15자 사이여야 합니다.' });
-        }
-        
-        // 아이디 중복 확인
-        if (usernames.has(username)) {
-            return res.status(400).json({ error: '이미 사용 중인 아이디입니다.' });
-        }
-        
-        // 닉네임 중복 확인
-        for (const [_, userData] of users) {
-            if (userData.nickname === nickname) {
-                return res.status(400).json({ error: '이미 사용 중인 닉네임입니다.' });
-            }
-        }
-        
-        // 비밀번호 해시화
-        const hashedPassword = await bcrypt.hash(password, 10);
-        
-        // 유저 생성
-        const userId = nextUserId++;
-        const userData = {
-            userId,
-            username,
-            nickname,
-            password: hashedPassword,
-            icon: '👤', // 기본 아이콘
-            trophies: {
-                mock: 0,
-                formal: 0
-            },
-            lastNicknameChange: 0,
-            createdAt: Date.now()
-        };
-        
-        users.set(userId, userData);
-        usernames.set(username, userId);
-        
-        // 랭킹에 0점으로 등록
-        rankings.mock.set(nickname, 0);
-        rankings.formal.set(nickname, 0);
-        
-        // 세션 생성
-        const sessionId = generateSessionId();
-        sessions.set(sessionId, userId);
-        
-        saveData();
-        
-        console.log(`👤 새 계정 생성: ${username} (${nickname})`);
-        
-        res.json({
-            success: true,
-            sessionId,
-            userData: {
-                userId,
-                username,
-                nickname,
-                icon: userData.icon,
-                trophies: userData.trophies
-            }
-        });
-        
-    } catch (error) {
-        console.error('❌ 계정 생성 오류:', error);
-        res.status(500).json({ error: '서버 오류가 발생했습니다.' });
-    }
-});
+// 라우터로 위임: routes/auth.js
 
-/**
- * 로그인 API
- */
-app.post('/api/login', async (req, res) => {
-    try {
-        const { username, password } = req.body;
-        
-        // 입력 검증
-        if (!username || !password) {
-            return res.status(400).json({ error: '아이디와 비밀번호를 입력해주세요.' });
-        }
-        
-        // 유저 찾기
-        const userId = usernames.get(username);
-        if (!userId) {
-            return res.status(400).json({ error: '아이디 또는 비밀번호가 잘못되었습니다.' });
-        }
-        
-        const userData = users.get(userId);
-        if (!userData) {
-            return res.status(400).json({ error: '아이디 또는 비밀번호가 잘못되었습니다.' });
-        }
-        
-        // 비밀번호 확인
-        const isValidPassword = await bcrypt.compare(password, userData.password);
-        if (!isValidPassword) {
-            return res.status(400).json({ error: '아이디 또는 비밀번호가 잘못되었습니다.' });
-        }
-        
-        // 세션 생성
-        const sessionId = generateSessionId();
-        sessions.set(sessionId, userId);
-        
-        console.log(`🔐 로그인 성공: ${username}`);
-        
-        // 기존 유저 데이터에 icon 필드가 없으면 추가
-        if (!userData.icon) {
-            userData.icon = '👤';
-            saveData();
-        }
-        
-        res.json({
-            success: true,
-            sessionId,
-            userData: {
-                userId,
-                username,
-                nickname: userData.nickname,
-                icon: userData.icon,
-                trophies: userData.trophies
-            }
-        });
-        
-    } catch (error) {
-        console.error('❌ 로그인 오류:', error);
-        res.status(500).json({ error: '서버 오류가 발생했습니다.' });
-    }
-});
+// 라우터로 위임: routes/auth.js
 
 /**
  * 세션 확인 API
  */
-app.post('/api/verify-session', (req, res) => {
-    try {
-        const { sessionId } = req.body;
-        
-        if (!sessionId) {
-            return res.status(400).json({ error: '세션 ID가 필요합니다.' });
-        }
-        
-        const userId = sessions.get(sessionId);
-        if (!userId) {
-            return res.status(401).json({ error: '유효하지 않은 세션입니다.' });
-        }
-        
-        const userData = users.get(userId);
-        if (!userData) {
-            return res.status(401).json({ error: '유저 데이터를 찾을 수 없습니다.' });
-        }
-        
-        // 기존 유저 데이터에 icon 필드가 없으면 추가
-        if (!userData.icon) {
-            userData.icon = '👤';
-            saveData();
-        }
-        
-        res.json({
-            success: true,
-            userData: {
-                userId,
-                username: userData.username,
-                nickname: userData.nickname,
-                icon: userData.icon,
-                trophies: userData.trophies
-            }
-        });
-        
-    } catch (error) {
-        console.error('❌ 세션 확인 오류:', error);
-        res.status(500).json({ error: '서버 오류가 발생했습니다.' });
-    }
-});
+// 라우터로 위임: routes/auth.js
 
 /**
  * 닉네임 변경 API
  */
-app.post('/api/change-nickname', (req, res) => {
-    try {
-        const { sessionId, newNickname } = req.body;
-        
-        if (!sessionId || !newNickname) {
-            return res.status(400).json({ error: '세션 ID와 새 닉네임이 필요합니다.' });
-        }
-        
-        const userId = sessions.get(sessionId);
-        if (!userId) {
-            return res.status(401).json({ error: '유효하지 않은 세션입니다.' });
-        }
-        
-        const userData = users.get(userId);
-        if (!userData) {
-            return res.status(401).json({ error: '유저 데이터를 찾을 수 없습니다.' });
-        }
-        
-        // 닉네임 길이 검증
-        if (newNickname.length < 2 || newNickname.length > 15) {
-            return res.status(400).json({ error: '닉네임은 2-15자 사이여야 합니다.' });
-        }
-        
-        // 1시간 제한 확인
-        const now = Date.now();
-        const oneHour = 60 * 60 * 1000;
-        if (userData.lastNicknameChange && (now - userData.lastNicknameChange) < oneHour) {
-            const remainingTime = Math.ceil((oneHour - (now - userData.lastNicknameChange)) / (60 * 1000));
-            return res.status(400).json({ 
-                error: `닉네임 변경은 1시간에 1번만 가능합니다. ${remainingTime}분 후에 다시 시도해주세요.` 
-            });
-        }
-        
-        // 닉네임 중복 확인
-        for (const [_, otherUserData] of users) {
-            if (otherUserData.userId !== userId && otherUserData.nickname === newNickname) {
-                return res.status(400).json({ error: '이미 사용 중인 닉네임입니다.' });
-            }
-        }
-        
-        // 기존 닉네임으로 랭킹 데이터 업데이트
-        const oldNickname = userData.nickname;
-        const mockScore = rankings.mock.get(oldNickname) || 0;
-        const formalScore = rankings.formal.get(oldNickname) || 0;
-        
-        if (mockScore > 0) {
-            rankings.mock.delete(oldNickname);
-            rankings.mock.set(newNickname, mockScore);
-        }
-        if (formalScore > 0) {
-            rankings.formal.delete(oldNickname);
-            rankings.formal.set(newNickname, formalScore);
-        }
-        
-        // 닉네임 변경
-        userData.nickname = newNickname;
-        userData.lastNicknameChange = now;
-        
-        saveData();
-        
-        console.log(`🔄 닉네임 변경: ${oldNickname} -> ${newNickname}`);
-        
-        res.json({
-            success: true,
-            userData: {
-                userId,
-                username: userData.username,
-                nickname: userData.nickname,
-                trophies: userData.trophies
-            }
-        });
-        
-    } catch (error) {
-        console.error('❌ 닉네임 변경 오류:', error);
-        res.status(500).json({ error: '서버 오류가 발생했습니다.' });
-    }
-});
+// 라우터로 위임: routes/auth.js
 
 /**
  * 아이콘 변경 API
  */
-app.post('/api/change-icon', (req, res) => {
-    try {
-        const { sessionId, icon } = req.body;
-        
-        console.log('🔍 아이콘 변경 요청:', { sessionId, icon });
-        
-        if (!sessionId || !icon) {
-            console.log('❌ 필수 정보 누락:', { sessionId: !!sessionId, icon: !!icon });
-            return res.status(400).json({ error: '필수 정보가 누락되었습니다.' });
-        }
-        
-        const userId = sessions.get(sessionId);
-        if (!userId) {
-            return res.status(401).json({ error: '유효하지 않은 세션입니다.' });
-        }
-        
-        const userData = users.get(userId);
-        if (!userData) {
-            return res.status(401).json({ error: '유저 데이터를 찾을 수 없습니다.' });
-        }
-        
-        // 아이콘 유효성 검증 (빈 문자열이 아닌지만 확인)
-        if (!icon || icon.trim() === '') {
-            console.log('❌ 빈 아이콘:', icon);
-            return res.status(400).json({ error: '아이콘을 선택해주세요.' });
-        }
-        
-        // 아이콘 변경
-        userData.icon = icon;
-        
-        saveData();
-        
-        console.log(`🔄 아이콘 변경: ${userData.nickname} -> ${icon}`);
-        
-        res.json({
-            success: true,
-            icon: icon
-        });
-        
-    } catch (error) {
-        console.error('❌ 아이콘 변경 오류:', error);
-        res.status(500).json({ error: '서버 오류가 발생했습니다.' });
-    }
-});
+// 라우터로 위임: routes/auth.js
 
 /**
  * 랭킹 조회 API
  */
-app.get('/api/rankings/:category', (req, res) => {
-    try {
-        const { category } = req.params;
-        
-        if (!rankings[category]) {
-            return res.status(400).json({ error: '유효하지 않은 카테고리입니다.' });
-        }
-        
-        // 랭킹 데이터 생성
-        const rankingData = [];
-        for (const [nickname, score] of rankings[category]) {
-            rankingData.push({ nickname, score });
-        }
-        
-        // 점수 높은 순으로 정렬
-        rankingData.sort((a, b) => b.score - a.score);
-        
-        console.log(`📊 랭킹 조회: ${category} - ${rankingData.length}명`);
-        
-        res.json({
-            success: true,
-            category,
-            rankings: rankingData
-        });
-        
-    } catch (error) {
-        console.error('❌ 랭킹 조회 오류:', error);
-        res.status(500).json({ error: '서버 오류가 발생했습니다.' });
-    }
-});
+// 라우터로 위임: routes/ranking.js
 
 /**
  * 승리의 증표 업데이트 API
  */
-app.post('/api/update-trophies', (req, res) => {
-    try {
-        const { sessionId, category, change } = req.body;
-        
-        if (!sessionId || !category || change === undefined) {
-            return res.status(400).json({ error: '필수 정보가 누락되었습니다.' });
-        }
-        
-        const userId = sessions.get(sessionId);
-        if (!userId) {
-            return res.status(401).json({ error: '유효하지 않은 세션입니다.' });
-        }
-        
-        const userData = users.get(userId);
-        if (!userData) {
-            return res.status(401).json({ error: '유저 데이터를 찾을 수 없습니다.' });
-        }
-        
-        // 증표 업데이트
-        const oldScore = userData.trophies[category] || 0;
-        const newScore = Math.max(0, oldScore + change);
-        userData.trophies[category] = newScore;
-        
-        // 랭킹 업데이트
-        rankings[category].set(userData.nickname, newScore);
-        
-        saveData();
-        
-        console.log(`🏆 증표 업데이트: ${userData.nickname} ${category} ${oldScore} -> ${newScore} (${change > 0 ? '+' : ''}${change})`);
-        
-        res.json({
-            success: true,
-            trophies: userData.trophies
-        });
-        
-    } catch (error) {
-        console.error('❌ 증표 업데이트 오류:', error);
-        res.status(500).json({ error: '서버 오류가 발생했습니다.' });
-    }
-});
+// 라우터로 위임: routes/ranking.js
 
 /**
  * 유저 프로필 조회 API
@@ -643,16 +501,19 @@ let serverStats = {
 // 에러 핸들링 함수
 function handleError(socket, error, context) {
     console.error(`❌ 에러 발생 (${context}):`, error);
-    socket.emit('error', {
-        message: '서버 오류가 발생했습니다.',
-        context: context
-    });
+    const payload = { message: '서버 오류가 발생했습니다.', context };
+    socket.emit('serverError', payload);
+    socket.emit('error', payload); // 하위 호환
 }
 
 // 연결 상태 확인 함수
 function isPlayerConnected(playerId) {
     return io.sockets.sockets.has(playerId);
 }
+
+const getGameIdOf = (socketId) => getGameIdOfUtil(playerSessions, socketId);
+const getOpponentSocketId = (gameId, socketId) => getOpponentSocketIdUtil(activeGames, gameId, socketId);
+const arePlayersInSameGame = (a, b) => arePlayersInSameGameUtil(playerSessions, activeGames, a, b);
 
 // Socket.IO 연결 처리
 io.on('connection', (socket) => {
@@ -694,7 +555,7 @@ io.on('connection', (socket) => {
                 return;
             }
             
-            const userId = sessions.get(sessionId);
+            const userId = getUserIdFromSession(sessionId);
             if (!userId) {
                 socket.emit('loginResult', { success: false, error: '유효하지 않은 세션입니다.' });
                 return;
@@ -751,6 +612,7 @@ io.on('connection', (socket) => {
                 // 매칭 성공!
                 console.log(`✅ 매칭 성공: ${playerName} ↔ ${matchedPlayer.name}`);
                 serverStats.totalMatches++;
+                totalMatchesCounter.inc();
                 
                 // 대기 목록에서 제거
                 waitingPlayers.delete(matchedPlayer.id);
@@ -777,6 +639,13 @@ io.on('connection', (socket) => {
                     matchedPlayerInfo.gameId = gameId;
                     matchedPlayerInfo.opponent = socket.id;
                 }
+
+                // 룸 조인
+                socket.join(gameId);
+                const matchedSocket = io.sockets.sockets.get(matchedPlayer.id);
+                if (matchedSocket) {
+                    matchedSocket.join(gameId);
+                }
                 
                 // 양쪽 플레이어에게 매칭 성공 알림
                 socket.emit('matchFound', {
@@ -801,6 +670,9 @@ io.on('connection', (socket) => {
                 
                 serverStats.activeGames++;
                 serverStats.waitingPlayers = Math.max(0, serverStats.waitingPlayers - 2);
+                connectionsGauge.set(serverStats.totalConnections);
+                activeGamesGauge.set(serverStats.activeGames);
+                waitingPlayersGauge.set(serverStats.waitingPlayers);
                 
             } else {
                 // 대기 목록에 추가
@@ -826,16 +698,15 @@ io.on('connection', (socket) => {
     socket.on('offer', (data) => {
         try {
             const { target, offer } = data;
-            if (isPlayerConnected(target)) {
+            if (isPlayerConnected(target) && arePlayersInSameGame(socket.id, target)) {
                 io.to(target).emit('offer', {
                     from: socket.id,
                     offer: offer
                 });
             } else {
-                socket.emit('error', {
-                    message: '상대방이 연결되지 않았습니다.',
-                    context: 'offer'
-                });
+                const payload = { message: '상대방이 연결되지 않았습니다.', context: 'offer' };
+                socket.emit('serverError', payload);
+                socket.emit('error', payload); // 하위 호환
             }
         } catch (error) {
             handleError(socket, error, 'offer');
@@ -846,7 +717,7 @@ io.on('connection', (socket) => {
         try {
             const { target, answer } = data;
             
-            if (isPlayerConnected(target)) {
+            if (isPlayerConnected(target) && arePlayersInSameGame(socket.id, target)) {
                 io.to(target).emit('answer', {
                     from: socket.id,
                     answer: answer
@@ -861,7 +732,7 @@ io.on('connection', (socket) => {
         try {
             const { target, candidate } = data;
             
-            if (isPlayerConnected(target)) {
+            if (isPlayerConnected(target) && arePlayersInSameGame(socket.id, target)) {
                 io.to(target).emit('iceCandidate', {
                     from: socket.id,
                     candidate: candidate
@@ -877,7 +748,7 @@ io.on('connection', (socket) => {
         try {
             const { target, gameState } = data;
             
-            if (isPlayerConnected(target)) {
+            if (isPlayerConnected(target) && arePlayersInSameGame(socket.id, target)) {
                 // 게임 상태 저장
                 if (playerInfo.gameId) {
                     gameStates.set(playerInfo.gameId, gameState);
@@ -898,7 +769,7 @@ io.on('connection', (socket) => {
         try {
             const { target, card, playerId, gameState } = data;
             
-            if (isPlayerConnected(target)) {
+            if (isPlayerConnected(target) && arePlayersInSameGame(socket.id, target)) {
                 // 게임 상태 업데이트
                 if (gameState && playerInfo.gameId) {
                     gameStates.set(playerInfo.gameId, gameState);
@@ -921,7 +792,7 @@ io.on('connection', (socket) => {
         try {
             const { target, gameState } = data;
             
-            if (isPlayerConnected(target)) {
+            if (isPlayerConnected(target) && arePlayersInSameGame(socket.id, target)) {
                 // 게임 상태 업데이트
                 if (gameState && playerInfo.gameId) {
                     gameStates.set(playerInfo.gameId, gameState);
@@ -942,18 +813,44 @@ io.on('connection', (socket) => {
         try {
             const { target, winner, gameState, isGuest } = data;
             
-            if (isPlayerConnected(target)) {
-                // 게임 상태 업데이트
-                if (gameState && playerInfo.gameId) {
-                    gameStates.set(playerInfo.gameId, gameState);
-                }
-                
-                io.to(target).emit('gameOver', {
-                    from: socket.id,
-                    winner: winner,
-                    gameState: gameState,
-                    isGuest: isGuest
-                });
+            if (!isPlayerConnected(target) || !arePlayersInSameGame(socket.id, target)) {
+                return; // 무시
+            }
+
+            const gameId = getGameIdOf(socket.id);
+            if (!gameId) return;
+
+            // 상태 저장
+            if (gameState) {
+                gameStates.set(gameId, gameState);
+            }
+
+            // 승자 값 검증 (자기자신 또는 상대)
+            const opponentId = getOpponentSocketId(gameId, socket.id);
+            if (winner !== socket.id && winner !== opponentId) {
+                return; // 유효하지 않은 승자 주장
+            }
+
+            // 합의 수집
+            if (!pendingResults.has(gameId)) {
+                pendingResults.set(gameId, { claims: new Map() });
+            }
+            const entry = pendingResults.get(gameId);
+            entry.claims.set(socket.id, winner);
+
+            // 상대 주장 확인
+            const otherClaim = entry.claims.get(opponentId);
+            if (otherClaim && otherClaim === winner) {
+                // 합의됨 → 결과 확정, 점수 반영
+                finalizeGameResult(gameId, winner);
+                // 알림
+                io.to(opponentId).emit('gameOver', { from: socket.id, winner, gameState, isGuest });
+                socket.emit('gameOver', { from: opponentId, winner, gameState, isGuest });
+                // 정리
+                pendingResults.delete(gameId);
+                activeGames.delete(gameId);
+                gameStates.delete(gameId);
+                serverStats.activeGames = Math.max(0, serverStats.activeGames - 1);
             }
         } catch (error) {
             handleError(socket, error, 'gameOver');
@@ -969,6 +866,7 @@ io.on('connection', (socket) => {
             if (waitingPlayers.has(socket.id)) {
                 waitingPlayers.delete(socket.id);
                 serverStats.waitingPlayers = Math.max(0, serverStats.waitingPlayers - 1);
+                waitingPlayersGauge.set(serverStats.waitingPlayers);
                 console.log(`❌ 대기 목록에서 제거: ${socket.id}`);
             }
             
@@ -992,6 +890,7 @@ io.on('connection', (socket) => {
                     activeGames.delete(playerInfo.gameId);
                     gameStates.delete(playerInfo.gameId);
                     serverStats.activeGames = Math.max(0, serverStats.activeGames - 1);
+                    activeGamesGauge.set(serverStats.activeGames);
                     console.log(`❌ 게임 세션 종료: ${playerInfo.gameId}`);
                 }
             }
@@ -999,6 +898,7 @@ io.on('connection', (socket) => {
             // 플레이어 세션 제거
             playerSessions.delete(socket.id);
             serverStats.totalConnections = Math.max(0, serverStats.totalConnections - 1);
+            connectionsGauge.set(serverStats.totalConnections);
             
             // 서버 상태 업데이트
             io.emit('serverStats', serverStats);
@@ -1038,12 +938,35 @@ setInterval(() => {
             serverStats.activeGames = Math.max(0, serverStats.activeGames - 1);
         }
     }
+
+    // 만료 세션 정리
+    for (const [sid, rec] of Array.from(sessions.entries())) {
+        const record = typeof rec === 'number' ? { userId: rec, expiresAt: currentTime + SESSION_TTL_MS, lastUsedAt: currentTime } : rec;
+        if (record.expiresAt && record.expiresAt < currentTime) {
+            sessions.delete(sid);
+        }
+    }
 }, 30000);
 
 // 서버 상태 모니터링
 setInterval(() => {
     console.log(`📊 서버 상태: 연결 ${serverStats.totalConnections}, 게임 ${serverStats.activeGames}, 대기 ${serverStats.waitingPlayers}, 총 매칭 ${serverStats.totalMatches}`);
 }, 30000);
+
+// 라우터 컨텍스트 초기화 후 라우터 등록 (404 핸들러보다 반드시 앞)
+const ctx = {
+    users,
+    usernames,
+    sessions,
+    rankings,
+    sessionTtlMs: SESSION_TTL_MS,
+    saveData,
+    getUserIdFromSession,
+    generateUserId: () => nextUserId++,
+    generateSessionId
+};
+require('./routes/auth')(app, ctx);
+require('./routes/ranking')(app, ctx);
 
 // 404 에러 처리 (모든 라우트 이후에 등록)
 app.use((req, res) => {
@@ -1069,17 +992,19 @@ server.listen(PORT, () => {
     
     // 데이터 로드
     loadData();
+
+    // 라우터는 이미 등록됨
 });
 
 // 서버 종료 시 데이터 저장
-process.on('SIGINT', () => {
+process.on('SIGINT', async () => {
     console.log('\n🔄 서버 종료 중...');
-    saveData();
+    await saveDataImmediate();
     process.exit(0);
 });
 
-process.on('SIGTERM', () => {
+process.on('SIGTERM', async () => {
     console.log('\n🔄 서버 종료 중...');
-    saveData();
+    await saveDataImmediate();
     process.exit(0);
 }); 

@@ -5412,11 +5412,12 @@
                         .then(data => {
                             if (data.success) {
                                 showToast('대표 아이콘이 변경되었습니다.', 'success', 2000);
-                                // 서버 데이터 업데이트
+                                // 서버 데이터 업데이트 및 새로고침으로 UI 반영
                                 if (currentUserData) {
                                     currentUserData.icon = selectedIcon;
-                                    console.log('✅ 아이콘 변경 완료:', selectedIcon);
+                                    localStorage.setItem('playerIcon', selectedIcon);
                                 }
+                                setTimeout(() => location.reload(), 300);
                             } else {
                                 showToast('아이콘 변경에 실패했습니다.', 'error', 3000);
                                 console.error('❌ 아이콘 변경 실패:', data.error);
@@ -5465,6 +5466,9 @@
                 reconnectionDelay: 1000
             });
             
+            // 현재 상대 소켓 ID 저장용 변수
+            let currentOpponentId = null;
+            
             socket.on('connect', () => {
                 console.log('🔌 Socket.IO 연결 성공');
                 serverConnected = true;
@@ -5485,6 +5489,7 @@
             socket.on('disconnect', () => {
                 console.log('🔌 Socket.IO 연결 해제');
                 serverConnected = false;
+                currentOpponentId = null;
                 addLog('🔌 서버와의 연결이 해제되었습니다.');
                 
                 // 연결 해제 시 랭킹 모달에 에러 표시
@@ -5535,6 +5540,7 @@
                 console.log('✅ 매칭 성공:', data);
                 opponentName = data.opponent.name;
                 isHost = data.isHost;
+                currentOpponentId = data.opponent.id;
                 
                 // 상대방 이름 즉시 업데이트
                 updateOpponentName();
@@ -5544,7 +5550,7 @@
                 matchingModal.classList.add('hidden');
                 
                 // WebRTC 연결 시작
-                initializeWebRTC(data.opponent.id);
+                initializeWebRTC(currentOpponentId);
             });
             
             socket.on('opponentDisconnected', (data) => {
@@ -5606,9 +5612,15 @@
                             peerConnection.close();
                             peerConnection = null;
                         }
-                        initializeWebRTC(opponentId);
+                        initializeWebRTC(currentOpponentId || opponentId);
                     }, 2000);
                 }
+            });
+
+            // 서버 정의 에러 이벤트 (하위 호환: 서버에서 error도 함께 발행)
+            socket.on('serverError', (error) => {
+                console.error('❌ 서버 에러(serverError):', error);
+                addLog(`❌ 서버 오류: ${error.message}`);
             });
             
             // 게임 상태 복구
@@ -5805,7 +5817,7 @@
                 
                 // 게스트도 타임아웃 설정
                 setTimeout(() => {
-                    if (!state.players || state.players[0].hand.length === 0) {
+                    if (!state.players || !state.players[0] || !state.players[0].hand || state.players[0].hand.length === 0) {
                         console.log('⚠️ 호스트로부터 게임 상태를 받지 못함 - 자동 복구 시도');
                         addLog('호스트 응답이 없어 자동으로 게임을 시작합니다.');
                         resetGame();
@@ -5815,16 +5827,24 @@
         }
 
         // WebRTC 초기화
-        function initializeWebRTC(opponentId) {
+        async function initializeWebRTC(opponentId) {
             console.log('🌐 WebRTC 연결 시도 중...');
             
-            // STUN 서버 설정
-            const configuration = {
-                iceServers: [
+            // ICE 서버 설정을 서버에서 받아서 사용
+            const configuration = { iceServers: [] };
+            try {
+                const resp = await fetch('/api/webrtc-ice');
+                const data = await resp.json();
+                if (data && data.iceServers) {
+                    configuration.iceServers = data.iceServers;
+                }
+            } catch (e) {
+                console.warn('ICE 서버 설정 조회 실패, 기본 STUN 사용');
+                configuration.iceServers = [
                     { urls: 'stun:stun.l.google.com:19302' },
                     { urls: 'stun:stun1.l.google.com:19302' }
-                ]
-            };
+                ];
+            }
 
             peerConnection = new RTCPeerConnection(configuration);
             
@@ -7373,8 +7393,8 @@
                 if (socket && socket.connected) {
                     syncLocalDataToServer();
                 } else {
-                    // 소켓 연결 대기 후 다시 시도
-                    socket.on('connect', () => {
+                    // 소켓 연결 대기 후 다시 시도 (1회성 리스너)
+                    socket.once('connect', () => {
                         syncLocalDataToServer();
                     });
                 }
