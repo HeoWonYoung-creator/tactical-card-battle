@@ -405,13 +405,17 @@ function finalizeGameResult(gameId, winnerSocketId) {
     const loserUser = users.get(loserInfo.userId);
     if (!winnerUser || !loserUser) return;
 
-    // 정식 결투 점수 +1 (하한 0)
-    const current = winnerUser.trophies.formal || 0;
-    const updated = Math.max(0, current + 1);
-    winnerUser.trophies.formal = updated;
-    rankings.formal.set(winnerInfo.userId, updated);
-            saveData();
-    console.log(`🏆 정식 결투 결과 확정: ${winnerUser.nickname} 승리 (+1)`);
+    // 정식 결투 점수: 승리 +2, 패배 -1 (하한 0)
+    const winnerCurrent = winnerUser.trophies.formal || 0;
+    const loserCurrent = loserUser.trophies.formal || 0;
+    const winnerUpdated = Math.max(0, winnerCurrent + 2);
+    const loserUpdated = Math.max(0, loserCurrent - 1);
+    winnerUser.trophies.formal = winnerUpdated;
+    loserUser.trophies.formal = loserUpdated;
+    rankings.formal.set(winnerInfo.userId, winnerUpdated);
+    rankings.formal.set(loserInfo.userId, loserUpdated);
+    saveData();
+    console.log(`🏆 정식 결투 결과 확정: ${winnerUser.nickname} 승리 (+2), ${loserUser.nickname} 패배 (-1)`);
 }
 
 /**
@@ -593,7 +597,15 @@ io.on('connection', (socket) => {
     // 매칭 요청
     socket.on('requestMatch', (data) => {
         try {
-            const playerName = data.playerName || '게스트';
+            // 로그인된 계정이면 서버의 닉네임을 강제 사용하고,
+            // 게스트인 경우에만 클라이언트가 보낸 이름을 사용
+            let playerName = '게스트';
+            if (!playerInfo.isGuest && playerInfo.userId) {
+                const u = users.get(playerInfo.userId);
+                playerName = (u && u.nickname) ? u.nickname : '게스트';
+            } else {
+                playerName = data.playerName || '게스트';
+            }
             playerInfo.name = playerName;
             playerInfo.isWaiting = true;
             
@@ -875,8 +887,8 @@ io.on('connection', (socket) => {
                 const gameSession = activeGames.get(playerInfo.gameId);
                 if (gameSession) {
                     // 상대방에게 연결 해제 알림
-                    const opponentPlayer = gameSession.players.find(p => p.id !== socket.id);
-                    const disconnectedPlayer = gameSession.players.find(p => p.id === socket.id);
+            const opponentPlayer = gameSession.players.find(p => p.id !== socket.id);
+            const disconnectedPlayer = gameSession.players.find(p => p.id === socket.id);
                     if (opponentPlayer && isPlayerConnected(opponentPlayer.id)) {
                         io.to(opponentPlayer.id).emit('opponentDisconnected', {
                             message: '상대방이 연결을 해제했습니다.',
@@ -885,6 +897,19 @@ io.on('connection', (socket) => {
                             disconnectedPlayerId: socket.id,
                             isDisconnectedAsLoser: true
                         });
+                        // 정식 결투인 경우: 둘 다 계정 유저라면 연결 해제를 패배로 간주하여 점수 반영
+                        try {
+                            const opponentInfo = playerSessions.get(opponentPlayer.id);
+                            if (opponentInfo && opponentInfo.userId && !opponentInfo.isGuest && playerInfo && playerInfo.userId && !playerInfo.isGuest) {
+                                const gameId = getGameIdOf(socket.id);
+                                if (gameId) {
+                                    // 연결 끊긴 쪽을 패배자로 확정
+                                    finalizeGameResult(gameId, opponentPlayer.id);
+                                }
+                            }
+                        } catch (e) {
+                            console.warn('연결 해제에 따른 결과 확정 실패(무시 가능):', e);
+                        }
                     }
                     
                     activeGames.delete(playerInfo.gameId);
