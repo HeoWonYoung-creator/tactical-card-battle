@@ -4827,6 +4827,8 @@
         // Socket.IO 연결
         let socket = null;
         let serverConnected = false;
+        // 상대 소켓 ID (멀티플레이어 결과 보고에 필요)
+        let opponentSocketId = null;
         
         // 전적 관리 함수들
         function loadStats() {
@@ -5552,6 +5554,7 @@
                 opponentName = data.opponent.name;
                 isHost = data.isHost;
                 currentOpponentId = data.opponent.id;
+                opponentSocketId = data.opponent.id;
                 
                 // 상대방 이름 즉시 업데이트
                 updateOpponentName();
@@ -5867,6 +5870,7 @@
 
             // 데이터 채널 이벤트 리스너
             peerConnection.ondatachannel = (event) => {
+                if (!event || !event.channel) return;
                 dataChannel = event.channel;
                 setupDataChannel(dataChannel);
             };
@@ -5884,6 +5888,10 @@
 
             // 연결 상태 변경
             peerConnection.onconnectionstatechange = () => {
+                if (!peerConnection) {
+                    console.warn('onconnectionstatechange: peerConnection is null');
+                    return;
+                }
                 console.log('Connection state:', peerConnection.connectionState);
                 if (peerConnection.connectionState === 'connected') {
                     console.log('WebRTC 연결 성공!');
