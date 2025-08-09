@@ -6665,6 +6665,11 @@
             }
         }
         
+        // 계정 시스템 변수들 (초기 선언 - TDZ 방지)
+        var currentSessionId = null;
+        var currentUserData = null;
+        var isLoggedIn = false;
+
         // 이벤트 리스너들
         DOM.get('ai-battle-btn').addEventListener('click', (e) => {
             if (e.target.disabled) {
@@ -7017,10 +7022,10 @@
             }
         };
         
-        // 계정 시스템 변수들
-        let currentSessionId = null;
-        let currentUserData = null;
-        let isLoggedIn = false;
+        // 계정 시스템 변수들 (var로 상단에서 재선언됨)
+        currentSessionId = null;
+        currentUserData = null;
+        isLoggedIn = false;
 
         // 계정 시스템 초기화
         function initializeAccountSystem() {
